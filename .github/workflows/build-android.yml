@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
   GODOT_VERSION: "4.3"
 
@@ -56,3 +59,13 @@ jobs:
         with:
           name: fantasy-mmorpg-debug-apk
           path: build/fantasy-mmorpg-debug.apk
+
+      - name: Publish APK to the "latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest APK
+          body: |
+            APK אוטומטי מהגרסה האחרונה ב-main.
+            מתעדכן בכל build. גרסה: ${{ github.sha }}
+          files: build/fantasy-mmorpg-debug.apk
