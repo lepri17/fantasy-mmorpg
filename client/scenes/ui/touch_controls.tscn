@@ -45,3 +45,63 @@ theme_override_font_sizes/font_size = 30
 text = "ATK"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="SkillButton" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -410.0
+offset_top = -190.0
+offset_right = -280.0
+offset_bottom = -60.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("2_button")
+action = "skill"
+color = Color(0.95, 0.7, 0.15, 1)
+
+[node name="Label" type="Label" parent="SkillButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 24
+text = "SPIN"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PotionButton" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -215.0
+offset_top = -390.0
+offset_right = -105.0
+offset_bottom = -280.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("2_button")
+action = "use_potion"
+color = Color(0.3, 0.75, 0.4, 1)
+
+[node name="Label" type="Label" parent="PotionButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 22
+text = "POT"
+horizontal_alignment = 1
+vertical_alignment = 1

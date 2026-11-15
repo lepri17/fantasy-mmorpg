@@ -390,6 +390,25 @@ def build_rock() -> Image.Image:
     return c.finish()
 
 
+def build_coin() -> Image.Image:
+    c = Canvas(32)
+    c.ellipse(16, 27, 9, 3, SHADOW, outline=False)
+    c.ellipse(16, 15, 10, 10, GOLD)
+    c.ellipse(16, 15, 6, 6, (255, 228, 140, 255), outline=False)
+    c.ellipse(13.5, 12.5, 2, 2, WHITE, outline=False)
+    return c.finish()
+
+
+def build_potion() -> Image.Image:
+    c = Canvas(32)
+    c.ellipse(16, 28, 9, 3, SHADOW, outline=False)
+    c.rect(13, 5, 19, 14, (214, 234, 244, 255), radius=1.5)
+    c.rect(12, 3, 20, 7, GRIP, radius=1.5)
+    c.ellipse(16, 19, 9, 8.5, (232, 70, 86, 255))
+    c.ellipse(13, 16, 2.6, 2, (255, 170, 176, 255), outline=False)
+    return c.finish()
+
+
 def build_icon(sheet: Image.Image) -> Image.Image:
     """App icon: the warrior's front idle frame on a rounded blue tile."""
     size = 192
@@ -518,6 +537,11 @@ def main() -> None:
     build_grass_tile().save(environment_dir / "grass.png")
     build_tree().save(environment_dir / "tree.png")
     build_rock().save(environment_dir / "rock.png")
+
+    items_dir = ASSETS / "items"
+    items_dir.mkdir(parents=True, exist_ok=True)
+    build_coin().save(items_dir / "coin.png")
+    build_potion().save(items_dir / "potion.png")
 
     slime_dir = ASSETS / "monsters" / "slime"
     slime_dir.mkdir(parents=True, exist_ok=True)

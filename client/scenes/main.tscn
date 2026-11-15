@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/environment/grass.png" id="1_grass"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
 [ext_resource type="PackedScene" path="res://scenes/maps/tree.tscn" id="6_tree"]
 [ext_resource type="PackedScene" path="res://scenes/maps/rock.tscn" id="7_rock"]
+[ext_resource type="Script" path="res://scripts/audio/sfx.gd" id="8_sfx"]
 
 [sub_resource type="WorldBoundaryShape2D" id="bound_left"]
 normal = Vector2(1, 0)
@@ -164,9 +165,41 @@ position = Vector2(1850, 860)
 [node name="Slime3" parent="World" instance=ExtResource("4_slime")]
 position = Vector2(1640, 960)
 
+[node name="Slime4" parent="World" instance=ExtResource("4_slime")]
+position = Vector2(1560, 1220)
+
+[node name="BlueSlime1" parent="World" instance=ExtResource("4_slime")]
+position = Vector2(2150, 820)
+display_name = "Blue Slime"
+level = 3
+max_hp = 110
+move_speed = 85.0
+attack_damage = 14
+xp_reward = 70
+gold_min = 6
+gold_max = 14
+potion_chance = 0.5
+tint = Color(0.62, 0.78, 1.5, 1)
+
+[node name="BlueSlime2" parent="World" instance=ExtResource("4_slime")]
+position = Vector2(2300, 960)
+display_name = "Blue Slime"
+level = 3
+max_hp = 110
+move_speed = 85.0
+attack_damage = 14
+xp_reward = 70
+gold_min = 6
+gold_max = 14
+potion_chance = 0.5
+tint = Color(0.62, 0.78, 1.5, 1)
+
 [node name="Player" parent="World" instance=ExtResource("2_player")]
 position = Vector2(1280, 768)
 camera_limits = Rect2(0, 0, 2560, 1536)
+
+[node name="Sfx" type="Node" parent="."]
+script = ExtResource("8_sfx")
 
 [node name="Hud" parent="." instance=ExtResource("5_hud")]
 

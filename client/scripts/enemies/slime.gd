@@ -1,7 +1,21 @@
 extends CharacterBody2D
-## A simple slime: waits, chases the warrior when he comes close, bumps into
-## him for a little damage, and comes back to life a few seconds after dying.
+## A slime. It wanders around its spawn point, chases the warrior when he comes
+## close, bumps into him for damage, gets knocked back when hit, drops loot and
+## gives XP when it dies, and comes back a few seconds later.
+##
+## Stronger kinds are the same scene with different exported values.
 
+const FloatingText = preload("res://scripts/ui/floating_text.gd")
+const PICKUP_SCENE := preload("res://scenes/items/pickup.tscn")
+
+const KNOCKBACK_SPEED := 240.0
+const KNOCKBACK_DECAY := 1400.0
+const WANDER_RADIUS := 90.0
+## A slime that gets this far from home gives up the chase and walks back.
+const LEASH_RADIUS := 480.0
+
+@export var display_name: String = "Slime"
+@export var level: int = 1
 @export var max_hp: int = 40
 @export var move_speed: float = 70.0
 ## The slime starts chasing when the warrior is closer than this.
@@ -11,12 +25,22 @@ extends CharacterBody2D
 @export var attack_damage: int = 6
 @export var attack_cooldown: float = 1.2
 @export var respawn_seconds: float = 5.0
+@export var xp_reward: int = 20
+@export var gold_min: int = 1
+@export var gold_max: int = 5
+@export_range(0.0, 1.0) var potion_chance: float = 0.3
+## Color multiplier, used to tell the kinds of slime apart.
+@export var tint: Color = Color.WHITE
 
 var hp: int = 0
 var is_dead: bool = false
 
 var _attack_ready_in: float = 0.0
 var _spawn_position: Vector2 = Vector2.ZERO
+var _knockback: Vector2 = Vector2.ZERO
+var _wander_target: Vector2 = Vector2.ZERO
+var _wander_timer: float = 0.0
+var _is_returning: bool = false
 var _player: Node2D = null
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
@@ -28,6 +52,9 @@ func _ready() -> void:
 	add_to_group("enemies")
 	hp = max_hp
 	_spawn_position = global_position
+	_wander_target = global_position
+	_sprite.modulate = tint
+	_hp_bar.set_label("Lv.%d %s" % [level, display_name])
 	_hp_bar.set_values(hp, max_hp)
 	_sprite.play("idle")
 
@@ -36,80 +63,110 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 	_attack_ready_in = maxf(0.0, _attack_ready_in - delta)
+	_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
 
-	if _player == null:
-		_player = get_tree().get_first_node_in_group("player") as Node2D
+	var movement := Vector2.ZERO
+	var target: Node2D = _chase_target()
+	if target == null:
+		movement = _wander(delta)
+	else:
+		var to_target: Vector2 = target.global_position - global_position
+		var distance: float = to_target.length()
+		if distance > attack_range:
+			movement = to_target / distance * move_speed
+		elif _attack_ready_in == 0.0:
+			_attack(target)
 
-	var direction := Vector2.ZERO
-	if _player != null:
-		var to_player: Vector2 = _player.global_position - global_position
-		var distance: float = to_player.length()
-		if distance <= attack_range:
-			if _attack_ready_in == 0.0:
-				_attack()
-		elif distance <= detect_radius:
-			direction = to_player / distance
-
-	velocity = direction * move_speed
+	velocity = movement + _knockback
 	move_and_slide()
 
 
-## Called by the warrior's attack.
-func take_damage(amount: int) -> void:
+## Called by the warrior's attacks. from_position is where the hit came from.
+func take_damage(amount: int, from_position: Vector2 = Vector2.ZERO) -> void:
 	if is_dead:
 		return
 	hp = maxi(hp - amount, 0)
 	_hp_bar.set_values(hp, max_hp)
-	_show_damage_number(amount)
-	_flash_hit()
+	FloatingText.spawn(self, str(amount), Color(1.0, 0.95, 0.4))
+	if from_position != Vector2.ZERO:
+		_knockback = (global_position - from_position).normalized() * KNOCKBACK_SPEED
 	if hp == 0:
 		_die()
+		return
+	_sprite.modulate = Color(1.0, 0.35, 0.35)
+	create_tween().tween_property(_sprite, "modulate", tint, 0.2)
 
 
-func _attack() -> void:
+## The warrior, if the slime should be chasing him right now. Otherwise null.
+func _chase_target() -> Node2D:
+	if _player == null:
+		_player = get_tree().get_first_node_in_group("player") as Node2D
+	var distance_from_home: float = global_position.distance_to(_spawn_position)
+	if distance_from_home > LEASH_RADIUS:
+		_is_returning = true
+	elif distance_from_home <= WANDER_RADIUS:
+		_is_returning = false
+	if _is_returning or _player == null or _player.get("is_dead"):
+		return null
+	if _player.global_position.distance_to(global_position) > detect_radius:
+		return null
+	return _player
+
+
+## Slow, aimless walking around the spawn point. Returns the velocity to use.
+func _wander(delta: float) -> Vector2:
+	if global_position.distance_to(_spawn_position) > WANDER_RADIUS:
+		return global_position.direction_to(_spawn_position) * move_speed
+	_wander_timer -= delta
+	if _wander_timer <= 0.0:
+		_wander_timer = randf_range(1.5, 3.5)
+		_wander_target = global_position
+		if randf() < 0.6:
+			var offset := Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0))
+			_wander_target = _spawn_position + offset * WANDER_RADIUS * 0.7
+	if global_position.distance_to(_wander_target) < 4.0:
+		return Vector2.ZERO
+	return global_position.direction_to(_wander_target) * move_speed * 0.5
+
+
+func _attack(target: Node2D) -> void:
 	_attack_ready_in = attack_cooldown
-	_player.call("take_damage", attack_damage)
+	target.call("take_damage", attack_damage)
 	_sprite.scale = Vector2(1.3, 0.75)
 	create_tween().tween_property(_sprite, "scale", Vector2.ONE, 0.2)
-
-
-func _flash_hit() -> void:
-	_sprite.modulate = Color(1.0, 0.35, 0.35)
-	create_tween().tween_property(_sprite, "modulate", Color.WHITE, 0.2)
-
-
-func _show_damage_number(amount: int) -> void:
-	var label := Label.new()
-	label.text = str(amount)
-	label.position = Vector2(-12, -80)
-	label.z_index = 10
-	label.add_theme_font_size_override("font_size", 26)
-	label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.4))
-	label.add_theme_color_override("font_outline_color", Color(0.2, 0.1, 0.1))
-	label.add_theme_constant_override("outline_size", 6)
-	add_child(label)
-	var tween: Tween = create_tween()
-	tween.tween_property(label, "position:y", label.position.y - 40.0, 0.6)
-	tween.parallel().tween_property(label, "modulate:a", 0.0, 0.6)
-	tween.tween_callback(label.queue_free)
 
 
 func _die() -> void:
 	is_dead = true
 	velocity = Vector2.ZERO
+	_knockback = Vector2.ZERO
 	_collision.set_deferred("disabled", true)
 	_hp_bar.hide()
 	create_tween().tween_property(_sprite, "modulate:a", 0.0, 0.35)
+	if _player != null:
+		_player.call("gain_xp", xp_reward)
+	_drop("gold", randi_range(gold_min, gold_max))
+	if randf() < potion_chance:
+		_drop("potion", 1)
 	await get_tree().create_timer(respawn_seconds).timeout
 	_respawn()
+
+
+func _drop(kind: String, amount: int) -> void:
+	var pickup: Node2D = PICKUP_SCENE.instantiate()
+	pickup.set("kind", kind)
+	pickup.set("amount", amount)
+	pickup.position = position + Vector2(randf_range(-24.0, 24.0), randf_range(-16.0, 16.0))
+	get_parent().call_deferred("add_child", pickup)
 
 
 func _respawn() -> void:
 	global_position = _spawn_position
 	hp = max_hp
 	is_dead = false
+	_is_returning = false
 	_attack_ready_in = attack_cooldown
 	_collision.set_deferred("disabled", false)
-	_sprite.modulate = Color.WHITE
+	_sprite.modulate = tint
 	_hp_bar.set_values(hp, max_hp)
 	_hp_bar.show()

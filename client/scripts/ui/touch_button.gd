@@ -1,10 +1,11 @@
 extends Control
 ## Round on-screen button that presses an input action while it is held.
-## Used for Attack. What the action does is decided elsewhere.
+## Used for Attack, Skill and Potion. What the action does is decided elsewhere.
 
 const NO_TOUCH := -1
 
 @export var action: String = "attack"
+@export var color: Color = Color(0.9, 0.25, 0.3)
 
 var _touch_index: int = NO_TOUCH
 
@@ -31,7 +32,7 @@ func _draw() -> void:
 	var center: Vector2 = size / 2.0
 	var radius: float = minf(size.x, size.y) / 2.0
 	var is_held: bool = _touch_index != NO_TOUCH
-	draw_circle(center, radius, Color(0.9, 0.25, 0.3, 0.8 if is_held else 0.5))
+	draw_circle(center, radius, Color(color, 0.85 if is_held else 0.5))
 	draw_arc(center, radius, 0.0, TAU, 48, Color(1, 1, 1, 0.7), 3.0, true)
 
 

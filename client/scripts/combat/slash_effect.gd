@@ -1,11 +1,14 @@
 extends Node2D
-## Short crescent flash drawn in front of the warrior when he swings.
-## The parent calls play() with the direction of the swing.
+## Short flash drawn around the warrior when he swings: a crescent in front
+## for a normal attack (play), a full ring for the spin skill (play_spin).
 
 const RADIUS := 56.0
 const ARC_HALF_ANGLE := 0.9
 const DURATION := 0.18
+const SPIN_DURATION := 0.32
+const SPIN_SCALE := 2.3
 
+var _half_angle: float = ARC_HALF_ANGLE
 var _tween: Tween
 
 
@@ -14,15 +17,28 @@ func _ready() -> void:
 
 
 func play(direction: Vector2) -> void:
+	_half_angle = ARC_HALF_ANGLE
+	rotation = direction.angle()
+	_animate(Vector2(0.7, 0.7), Vector2.ONE, 0.0, DURATION)
+
+
+func play_spin() -> void:
+	_half_angle = PI
+	rotation = 0.0
+	_animate(Vector2(0.6, 0.6), Vector2(SPIN_SCALE, SPIN_SCALE), TAU, SPIN_DURATION)
+
+
+func _animate(from_scale: Vector2, to_scale: Vector2, turn: float, duration: float) -> void:
 	if _tween != null:
 		_tween.kill()
-	rotation = direction.angle()
-	scale = Vector2(0.7, 0.7)
+	scale = from_scale
 	modulate.a = 1.0
+	queue_redraw()
 	show()
 	_tween = create_tween()
-	_tween.tween_property(self, "scale", Vector2.ONE, DURATION)
-	_tween.parallel().tween_property(self, "modulate:a", 0.0, DURATION)
+	_tween.tween_property(self, "scale", to_scale, duration)
+	_tween.parallel().tween_property(self, "modulate:a", 0.0, duration)
+	_tween.parallel().tween_property(self, "rotation", rotation + turn, duration)
 	_tween.tween_callback(hide)
 
 
@@ -30,6 +46,6 @@ func _draw() -> void:
 	var outer_color := Color(1, 1, 1, 0.95)
 	var inner_color := Color(1, 0.85, 0.4, 0.8)
 	var inner_radius: float = RADIUS - 8.0
-	var inner_angle: float = ARC_HALF_ANGLE * 0.8
-	draw_arc(Vector2.ZERO, RADIUS, -ARC_HALF_ANGLE, ARC_HALF_ANGLE, 20, outer_color, 10.0, true)
-	draw_arc(Vector2.ZERO, inner_radius, -inner_angle, inner_angle, 20, inner_color, 4.0, true)
+	var inner_angle: float = _half_angle * 0.8
+	draw_arc(Vector2.ZERO, RADIUS, -_half_angle, _half_angle, 32, outer_color, 10.0, true)
+	draw_arc(Vector2.ZERO, inner_radius, -inner_angle, inner_angle, 32, inner_color, 4.0, true)
