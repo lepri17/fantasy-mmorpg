@@ -6,6 +6,8 @@ Outputs (under client/assets):
   characters/warrior/warrior.png          sprite sheet, 4 rows x 6 columns
   characters/warrior/warrior_frames.tres  Godot SpriteFrames using that sheet
   environment/grass.png                   seamless grass tile
+  monsters/slime/slime.png                slime sheet, 2 idle frames
+  monsters/slime/slime_frames.tres        Godot SpriteFrames for the slime
 
 Sheet layout: rows = down, left, right, up. Columns 0-1 = idle, 2-5 = walk.
 
@@ -53,6 +55,12 @@ GRIP = (120, 78, 52, 255)
 EYE = (58, 42, 70, 255)
 WHITE = (255, 255, 255, 255)
 SHADOW = (0, 0, 0, 64)
+SLIME = (122, 222, 170, 255)
+SLIME_LIGHT = (196, 248, 220, 255)
+LEAF = (64, 150, 84, 255)
+
+SLIME_FRAME = 64
+SLIME_FEET_Y = 56
 
 
 @dataclass
@@ -68,8 +76,9 @@ WALK_POSES = [Pose(0, 1), Pose(-1, 0), Pose(0, -1), Pose(-1, 0)]
 class Canvas:
     """Thin wrapper so the drawing code can use final-pixel coordinates."""
 
-    def __init__(self) -> None:
-        self.image = Image.new("RGBA", (FRAME * SCALE, FRAME * SCALE), (0, 0, 0, 0))
+    def __init__(self, size: int = FRAME) -> None:
+        self.size = size
+        self.image = Image.new("RGBA", (size * SCALE, size * SCALE), (0, 0, 0, 0))
         self.draw = ImageDraw.Draw(self.image)
         self.line_width = int(1.5 * SCALE)
 
@@ -106,7 +115,7 @@ class Canvas:
         self.draw.line(scaled, fill=fill, width=int(width * SCALE), joint="curve")
 
     def finish(self) -> Image.Image:
-        return self.image.resize((FRAME, FRAME), Image.LANCZOS)
+        return self.image.resize((self.size, self.size), Image.LANCZOS)
 
 
 def arc_points(cx, cy, rx, ry, start_deg, end_deg, count=24):
@@ -357,6 +366,61 @@ def build_grass_tile(size: int = 256, seed: int = 7) -> Image.Image:
     return small.crop((size, size, size * 2, size * 2)).convert("RGB")
 
 
+def draw_slime(squash: float) -> Image.Image:
+    """One slime frame. squash 0 = tall, 1 = flattened (for the idle bounce)."""
+    c = Canvas(SLIME_FRAME)
+    cx, cy = 32, 39 + 2 * squash
+    rx, ry = 22 + 2 * squash, 17 - 2 * squash
+    c.ellipse(cx, SLIME_FEET_Y + 1, 20, 4, SHADOW, outline=False)
+    top = cy - ry
+    c.line([(cx, top + 2), (cx, top - 6)], width=1.6)
+    c.polygon([(cx, top - 5), (cx + 9, top - 11), (cx + 8, top - 3)], LEAF)
+    c.polygon([(cx, top - 5), (cx - 8, top - 10), (cx - 7, top - 3)], LEAF)
+    c.ellipse(cx, cy, rx, ry, SLIME)
+    c.ellipse(cx - 9, cy - 8, 6, 3.5, SLIME_LIGHT, outline=False)
+    for side in (-1, 1):
+        ex = cx + side * 8
+        c.ellipse(ex, cy - 1, 3.2, 4.6, EYE, outline=False)
+        c.ellipse(ex - 1, cy - 3, 1.3, 1.3, WHITE, outline=False)
+        c.ellipse(cx + side * 15, cy + 6, 3.0, 1.8, BLUSH, outline=False)
+    c.line(arc_points(cx, cy + 5, 2.6, 1.8, 20, 160, 8), width=1.2)
+    return c.finish()
+
+
+def build_slime_sheet() -> Image.Image:
+    sheet = Image.new("RGBA", (SLIME_FRAME * 2, SLIME_FRAME), (0, 0, 0, 0))
+    for col, squash in enumerate((0.0, 1.0)):
+        sheet.paste(draw_slime(squash), (col * SLIME_FRAME, 0))
+    return sheet
+
+
+def build_slime_frames(sheet_res_path: str) -> str:
+    """SpriteFrames text with one looping animation: idle (2 frames)."""
+    lines = [
+        '[gd_resource type="SpriteFrames" load_steps=4 format=3]',
+        "",
+        f'[ext_resource type="Texture2D" path="{sheet_res_path}" id="1_sheet"]',
+        "",
+    ]
+    for col in range(2):
+        lines += [
+            f'[sub_resource type="AtlasTexture" id="frame_{col}"]',
+            'atlas = ExtResource("1_sheet")',
+            f"region = Rect2({col * SLIME_FRAME}, 0, {SLIME_FRAME}, {SLIME_FRAME})",
+            "",
+        ]
+    frames = ", ".join(
+        '{\n"duration": 1.0,\n"texture": SubResource("frame_%d")\n}' % col for col in range(2)
+    )
+    lines += [
+        "[resource]",
+        'animations = [{\n"frames": [%s],\n"loop": true,\n"name": &"idle",\n"speed": 3.0\n}]'
+        % frames,
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def main() -> None:
     warrior_dir = ASSETS / "characters" / "warrior"
     environment_dir = ASSETS / "environment"
@@ -368,6 +432,13 @@ def main() -> None:
         build_sprite_frames("res://assets/characters/warrior/warrior.png"), encoding="utf-8"
     )
     build_grass_tile().save(environment_dir / "grass.png")
+
+    slime_dir = ASSETS / "monsters" / "slime"
+    slime_dir.mkdir(parents=True, exist_ok=True)
+    build_slime_sheet().save(slime_dir / "slime.png")
+    (slime_dir / "slime_frames.tres").write_text(
+        build_slime_frames("res://assets/monsters/slime/slime.png"), encoding="utf-8"
+    )
     print("Assets written to", ASSETS)
 
 

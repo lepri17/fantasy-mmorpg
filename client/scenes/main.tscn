@@ -1,8 +1,10 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/environment/grass.png" id="1_grass"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui/touch_controls.tscn" id="3_touch"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/slime.tscn" id="4_slime"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="5_hud"]
 
 [sub_resource type="WorldBoundaryShape2D" id="bound_left"]
 normal = Vector2(1, 0)
@@ -46,5 +48,10 @@ shape = SubResource("bound_bottom")
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector2(1280, 768)
 camera_limits = Rect2(0, 0, 2560, 1536)
+
+[node name="Slime" parent="." instance=ExtResource("4_slime")]
+position = Vector2(1560, 768)
+
+[node name="Hud" parent="." instance=ExtResource("5_hud")]
 
 [node name="TouchControls" parent="." instance=ExtResource("3_touch")]

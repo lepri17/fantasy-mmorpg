@@ -1,13 +1,13 @@
 # Fantasy MMORPG – Prototype
 
-משחק 2D מלמעלה ל-Android, בסגנון Chibi Anime Fantasy. כרגע: לוחם אחד שהולך על שדה דשא.
+משחק 2D מלמעלה ל-Android, בסגנון Chibi Anime Fantasy. כרגע: לוחם אחד על שדה דשא, שנלחם בסליים.
 
 ## איך מריצים
 1. מורידים Godot 4 (הגרסה הרגילה, לא .NET) מ-godotengine.org.
 2. פותחים את Godot, לוחצים Import ובוחרים את `client/project.godot`.
 3. לוחצים F5.
 
-מקשים: WASD או חצים. רווח = Attack (עדיין בלי קרב).
+מקשים: WASD או חצים. רווח = Attack (אפשר להחזיק). בקרבת הסליים הלוחם תוקף אותו.
 אפשר לגרור את הג'ויסטיק שעל המסך גם עם העכבר.
 
 ## APK אוטומטי מ-GitHub
