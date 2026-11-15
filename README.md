@@ -7,7 +7,7 @@
 2. פותחים את Godot, לוחצים Import ובוחרים את `client/project.godot`.
 3. לוחצים F5.
 
-מקשים: WASD או חצים. רווח = Attack (אפשר להחזיק). בקרבת הסליים הלוחם תוקף אותו.
+מקשים: WASD או חצים. רווח = תקיפה (אפשר להחזיק), E = סקיל סיבוב, Q = שיקוי.
 אפשר לגרור את הג'ויסטיק שעל המסך גם עם העכבר.
 
 ## APK אוטומטי מ-GitHub
@@ -33,7 +33,8 @@
 ## כלי Python
 ```
 pip install pillow gdtoolkit
-python tools/generate_assets.py   # מצייר מחדש את הלוחם והדשא
+python tools/generate_assets.py   # מצייר מחדש את כל הגרפיקה
+python tools/generate_sounds.py   # יוצר מחדש את האפקטים הקוליים
 python tools/check_project.py     # בודק שהקבצים מחוברים נכון, בלי Godot
 ```
 
