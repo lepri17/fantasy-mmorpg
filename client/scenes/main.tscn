@@ -1,0 +1,50 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/environment/grass.png" id="1_grass"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/ui/touch_controls.tscn" id="3_touch"]
+
+[sub_resource type="WorldBoundaryShape2D" id="bound_left"]
+normal = Vector2(1, 0)
+distance = 24.0
+
+[sub_resource type="WorldBoundaryShape2D" id="bound_right"]
+normal = Vector2(-1, 0)
+distance = -2536.0
+
+[sub_resource type="WorldBoundaryShape2D" id="bound_top"]
+normal = Vector2(0, 1)
+distance = 80.0
+
+[sub_resource type="WorldBoundaryShape2D" id="bound_bottom"]
+normal = Vector2(0, -1)
+distance = -1516.0
+
+[node name="Main" type="Node2D"]
+
+[node name="Ground" type="Sprite2D" parent="."]
+texture_repeat = 2
+texture = ExtResource("1_grass")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 2560, 1536)
+
+[node name="WorldBounds" type="StaticBody2D" parent="."]
+
+[node name="Left" type="CollisionShape2D" parent="WorldBounds"]
+shape = SubResource("bound_left")
+
+[node name="Right" type="CollisionShape2D" parent="WorldBounds"]
+shape = SubResource("bound_right")
+
+[node name="Top" type="CollisionShape2D" parent="WorldBounds"]
+shape = SubResource("bound_top")
+
+[node name="Bottom" type="CollisionShape2D" parent="WorldBounds"]
+shape = SubResource("bound_bottom")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(1280, 768)
+camera_limits = Rect2(0, 0, 2560, 1536)
+
+[node name="TouchControls" parent="." instance=ExtResource("3_touch")]

@@ -1,0 +1,11 @@
+# Godot 4
+.godot/
+*.aab
+
+# Build output
+build/
+*.keystore
+
+# Python
+__pycache__/
+*.pyc
