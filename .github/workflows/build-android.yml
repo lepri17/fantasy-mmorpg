@@ -27,6 +27,18 @@ jobs:
             -keystore debug.keystore -storepass android \
             -dname "CN=Android Debug,O=Android,C=US" -validity 9999 -deststoretype pkcs12
 
+      - name: Point Godot at the Java and Android SDKs
+        run: |
+          JAVA_PATH="${JAVA_HOME:-$(dirname "$(dirname "$(readlink -f "$(which java)")")")}"
+          ANDROID_PATH="${ANDROID_HOME:-$ANDROID_SDK_ROOT}"
+          echo "java: $JAVA_PATH"
+          echo "android sdk: $ANDROID_PATH"
+          ls "$ANDROID_PATH" "$ANDROID_PATH/build-tools" || true
+          mkdir -p ~/.config/godot
+          for f in editor_settings-4.tres editor_settings-4.3.tres; do
+            printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/java_sdk_path = "%s"\nexport/android/android_sdk_path = "%s"\n' "$JAVA_PATH" "$ANDROID_PATH" > ~/.config/godot/$f
+          done
+
       - name: Export APK
         env:
           GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/debug.keystore
