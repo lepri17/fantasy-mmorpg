@@ -15,6 +15,8 @@ const ACTION_RIGHT := "move_right"
 const ACTION_UP := "move_up"
 const ACTION_DOWN := "move_down"
 const ACTION_ATTACK := "attack"
+## How long the swing animation keeps priority over walk / idle.
+const ATTACK_ANIMATION_SECONDS := 0.22
 
 const FACING_VECTORS := {
 	"down": Vector2.DOWN,
@@ -39,6 +41,7 @@ var facing: String = "down"
 var hp: int = 0
 
 var _attack_ready_in: float = 0.0
+var _attack_animation_left: float = 0.0
 var _spawn_position: Vector2 = Vector2.ZERO
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
@@ -65,10 +68,12 @@ func _physics_process(delta: float) -> void:
 	velocity = direction * move_speed
 	move_and_slide()
 
-	if is_moving:
-		_play("walk_" + facing)
-	else:
-		_play("idle_" + facing)
+	_attack_animation_left = maxf(0.0, _attack_animation_left - delta)
+	if _attack_animation_left == 0.0:
+		if is_moving:
+			_play("walk_" + facing)
+		else:
+			_play("idle_" + facing)
 
 	_attack_ready_in = maxf(0.0, _attack_ready_in - delta)
 	if Input.is_action_pressed(ACTION_ATTACK) and _attack_ready_in == 0.0:
@@ -89,6 +94,9 @@ func _attack() -> void:
 	_attack_ready_in = attack_cooldown
 	var facing_vector: Vector2 = FACING_VECTORS[facing]
 	_slash.play(facing_vector)
+	_attack_animation_left = ATTACK_ANIMATION_SECONDS
+	_sprite.stop()
+	_sprite.play("attack_" + facing)
 
 	var lunge: Tween = create_tween()
 	lunge.tween_property(_sprite, "position", facing_vector * 8.0, 0.06)

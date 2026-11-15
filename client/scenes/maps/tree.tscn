@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/environment/tree.png" id="1_tree"]
+
+[sub_resource type="CircleShape2D" id="trunk_shape"]
+radius = 18.0
+
+[node name="Tree" type="StaticBody2D" groups=["obstacles"]]
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture = ExtResource("1_tree")
+offset = Vector2(0, -70)
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2(0, -6)
+shape = SubResource("trunk_shape")

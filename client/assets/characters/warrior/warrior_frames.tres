@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" load_steps=26 format=3]
+[gd_resource type="SpriteFrames" load_steps=38 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/characters/warrior/warrior.png" id="1_sheet"]
 
@@ -97,6 +97,54 @@ region = Rect2(384, 288, 96, 96)
 [sub_resource type="AtlasTexture" id="frame_3_5"]
 atlas = ExtResource("1_sheet")
 region = Rect2(480, 288, 96, 96)
+
+[sub_resource type="AtlasTexture" id="frame_0_6"]
+atlas = ExtResource("1_sheet")
+region = Rect2(576, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="frame_0_7"]
+atlas = ExtResource("1_sheet")
+region = Rect2(672, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="frame_0_8"]
+atlas = ExtResource("1_sheet")
+region = Rect2(768, 0, 96, 96)
+
+[sub_resource type="AtlasTexture" id="frame_1_6"]
+atlas = ExtResource("1_sheet")
+region = Rect2(576, 96, 96, 96)
+
+[sub_resource type="AtlasTexture" id="frame_1_7"]
+atlas = ExtResource("1_sheet")
+region = Rect2(672, 96, 96, 96)
+
+[sub_resource type="AtlasTexture" id="frame_1_8"]
+atlas = ExtResource("1_sheet")
+region = Rect2(768, 96, 96, 96)
+
+[sub_resource type="AtlasTexture" id="frame_2_6"]
+atlas = ExtResource("1_sheet")
+region = Rect2(576, 192, 96, 96)
+
+[sub_resource type="AtlasTexture" id="frame_2_7"]
+atlas = ExtResource("1_sheet")
+region = Rect2(672, 192, 96, 96)
+
+[sub_resource type="AtlasTexture" id="frame_2_8"]
+atlas = ExtResource("1_sheet")
+region = Rect2(768, 192, 96, 96)
+
+[sub_resource type="AtlasTexture" id="frame_3_6"]
+atlas = ExtResource("1_sheet")
+region = Rect2(576, 288, 96, 96)
+
+[sub_resource type="AtlasTexture" id="frame_3_7"]
+atlas = ExtResource("1_sheet")
+region = Rect2(672, 288, 96, 96)
+
+[sub_resource type="AtlasTexture" id="frame_3_8"]
+atlas = ExtResource("1_sheet")
+region = Rect2(768, 288, 96, 96)
 
 [resource]
 animations = [{
@@ -211,4 +259,60 @@ animations = [{
 "loop": true,
 "name": &"walk_up",
 "speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("frame_0_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("frame_0_7")
+}, {
+"duration": 1.0,
+"texture": SubResource("frame_0_8")
+}],
+"loop": false,
+"name": &"attack_down",
+"speed": 14.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("frame_1_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("frame_1_7")
+}, {
+"duration": 1.0,
+"texture": SubResource("frame_1_8")
+}],
+"loop": false,
+"name": &"attack_left",
+"speed": 14.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("frame_2_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("frame_2_7")
+}, {
+"duration": 1.0,
+"texture": SubResource("frame_2_8")
+}],
+"loop": false,
+"name": &"attack_right",
+"speed": 14.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("frame_3_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("frame_3_7")
+}, {
+"duration": 1.0,
+"texture": SubResource("frame_3_8")
+}],
+"loop": false,
+"name": &"attack_up",
+"speed": 14.0
 }]

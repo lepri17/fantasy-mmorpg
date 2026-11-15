@@ -71,7 +71,7 @@ def check_script(script: Path, actions: set[str]) -> None:
         for node in set(re.findall(r"\$(\w+)", text)) - node_names:
             errors.append(f"{name}: ${node} not found in {scene.relative_to(CLIENT)}")
 
-        prefixes = set(re.findall(r'_play\("(\w+_)" \+ facing\)', text))
+        prefixes = set(re.findall(r'play\("(\w+_)" \+ facing\)', text))
         facings = set(re.findall(r'return "(\w+)"', text))
         for frames_path in re.findall(r'type="SpriteFrames" path="(res://[^"]+)"', scene_text):
             frames_file = res_to_path(frames_path)

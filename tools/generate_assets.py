@@ -9,7 +9,8 @@ Outputs (under client/assets):
   monsters/slime/slime.png                slime sheet, 2 idle frames
   monsters/slime/slime_frames.tres        Godot SpriteFrames for the slime
 
-Sheet layout: rows = down, left, right, up. Columns 0-1 = idle, 2-5 = walk.
+Sheet layout: rows = down, left, right, up. Columns 0-1 = idle, 2-5 = walk, 6-8 = attack.
+Also writes environment/tree.png, environment/rock.png and the app icon (client/icon.png).
 
 Run:  python tools/generate_assets.py
 Needs: Pillow (pip install pillow)
@@ -34,6 +35,7 @@ FEET_Y = 86  # where the feet touch the ground inside a frame
 DIRECTIONS = ["down", "left", "right", "up"]
 IDLE_FPS = 2.0
 WALK_FPS = 8.0
+ATTACK_FPS = 14.0
 
 OUTLINE = (52, 38, 60, 255)
 SKIN = (255, 222, 194, 255)
@@ -67,10 +69,31 @@ SLIME_FEET_Y = 56
 class Pose:
     bob: float = 0.0  # body moves down by this many pixels
     step: int = 0  # -1 / 0 / 1: which leg is forward (or lifted)
+    swing: int = 0  # 0 = sword at rest, 1-3 = frames of the sword swing
 
 
 IDLE_POSES = [Pose(bob=0), Pose(bob=1)]
 WALK_POSES = [Pose(0, 1), Pose(-1, 0), Pose(0, -1), Pose(-1, 0)]
+ATTACK_POSES = [Pose(0, 0, 1), Pose(1, 0, 2), Pose(1, 0, 3)]
+
+# Sword (hand, tip, drawn on top of the body?) for each swing frame.
+SWING = {
+    "down": [((30, 66), (12, 42), False), ((34, 72), (30, 94), True), ((40, 72), (62, 92), True)],
+    "up": [((66, 66), (84, 42), False), ((62, 58), (72, 22), False), ((40, 58), (18, 40), False)],
+    "left": [((42, 64), (20, 38), False), ((38, 70), (8, 66), True), ((38, 74), (14, 90), True)],
+}
+
+
+def sword_placement(direction: str, pose: Pose):
+    """Where the sword is for this pose: (hand, tip, on_top)."""
+    b = pose.bob
+    if pose.swing:
+        return SWING[direction][pose.swing - 1]
+    if direction == "down":
+        return (31, 72 + b - pose.step * 2), (17, 44 + b - pose.step * 2), False
+    if direction == "up":
+        return (65, 72 + b - pose.step * 2), (79, 44 + b - pose.step * 2), False
+    return (40 + pose.step * 2, 71 + b), (13 + pose.step * 2, 53 + b), False
 
 
 class Canvas:
@@ -190,7 +213,9 @@ def draw_down(c: Canvas, pose: Pose) -> None:
     cx, cy = 48, 35 + b
     draw_shadow(c)
     c.polygon([(34, 58 + b), (62, 58 + b), (66, 79 + b), (30, 79 + b)], CAPE_DARK)
-    draw_sword(c, hand=(31, 72 + b - pose.step * 2), tip=(17, 44 + b - pose.step * 2))
+    hand, tip, sword_on_top = sword_placement("down", pose)
+    if not sword_on_top:
+        draw_sword(c, hand, tip)
     draw_leg(c, 42, lift=3 if pose.step > 0 else 0)
     draw_leg(c, 54, lift=3 if pose.step < 0 else 0)
     draw_torso(c, 35, 61, b)
@@ -203,13 +228,16 @@ def draw_down(c: Canvas, pose: Pose) -> None:
     fringe = [(70, cy), (66, cy + 7), (60, cy + 1), (54, cy + 8), (48, cy + 1),
               (42, cy + 8), (36, cy + 1), (30, cy + 7), (26, cy)]
     c.polygon(arc_points(cx, cy, 23, 21.5, 180, 360) + fringe, HAIR)
+    if sword_on_top:
+        draw_sword(c, hand, tip)
 
 
 def draw_up(c: Canvas, pose: Pose) -> None:
     b = pose.bob
     cx, cy = 48, 35 + b
     draw_shadow(c)
-    draw_sword(c, hand=(65, 72 + b - pose.step * 2), tip=(79, 44 + b - pose.step * 2))
+    hand, tip, _ = sword_placement("up", pose)
+    draw_sword(c, hand, tip)
     draw_leg(c, 42, lift=3 if pose.step < 0 else 0)
     draw_leg(c, 54, lift=3 if pose.step > 0 else 0)
     draw_torso(c, 35, 61, b)
@@ -234,7 +262,9 @@ def draw_left(c: Canvas, pose: Pose) -> None:
     cx, cy = 47, 35 + b
     stride = pose.step * 5
     draw_shadow(c)
-    draw_sword(c, hand=(40 + pose.step * 2, 71 + b), tip=(13 + pose.step * 2, 53 + b))
+    hand, tip, sword_on_top = sword_placement("left", pose)
+    if not sword_on_top:
+        draw_sword(c, hand, tip)
     sway = abs(pose.step) * 2
     c.polygon(
         [(52, 56 + b), (62, 58 + b), (70 + sway, 78 + b), (63 + sway, 75 + b),
@@ -255,6 +285,8 @@ def draw_left(c: Canvas, pose: Pose) -> None:
     inner = [(cx + 9, cy + 15), (cx + 3, cy + 9), (cx + 1, cy + 1), (cx - 5, cy + 8),
              (cx - 10, cy), (cx - 16, cy + 6)]
     c.polygon(arc_points(cx, cy, 22, 21.5, 188, 425) + inner, HAIR)
+    if sword_on_top:
+        draw_sword(c, hand, tip)
 
 
 def draw_frame(direction: str, pose: Pose) -> Image.Image:
@@ -272,7 +304,7 @@ def draw_frame(direction: str, pose: Pose) -> Image.Image:
 
 
 def build_warrior_sheet() -> Image.Image:
-    poses = IDLE_POSES + WALK_POSES
+    poses = IDLE_POSES + WALK_POSES + ATTACK_POSES
     sheet = Image.new("RGBA", (FRAME * len(poses), FRAME * len(DIRECTIONS)), (0, 0, 0, 0))
     for row, direction in enumerate(DIRECTIONS):
         for col, pose in enumerate(poses):
@@ -282,22 +314,27 @@ def build_warrior_sheet() -> Image.Image:
 
 def build_sprite_frames(sheet_res_path: str) -> str:
     """Text of a Godot 4 SpriteFrames resource that slices the sheet."""
-    animations = []  # (name, fps, [column, ...])
-    for kind, fps, columns in (
-        ("idle", IDLE_FPS, range(0, len(IDLE_POSES))),
-        ("walk", WALK_FPS, range(len(IDLE_POSES), len(IDLE_POSES) + len(WALK_POSES))),
+    idle_end = len(IDLE_POSES)
+    walk_end = idle_end + len(WALK_POSES)
+    attack_end = walk_end + len(ATTACK_POSES)
+    animations = []  # (name, fps, loop, [(row, column), ...])
+    for kind, fps, loop, columns in (
+        ("idle", IDLE_FPS, True, range(0, idle_end)),
+        ("walk", WALK_FPS, True, range(idle_end, walk_end)),
+        ("attack", ATTACK_FPS, False, range(walk_end, attack_end)),
     ):
         for row, direction in enumerate(DIRECTIONS):
-            animations.append((f"{kind}_{direction}", fps, [(row, col) for col in columns]))
+            cells = [(row, col) for col in columns]
+            animations.append((f"{kind}_{direction}", fps, loop, cells))
 
-    frame_count = sum(len(cells) for _, _, cells in animations)
+    frame_count = sum(len(cells) for _, _, _, cells in animations)
     lines = [
         f'[gd_resource type="SpriteFrames" load_steps={frame_count + 2} format=3]',
         "",
         f'[ext_resource type="Texture2D" path="{sheet_res_path}" id="1_sheet"]',
         "",
     ]
-    for _, _, cells in animations:
+    for _, _, _, cells in animations:
         for row, col in cells:
             lines += [
                 f'[sub_resource type="AtlasTexture" id="frame_{row}_{col}"]',
@@ -307,17 +344,62 @@ def build_sprite_frames(sheet_res_path: str) -> str:
             ]
 
     blocks = []
-    for name, fps, cells in animations:
+    for name, fps, loop, cells in animations:
         frames = ", ".join(
             '{\n"duration": 1.0,\n"texture": SubResource("frame_%d_%d")\n}' % cell
             for cell in cells
         )
         blocks.append(
-            '{\n"frames": [%s],\n"loop": true,\n"name": &"%s",\n"speed": %.1f\n}'
-            % (frames, name, fps)
+            '{\n"frames": [%s],\n"loop": %s,\n"name": &"%s",\n"speed": %.1f\n}'
+            % (frames, "true" if loop else "false", name, fps)
         )
     lines += ["[resource]", "animations = [" + ", ".join(blocks) + "]", ""]
     return "\n".join(lines)
+
+
+def blob(c: Canvas, circles, fill) -> None:
+    """Several overlapping ellipses drawn as one shape with a single outline."""
+    for cx, cy, rx, ry in circles:
+        c.ellipse(cx, cy, rx + 1.5, ry + 1.5, OUTLINE, outline=False)
+    for cx, cy, rx, ry in circles:
+        c.ellipse(cx, cy, rx, ry, fill, outline=False)
+
+
+def build_tree() -> Image.Image:
+    """160x160, trunk base at (80, 150)."""
+    c = Canvas(160)
+    c.ellipse(80, 150, 36, 8, SHADOW, outline=False)
+    c.rect(69, 98, 91, 150, (134, 92, 60, 255), radius=5)
+    c.line([(76, 112), (76, 140)], fill=(108, 72, 48, 255), width=2)
+    blob(c, [(80, 58, 42, 40), (50, 82, 28, 26), (110, 82, 28, 26), (80, 92, 32, 22)],
+         (70, 160, 84, 255))
+    for cx, cy, rx, ry in ((68, 44, 20, 14), (46, 74, 11, 8), (106, 72, 11, 8)):
+        c.ellipse(cx, cy, rx, ry, (112, 196, 110, 255), outline=False)
+    for cx, cy in ((92, 72), (64, 92), (100, 98)):
+        c.ellipse(cx, cy, 5, 3.5, (52, 136, 74, 255), outline=False)
+    return c.finish()
+
+
+def build_rock() -> Image.Image:
+    """80x80, base at (40, 66)."""
+    c = Canvas(80)
+    c.ellipse(40, 66, 30, 6, SHADOW, outline=False)
+    blob(c, [(40, 50, 28, 16), (31, 42, 18, 14), (51, 45, 14, 11)], (158, 164, 178, 255))
+    c.ellipse(28, 37, 9, 5, (204, 208, 218, 255), outline=False)
+    c.ellipse(48, 56, 12, 5, (128, 134, 150, 255), outline=False)
+    return c.finish()
+
+
+def build_icon(sheet: Image.Image) -> Image.Image:
+    """App icon: the warrior's front idle frame on a rounded blue tile."""
+    size = 192
+    icon = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    ImageDraw.Draw(icon).rounded_rectangle(
+        [0, 0, size - 1, size - 1], radius=40, fill=(96, 170, 232, 255)
+    )
+    warrior = sheet.crop((0, 0, FRAME, FRAME)).resize((FRAME * 2, FRAME * 2), Image.LANCZOS)
+    icon.alpha_composite(warrior, (0, 6))
+    return icon
 
 
 def build_grass_tile(size: int = 256, seed: int = 7) -> Image.Image:
@@ -427,11 +509,15 @@ def main() -> None:
     warrior_dir.mkdir(parents=True, exist_ok=True)
     environment_dir.mkdir(parents=True, exist_ok=True)
 
-    build_warrior_sheet().save(warrior_dir / "warrior.png")
+    sheet = build_warrior_sheet()
+    sheet.save(warrior_dir / "warrior.png")
+    build_icon(sheet).save(ROOT / "client" / "icon.png")
     (warrior_dir / "warrior_frames.tres").write_text(
         build_sprite_frames("res://assets/characters/warrior/warrior.png"), encoding="utf-8"
     )
     build_grass_tile().save(environment_dir / "grass.png")
+    build_tree().save(environment_dir / "tree.png")
+    build_rock().save(environment_dir / "rock.png")
 
     slime_dir = ASSETS / "monsters" / "slime"
     slime_dir.mkdir(parents=True, exist_ok=True)
