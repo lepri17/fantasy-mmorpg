@@ -1,6 +1,6 @@
 # Fantasy MMORPG – Prototype
 
-משחק 2D מלמעלה ל-Android, בסגנון Chibi Anime Fantasy. כרגע: לוחם אחד על שדה דשא, שנלחם בסליים.
+משחק 2D מלמעלה ל-Android, בסגנון Chibi Anime Fantasy. כרגע: לוחם אחד במפת אימונים עם עצים, אבנים ושבילים, שנלחם בסליימים.
 
 ## איך מריצים
 1. מורידים Godot 4 (הגרסה הרגילה, לא .NET) מ-godotengine.org.
@@ -36,5 +36,12 @@ pip install pillow gdtoolkit
 python tools/generate_assets.py   # מצייר מחדש את הלוחם והדשא
 python tools/check_project.py     # בודק שהקבצים מחוברים נכון, בלי Godot
 ```
+
+## בדיקה אוטומטית ב-Godot
+מתוך `client/`:
+```
+godot --headless -s res://tests/smoke_test.gd
+```
+מריץ את המשחק בלי מסך ובודק תנועה, מכשולים וקרב. רץ גם ב-GitHub בכל Push, לפני בניית ה-APK.
 
 כל הגרפיקה מצוירת בקוד ב-`tools/generate_assets.py`, כך שהיא מקורית ובבעלות הפרויקט.
