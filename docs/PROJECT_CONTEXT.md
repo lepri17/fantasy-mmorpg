@@ -54,7 +54,7 @@
 - `client/scripts/ui/` – `hud.gd`, `player_panel.gd`, `hp_bar_world.gd`, `floating_text.gd`, `touch_joystick.gd`, `touch_button.gd`.
 - `client/scripts/audio/sfx.gd` – אפקטים קוליים, דרך הקבוצה `sfx`.
 - `client/tests/smoke_test.gd` – הבדיקה האוטומטית.
-- `docs/ROADMAP.md` – רשימת רעיונות לשיפור, עם מזהים, גודל ותלויות. עוד לא בוצעו.
+- `docs/ROADMAP.md` – רשימת רעיונות לשיפור, עם מזהים, גודל ותלויות. עוד לא בוצעו. סעיף K מכיל פערים שנמצאו בקוד הקיים, כולל באג בחתימת ה-APK (K1).
 - `tools/generate_assets.py`, `tools/generate_sounds.py`, `tools/check_project.py`.
 - `.github/workflows/build-android.yml`, `client/export_presets.cfg`.
 
