@@ -63,6 +63,7 @@ func _run() -> void:
 	await _frames(2)
 	await _hold("attack", 5)
 	_check(slime.hp == slime.max_hp, "attack out of range does no damage")
+	await _frames(40)  # let the attack cooldown from that swing run out
 
 	# --- auto-aim: stand left of the slime while facing DOWN, then attack
 	player.global_position = slime.global_position + Vector2(-70, 0)
