@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT
 
-עודכן: 2026-11-15
+עודכן: 2026-11-17
 
 ## מטרת הפרויקט
 משחק MMORPG מקורי ל-Android: דו-ממד, מבט מלמעלה, סגנון Chibi Anime Fantasy.
