@@ -3,9 +3,11 @@ extends CharacterBody2D
 ## close, bumps into him for damage, gets knocked back when hit, drops loot and
 ## gives XP when it dies, and comes back a few seconds later.
 ##
-## Stronger kinds are the same scene with different exported values.
+## Every kind of slime is this scene with a different monster_id; the numbers
+## come from res://data/monsters.json.
 
 const FloatingText = preload("res://scripts/ui/floating_text.gd")
+const GameData = preload("res://scripts/data/game_data.gd")
 const PICKUP_SCENE := preload("res://scenes/items/pickup.tscn")
 
 const KNOCKBACK_SPEED := 240.0
@@ -14,23 +16,28 @@ const WANDER_RADIUS := 90.0
 ## A slime that gets this far from home gives up the chase and walks back.
 const LEASH_RADIUS := 480.0
 
-@export var display_name: String = "Slime"
-@export var level: int = 1
-@export var max_hp: int = 40
-@export var move_speed: float = 70.0
+## Which entry of monsters.json this is.
+@export var monster_id: String = "green_slime"
+
+# Filled from monsters.json in _ready.
+var display_name: String = "Slime"
+var level: int = 1
+var max_hp: int = 40
+var move_speed: float = 70.0
 ## The slime starts chasing when the warrior is closer than this.
-@export var detect_radius: float = 260.0
+var detect_radius: float = 260.0
 ## The slime attacks when the warrior is closer than this.
-@export var attack_range: float = 48.0
-@export var attack_damage: int = 6
-@export var attack_cooldown: float = 1.2
-@export var respawn_seconds: float = 5.0
-@export var xp_reward: int = 20
-@export var gold_min: int = 1
-@export var gold_max: int = 5
-@export_range(0.0, 1.0) var potion_chance: float = 0.3
+var attack_range: float = 48.0
+var attack_damage: int = 6
+var attack_cooldown: float = 1.2
+var respawn_seconds: float = 5.0
+var xp_reward: int = 20
+var gold_min: int = 1
+var gold_max: int = 5
+## [{"item": item id, "chance": 0..1}, ...]
+var drops: Array = []
 ## Color multiplier, used to tell the kinds of slime apart.
-@export var tint: Color = Color.WHITE
+var tint: Color = Color.WHITE
 
 var hp: int = 0
 var is_dead: bool = false
@@ -50,6 +57,7 @@ var _player: Node2D = null
 
 func _ready() -> void:
 	add_to_group("enemies")
+	_load_monster_data()
 	hp = max_hp
 	_spawn_position = global_position
 	_wander_target = global_position
@@ -146,10 +154,33 @@ func _die() -> void:
 	if _player != null:
 		_player.call("gain_xp", xp_reward)
 	_drop("gold", randi_range(gold_min, gold_max))
-	if randf() < potion_chance:
-		_drop("item", 1, "red_potion")
+	for drop in drops:
+		if randf() < float(drop["chance"]):
+			_drop("item", 1, drop["item"])
 	await get_tree().create_timer(respawn_seconds).timeout
 	_respawn()
+
+
+func _load_monster_data() -> void:
+	var data: Dictionary = GameData.table("monsters").get(monster_id, {})
+	if data.is_empty():
+		push_error("Slime: no monster '%s' in monsters.json" % monster_id)
+		return
+	display_name = data["name"]
+	level = int(data["level"])
+	max_hp = int(data["max_hp"])
+	move_speed = float(data["move_speed"])
+	detect_radius = float(data["detect_radius"])
+	attack_range = float(data["attack_range"])
+	attack_damage = int(data["attack_damage"])
+	attack_cooldown = float(data["attack_cooldown"])
+	respawn_seconds = float(data["respawn_seconds"])
+	xp_reward = int(data["xp"])
+	gold_min = int(data["gold"][0])
+	gold_max = int(data["gold"][1])
+	drops = data.get("drops", [])
+	var rgba: Array = data.get("tint", [1, 1, 1, 1])
+	tint = Color(rgba[0], rgba[1], rgba[2], rgba[3])
 
 
 func _drop(kind: String, amount: int, item_id: String = "") -> void:

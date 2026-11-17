@@ -15,7 +15,28 @@ env:
   GODOT_VERSION: "4.3"
 
 jobs:
+  checks:
+    # Fast checks without Godot: game data, project wiring, GDScript style.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install the Python tools
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --quiet "gdtoolkit==4.*" pillow
+
+      - name: Check game data
+        run: .venv/bin/python tools/check_data.py
+
+      - name: Check project wiring
+        run: .venv/bin/python tools/check_project.py
+
+      - name: Lint GDScript
+        run: .venv/bin/gdlint client/
+
   build-apk:
+    needs: checks
     runs-on: ubuntu-latest
     container:
       image: barichello/godot-ci:4.3

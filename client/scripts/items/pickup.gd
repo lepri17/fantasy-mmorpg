@@ -29,10 +29,10 @@ func _ready() -> void:
 	add_to_group("pickups")
 	var target_scale: float = 1.0
 	if kind == "item":
-		if not ItemDb.ITEMS.has(item_id):
+		if not ItemDb.items.has(item_id):
 			queue_free()
 			return
-		var item: Dictionary = ItemDb.ITEMS[item_id]
+		var item: Dictionary = ItemDb.items[item_id]
 		if item.has("world_icon"):
 			_sprite.texture = load(item["world_icon"])
 		else:

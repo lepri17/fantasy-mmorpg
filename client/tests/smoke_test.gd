@@ -31,6 +31,13 @@ func _run() -> void:
 		quit(1)
 		return
 	var sprite: AnimatedSprite2D = player.get_node("Sprite")
+	var blue_slimes: Array = get_nodes_in_group("enemies").filter(
+		func(enemy): return enemy.get("monster_id") == "blue_slime"
+	)
+	_check(
+		blue_slimes.size() == 2 and blue_slimes[0].level == 3 and blue_slimes[0].max_hp == 110,
+		"blue slimes take their numbers from monsters.json"
+	)
 	var enemies: Array = get_nodes_in_group("enemies")
 	_check(enemies.size() == 6, "six slimes on the map (found %d)" % enemies.size())
 	_check(sprite.animation == &"idle_down", "starts in idle_down")

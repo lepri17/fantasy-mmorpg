@@ -96,7 +96,7 @@ func _show_details() -> void:
 		_primary_button.hide()
 		_drop_button.hide()
 		return
-	var item: Dictionary = ItemDb.ITEMS[_selected.item_id]
+	var item: Dictionary = ItemDb.items[_selected.item_id]
 	var parts: PackedStringArray = []
 	if item.has("attack"):
 		parts.append("+%d Attack." % item["attack"])
@@ -114,7 +114,7 @@ func _show_details() -> void:
 func _primary_action() -> Array:
 	if _selected.place == "gear":
 		return ["REMOVE", "unequip"]
-	var item: Dictionary = ItemDb.ITEMS[_selected.item_id]
+	var item: Dictionary = ItemDb.items[_selected.item_id]
 	if item.get("slot", "") != "":
 		return ["EQUIP", "equip_from_bag"]
 	if item.get("usable", false):
@@ -151,7 +151,7 @@ func _gear_row() -> Control:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 12)
-	row.add_child(_gear_column(ItemDb.GEAR_SLOTS.slice(0, 3)))
+	row.add_child(_gear_column(ItemDb.gear_slots.slice(0, 3)))
 	var middle := VBoxContainer.new()
 	middle.alignment = BoxContainer.ALIGNMENT_CENTER
 	var portrait := TextureRect.new()
@@ -166,7 +166,7 @@ func _gear_row() -> Control:
 	_stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	middle.add_child(_stats_label)
 	row.add_child(middle)
-	row.add_child(_gear_column(ItemDb.GEAR_SLOTS.slice(3, 6)))
+	row.add_child(_gear_column(ItemDb.gear_slots.slice(3, 6)))
 	return row
 
 
@@ -176,7 +176,7 @@ func _gear_column(slot_names: Array) -> Control:
 	for slot_name in slot_names:
 		var slot = _new_slot("gear", slot_name)
 		slot.is_gear = true
-		slot.hint = ItemDb.SLOT_NAMES[slot_name]
+		slot.hint = ItemDb.slot_names[slot_name]
 		gear_slots[slot_name] = slot
 		column.add_child(slot)
 	return column

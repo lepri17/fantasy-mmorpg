@@ -170,29 +170,11 @@ position = Vector2(1560, 1220)
 
 [node name="BlueSlime1" parent="World" instance=ExtResource("4_slime")]
 position = Vector2(2150, 820)
-display_name = "Blue Slime"
-level = 3
-max_hp = 110
-move_speed = 85.0
-attack_damage = 14
-xp_reward = 70
-gold_min = 6
-gold_max = 14
-potion_chance = 0.5
-tint = Color(0.62, 0.78, 1.5, 1)
+monster_id = "blue_slime"
 
 [node name="BlueSlime2" parent="World" instance=ExtResource("4_slime")]
 position = Vector2(2300, 960)
-display_name = "Blue Slime"
-level = 3
-max_hp = 110
-move_speed = 85.0
-attack_damage = 14
-xp_reward = 70
-gold_min = 6
-gold_max = 14
-potion_chance = 0.5
-tint = Color(0.62, 0.78, 1.5, 1)
+monster_id = "blue_slime"
 
 [node name="Player" parent="World" instance=ExtResource("2_player")]
 position = Vector2(1280, 768)

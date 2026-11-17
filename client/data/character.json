@@ -1,0 +1,37 @@
+{
+  "base_max_hp": 65,
+  "hp_per_level": 20,
+  "base_damage": 5,
+  "damage_per_level": 3,
+  "xp_per_level": 50,
+  "bag_size": 15,
+  "starting_gear": {
+    "head": "red_headband",
+    "weapon": "training_sword",
+    "gloves": "leather_gloves",
+    "cape": "red_cape",
+    "armor": "blue_plate",
+    "boots": "leather_boots"
+  },
+  "starting_bag": [
+    {
+      "id": "red_potion",
+      "count": 2
+    }
+  ],
+  "move_speed": 220,
+  "attack_range": 90,
+  "attack_cooldown": 0.45,
+  "max_stamina": 100,
+  "stamina_regen_per_second": 12,
+  "skill": {
+    "stamina_cost": 40,
+    "radius": 130,
+    "damage_multiplier": 2.0,
+    "cooldown": 1.0
+  },
+  "regen_delay_seconds": 5,
+  "regen_hp_per_second": 2,
+  "respawn_seconds": 2.5,
+  "hit_invincible_seconds": 1.0
+}

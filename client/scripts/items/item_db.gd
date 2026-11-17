@@ -1,74 +1,16 @@
 extends RefCounted
-## Every item in the game: its name, the gear slot it is worn in ("" = not
-## worn), icon, bonuses and a short text. Pure data with no scene
-## dependencies, so the server can use the same table later.
+## Every item in the game, from res://data/items.json: its name, the gear slot
+## it is worn in ("" = not worn), icon, bonuses and a short text.
 ##
 ## Bonuses: "attack" adds to the sword damage, "max_hp" to maximum health.
 ## "usable" items can be used from the bag; "world_icon" is the picture on the
-## ground when it should differ from the inventory icon.
+## ground when it should differ from the inventory icon; potions have
+## "heal_fraction".
 
+const GameData := preload("res://scripts/data/game_data.gd")
+
+## Item id -> its fields.
+static var items: Dictionary = GameData.table("items")["items"]
 ## Gear slots in the order the inventory shows them: left column, then right.
-const GEAR_SLOTS := ["head", "weapon", "gloves", "cape", "armor", "boots"]
-
-const SLOT_NAMES := {
-	"head": "Head",
-	"weapon": "Weapon",
-	"gloves": "Gloves",
-	"cape": "Cape",
-	"armor": "Armor",
-	"boots": "Boots",
-}
-
-const ITEMS := {
-	"red_headband": {
-		"name": "Red Headband",
-		"slot": "head",
-		"max_hp": 5,
-		"icon": "res://assets/items/icons/headband.png",
-		"text": "Cloth band with a small gold plate.",
-	},
-	"training_sword": {
-		"name": "Training Sword",
-		"slot": "weapon",
-		"attack": 4,
-		"icon": "res://assets/items/icons/sword.png",
-		"text": "Plain steel. Every warrior starts with one.",
-	},
-	"leather_gloves": {
-		"name": "Leather Gloves",
-		"slot": "gloves",
-		"attack": 1,
-		"icon": "res://assets/items/icons/gloves.png",
-		"text": "Steel bracers keep the grip steady.",
-	},
-	"red_cape": {
-		"name": "Red Cape",
-		"slot": "cape",
-		"max_hp": 5,
-		"icon": "res://assets/items/icons/cape.png",
-		"text": "Warm wool with a gold trim.",
-	},
-	"blue_plate": {
-		"name": "Blue Plate Armor",
-		"slot": "armor",
-		"max_hp": 20,
-		"icon": "res://assets/items/icons/armor.png",
-		"text": "Light plates over padded cloth.",
-	},
-	"leather_boots": {
-		"name": "Leather Boots",
-		"slot": "boots",
-		"max_hp": 5,
-		"icon": "res://assets/items/icons/boots.png",
-		"text": "Good for long walks.",
-	},
-	"red_potion": {
-		"name": "Red Potion",
-		"slot": "",
-		"usable": true,
-		"icon": "res://assets/items/icons/potion.png",
-		"world_icon": "res://assets/items/potion.png",
-		# Keep in step with POTION_HEAL_FRACTION in player.gd.
-		"text": "Heals 40% of max HP.",
-	},
-}
+static var gear_slots: Array = GameData.table("items")["gear_slots"]
+static var slot_names: Dictionary = GameData.table("items")["slot_names"]

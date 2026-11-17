@@ -47,7 +47,7 @@ func show_item(id: String, amount: int = 1) -> void:
 	count = amount if id != "" else 0
 	_icon = null
 	if id != "":
-		_icon = load(ItemDb.ITEMS[id]["icon"]) as Texture2D
+		_icon = load(ItemDb.items[id]["icon"]) as Texture2D
 	queue_redraw()
 
 

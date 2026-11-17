@@ -2,7 +2,10 @@ extends RefCounted
 ## Pure combat math with no scene or node dependencies.
 ## Kept separate on purpose: later the server can run the same rules.
 
-const DAMAGE_SPREAD := 0.2
+const GameData = preload("res://scripts/data/game_data.gd")
+
+## Plus or minus this fraction of the base damage (res://data/combat.json).
+static var damage_spread: float = float(GameData.table("combat")["damage_spread"])
 
 
 ## Damage of one hit: the base value, plus or minus a small random spread. Never below 1.
@@ -18,4 +21,4 @@ static func damage_range(base_damage: int) -> Vector2i:
 
 
 static func _spread(base_damage: int) -> int:
-	return maxi(1, roundi(base_damage * DAMAGE_SPREAD))
+	return maxi(1, roundi(base_damage * damage_spread))

@@ -40,18 +40,6 @@ const FACING_VECTORS := {
 ## How long the swing animation keeps priority over walk / idle
 ## (5 frames at 18 fps in warrior_frames.tres).
 const ATTACK_ANIMATION_SECONDS := 0.28
-const STAMINA_REGEN_PER_SECOND := 12.0
-const SKILL_STAMINA_COST := 40.0
-const SKILL_RADIUS := 130.0
-const SKILL_DAMAGE_MULTIPLIER := 2.0
-const SKILL_COOLDOWN := 1.0
-const POTION_HEAL_FRACTION := 0.4
-## Health starts coming back after this long without taking damage.
-const REGEN_DELAY_SECONDS := 5.0
-const REGEN_HP_PER_SECOND := 2.0
-const RESPAWN_SECONDS := 2.5
-## After a hit the warrior blinks and cannot be hurt for this long.
-const HIT_INVINCIBLE_SECONDS := 1.0
 ## Dropped items land this far in front of the warrior and stay this long.
 const DROP_DISTANCE := 56.0
 const DROPPED_ITEM_SECONDS := 120.0
@@ -88,6 +76,17 @@ var _seconds_since_damage: float = 0.0
 var _regen_progress: float = 0.0
 var _spawn_position: Vector2 = Vector2.ZERO
 var _invincible_left: float = 0.0
+# Tuning from res://data/character.json (see _load_tuning).
+var _stamina_regen: float = 12.0
+var _skill_cost: float = 40.0
+var _skill_radius: float = 130.0
+var _skill_multiplier: float = 2.0
+var _skill_cooldown: float = 1.0
+var _regen_delay: float = 5.0
+var _regen_per_second: float = 2.0
+var _respawn_seconds: float = 2.5
+## After a hit the warrior blinks and cannot be hurt for this long.
+var _hit_invincible_seconds: float = 1.0
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
 @onready var _camera: Camera2D = $Camera
@@ -96,6 +95,7 @@ var _invincible_left: float = 0.0
 
 func _ready() -> void:
 	add_to_group("player")
+	_load_tuning()
 	stats.from_dict(SaveFile.load_data())
 	max_hp = stats.max_hp()
 	hp = max_hp
@@ -151,7 +151,7 @@ func take_damage(amount: int) -> void:
 	if hp == 0:
 		_die()
 		return
-	_invincible_left = HIT_INVINCIBLE_SECONDS
+	_invincible_left = _hit_invincible_seconds
 	_sprite.modulate = Color(1.0, 0.4, 0.4)
 	create_tween().tween_property(_sprite, "modulate", Color.WHITE, 0.2)
 
@@ -246,7 +246,7 @@ func use_from_bag(index: int) -> void:
 
 ## For the SPIN button: true when the skill would work right now.
 func can_use_skill() -> bool:
-	return not is_dead and _skill_ready_in == 0.0 and stamina >= SKILL_STAMINA_COST
+	return not is_dead and _skill_ready_in == 0.0 and stamina >= _skill_cost
 
 
 ## Drinks one potion. Does nothing at full health or with no potions left.
@@ -254,7 +254,8 @@ func use_potion() -> void:
 	if is_dead or stats.potions <= 0 or hp >= max_hp:
 		return
 	stats.potions -= 1
-	var healed: int = mini(roundi(max_hp * POTION_HEAL_FRACTION), max_hp - hp)
+	var heal_fraction: float = float(ItemDb.items[PlayerStats.POTION_ID]["heal_fraction"])
+	var healed: int = mini(roundi(max_hp * heal_fraction), max_hp - hp)
 	hp += healed
 	hp_changed.emit(hp, max_hp)
 	FloatingText.spawn(self, "+%d" % healed, Color(0.5, 1.0, 0.55), 100.0)
@@ -293,16 +294,16 @@ func _attack() -> void:
 
 ## Spin slash: costs stamina and hits every enemy around the warrior.
 func _use_skill() -> void:
-	if _skill_ready_in > 0.0 or stamina < SKILL_STAMINA_COST:
+	if _skill_ready_in > 0.0 or stamina < _skill_cost:
 		return
-	_skill_ready_in = SKILL_COOLDOWN
-	stamina -= SKILL_STAMINA_COST
+	_skill_ready_in = _skill_cooldown
+	stamina -= _skill_cost
 	stamina_changed.emit(stamina, max_stamina)
 	_slash.play_spin()
 	_sfx("skill")
-	var base_damage: int = roundi(stats.attack_damage() * SKILL_DAMAGE_MULTIPLIER)
+	var base_damage: int = roundi(stats.attack_damage() * _skill_multiplier)
 	for enemy in _alive_enemies():
-		if enemy.global_position.distance_to(global_position) <= SKILL_RADIUS:
+		if enemy.global_position.distance_to(global_position) <= _skill_radius:
 			enemy.call("take_damage", CombatRules.roll_damage(base_damage), global_position)
 
 
@@ -340,14 +341,14 @@ func _can_hit(target_position: Vector2, aim: Vector2) -> bool:
 ## Stamina always comes back; health only after a while without being hit.
 func _recover(delta: float) -> void:
 	if stamina < max_stamina:
-		stamina = minf(max_stamina, stamina + STAMINA_REGEN_PER_SECOND * delta)
+		stamina = minf(max_stamina, stamina + _stamina_regen * delta)
 		stamina_changed.emit(stamina, max_stamina)
 
 	_seconds_since_damage += delta
-	if hp >= max_hp or _seconds_since_damage < REGEN_DELAY_SECONDS:
+	if hp >= max_hp or _seconds_since_damage < _regen_delay:
 		_regen_progress = 0.0
 		return
-	_regen_progress += REGEN_HP_PER_SECOND * delta
+	_regen_progress += _regen_per_second * delta
 	if _regen_progress >= 1.0:
 		_regen_progress -= 1.0
 		hp = mini(hp + 1, max_hp)
@@ -361,7 +362,7 @@ func _die() -> void:
 	_sfx("defeat")
 	_sprite.stop()
 	create_tween().tween_property(_sprite, "modulate:a", 0.0, 0.6)
-	await get_tree().create_timer(RESPAWN_SECONDS).timeout
+	await get_tree().create_timer(_respawn_seconds).timeout
 	_respawn()
 
 
@@ -403,6 +404,25 @@ func _apply_look() -> void:
 				frame.atlas = look_texture
 
 
+## Reads speed, ranges, stamina, skill and regeneration from character.json.
+func _load_tuning() -> void:
+	var rules: Dictionary = PlayerStats.rules
+	var skill: Dictionary = rules["skill"]
+	move_speed = float(rules["move_speed"])
+	attack_range = float(rules["attack_range"])
+	attack_cooldown = float(rules["attack_cooldown"])
+	max_stamina = float(rules["max_stamina"])
+	_stamina_regen = float(rules["stamina_regen_per_second"])
+	_skill_cost = float(skill["stamina_cost"])
+	_skill_radius = float(skill["radius"])
+	_skill_multiplier = float(skill["damage_multiplier"])
+	_skill_cooldown = float(skill["cooldown"])
+	_regen_delay = float(rules["regen_delay_seconds"])
+	_regen_per_second = float(rules["regen_hp_per_second"])
+	_respawn_seconds = float(rules["respawn_seconds"])
+	_hit_invincible_seconds = float(rules["hit_invincible_seconds"])
+
+
 func _drop_on_ground(item_id: String) -> void:
 	var pickup: Node2D = PICKUP_SCENE.instantiate()
 	pickup.set("kind", "item")
@@ -427,7 +447,7 @@ func _say(text: String, color: Color = Color.WHITE) -> void:
 
 
 func _item_name(item_id: String) -> String:
-	return ItemDb.ITEMS[item_id]["name"]
+	return ItemDb.items[item_id]["name"]
 
 
 func _shake_camera() -> void:
