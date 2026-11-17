@@ -62,7 +62,8 @@ func _on_item_action(method: String, argument: Variant) -> void:
 		_player.call(method, argument)
 
 
-## POT shows how many potions are left; SPIN and POT fade when they would do nothing.
+## POT shows how many potions are left; SPIN and POT fade when they would do
+## nothing; ATK and SPIN show their cooldown.
 func _update_action_buttons() -> void:
 	var potions: int = _player.get("stats").potions
 	for button in get_tree().get_nodes_in_group(ACTION_BUTTONS_GROUP):
@@ -72,6 +73,9 @@ func _update_action_buttons() -> void:
 				button.set("dimmed", potions == 0)
 			"skill":
 				button.set("dimmed", not _player.call("can_use_skill"))
+				button.set("cooldown", _player.call("cooldown_left", "skill"))
+			"attack":
+				button.set("cooldown", _player.call("cooldown_left", "attack"))
 
 
 func _refresh_progress() -> void:

@@ -20,6 +20,9 @@ const WARRIOR_SHEET := "res://assets/characters/warrior/warrior.png"
 const COIN_ICON := "res://assets/items/icons/coin.png"
 const GOLD_TEXT := Color(1.0, 0.86, 0.45)
 const FRAME_BORDER := Color(0.85, 0.68, 0.32)
+## How item bonuses are written in the details: whole numbers, then fractions.
+const STAT_TEXTS := {"attack": "+%d Attack.", "max_hp": "+%d Max HP.", "defense": "+%d Defense."}
+const PERCENT_TEXTS := {"crit_chance": "+%d%% Crit.", "evasion": "+%d%% Evasion."}
 
 ## Gear slot name -> slot control.
 var gear_slots: Dictionary = {}
@@ -63,7 +66,14 @@ func refresh(stats, look: Texture2D = null) -> void:
 			bag_slots[i].show_item("")
 	_gold_label.text = str(stats.gold)
 	var damage: Vector2i = CombatRules.damage_range(stats.attack_damage())
-	_stats_label.text = "ATK %d~%d   HP %d" % [damage.x, damage.y, stats.max_hp()]
+	_stats_label.text = "ATK %d~%d  HP %d\nDEF %d  CRIT %d%%  EVA %d%%" % [
+		damage.x,
+		damage.y,
+		stats.max_hp(),
+		stats.defense(),
+		roundi(stats.crit_chance() * 100.0),
+		roundi(stats.evasion() * 100.0),
+	]
 	if look != null:
 		_portrait_frame.atlas = look
 	if _selected != null and _selected.item_id == "":
@@ -98,10 +108,12 @@ func _show_details() -> void:
 		return
 	var item: Dictionary = ItemDb.items[_selected.item_id]
 	var parts: PackedStringArray = []
-	if item.has("attack"):
-		parts.append("+%d Attack." % item["attack"])
-	if item.has("max_hp"):
-		parts.append("+%d Max HP." % item["max_hp"])
+	for stat in STAT_TEXTS:
+		if item.has(stat):
+			parts.append(STAT_TEXTS[stat] % int(item[stat]))
+	for stat in PERCENT_TEXTS:
+		if item.has(stat):
+			parts.append(PERCENT_TEXTS[stat] % roundi(float(item[stat]) * 100.0))
 	parts.append(item["text"])
 	_name_label.text = item["name"]
 	_info_label.text = " ".join(parts)
@@ -162,7 +174,7 @@ func _gear_row() -> Control:
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	middle.add_child(portrait)
-	_stats_label = _label("", 15, Color(0.88, 0.9, 1.0))
+	_stats_label = _label("", 13, Color(0.88, 0.9, 1.0))
 	_stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	middle.add_child(_stats_label)
 	row.add_child(middle)

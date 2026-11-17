@@ -8,6 +8,9 @@ extends CharacterBody2D
 
 const FloatingText = preload("res://scripts/ui/floating_text.gd")
 const GameData = preload("res://scripts/data/game_data.gd")
+const CombatRules = preload("res://scripts/combat/combat_rules.gd")
+const CRIT_COLOR := Color(1.0, 0.55, 0.2)
+const MISS_COLOR := Color(0.8, 0.85, 0.95)
 const PICKUP_SCENE := preload("res://scenes/items/pickup.tscn")
 
 const KNOCKBACK_SPEED := 240.0
@@ -15,6 +18,9 @@ const KNOCKBACK_DECAY := 1400.0
 const WANDER_RADIUS := 90.0
 ## A slime that gets this far from home gives up the chase and walks back.
 const LEASH_RADIUS := 480.0
+
+## Chance of spawning as an elite; below 0 = use combat.json. Tests set it to 0.
+static var elite_chance_override: float = -1.0
 
 ## Which entry of monsters.json this is.
 @export var monster_id: String = "green_slime"
@@ -29,6 +35,10 @@ var detect_radius: float = 260.0
 ## The slime attacks when the warrior is closer than this.
 var attack_range: float = 48.0
 var attack_damage: int = 6
+## Damage from each hit goes down by this much (never below 1).
+var defense: int = 0
+## Chance (0..1) that the warrior's hit misses.
+var evasion: float = 0.0
 var attack_cooldown: float = 1.2
 var respawn_seconds: float = 5.0
 var xp_reward: int = 20
@@ -38,6 +48,8 @@ var gold_max: int = 5
 var drops: Array = []
 ## Color multiplier, used to tell the kinds of slime apart.
 var tint: Color = Color.WHITE
+## Elites have more HP, damage, XP and loot, glow, and are a bit bigger.
+var is_elite: bool = false
 
 var hp: int = 0
 var is_dead: bool = false
@@ -49,6 +61,10 @@ var _wander_target: Vector2 = Vector2.ZERO
 var _wander_timer: float = 0.0
 var _is_returning: bool = false
 var _player: Node2D = null
+## Attacker -> damage it has done: the slime goes after whoever hurt it most.
+var _threat: Dictionary = {}
+var _sprite_scale: Vector2 = Vector2.ONE
+var _glow: Tween = null
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
 @onready var _collision: CollisionShape2D = $Collision
@@ -58,6 +74,7 @@ var _player: Node2D = null
 func _ready() -> void:
 	add_to_group("enemies")
 	_load_monster_data()
+	_roll_elite()
 	hp = max_hp
 	_spawn_position = global_position
 	_wander_target = global_position
@@ -89,15 +106,28 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
-## Called by the warrior's attacks. from_position is where the hit came from.
-func take_damage(amount: int, from_position: Vector2 = Vector2.ZERO) -> void:
+## Called by the warrior's attacks, after miss / crit / defense were worked out
+## (see CombatRules.resolve_hit). from_position is where the hit came from.
+func take_damage(
+	amount: int,
+	from_position: Vector2 = Vector2.ZERO,
+	crit: bool = false,
+	attacker: Node = null,
+	knockback: float = 1.0
+) -> void:
 	if is_dead:
 		return
 	hp = maxi(hp - amount, 0)
 	_hp_bar.set_values(hp, max_hp)
-	FloatingText.spawn(self, str(amount), Color(1.0, 0.95, 0.4))
+	if crit:
+		FloatingText.spawn(self, "%d!" % amount, CRIT_COLOR, 90.0, 36)
+	else:
+		FloatingText.spawn(self, str(amount), Color(1.0, 0.95, 0.4))
+	if attacker != null:
+		_threat[attacker] = int(_threat.get(attacker, 0)) + amount
 	if from_position != Vector2.ZERO:
-		_knockback = (global_position - from_position).normalized() * KNOCKBACK_SPEED
+		var away: Vector2 = (global_position - from_position).normalized()
+		_knockback = away * KNOCKBACK_SPEED * knockback
 	if hp == 0:
 		_die()
 		return
@@ -114,11 +144,31 @@ func _chase_target() -> Node2D:
 		_is_returning = true
 	elif distance_from_home <= WANDER_RADIUS:
 		_is_returning = false
-	if _is_returning or _player == null or _player.get("is_dead"):
+	if _is_returning:
+		_threat.clear()
+		return null
+	var hated: Node2D = _most_threatening()
+	if hated != null:
+		return hated
+	if _player == null or _player.get("is_dead"):
 		return null
 	if _player.global_position.distance_to(global_position) > detect_radius:
 		return null
 	return _player
+
+
+## The living attacker that did the most damage, if any.
+func _most_threatening() -> Node2D:
+	var best: Node2D = null
+	var best_threat: int = 0
+	for attacker in _threat.keys():
+		if not is_instance_valid(attacker) or attacker.get("is_dead"):
+			_threat.erase(attacker)
+			continue
+		if int(_threat[attacker]) > best_threat:
+			best = attacker
+			best_threat = int(_threat[attacker])
+	return best
 
 
 ## Slow, aimless walking around the spawn point. Returns the velocity to use.
@@ -139,9 +189,16 @@ func _wander(delta: float) -> Vector2:
 
 func _attack(target: Node2D) -> void:
 	_attack_ready_in = attack_cooldown
-	target.call("take_damage", attack_damage)
-	_sprite.scale = Vector2(1.3, 0.75)
-	create_tween().tween_property(_sprite, "scale", Vector2.ONE, 0.2)
+	var target_stats = target.get("stats")
+	var target_defense: int = target_stats.defense() if target_stats != null else 0
+	var target_evasion: float = target_stats.evasion() if target_stats != null else 0.0
+	var hit: Dictionary = CombatRules.resolve_hit(attack_damage, 0.0, target_defense, target_evasion)
+	if hit["miss"]:
+		FloatingText.spawn(target, "MISS", MISS_COLOR, 100.0, 22)
+	else:
+		target.call("take_damage", hit["damage"])
+	_sprite.scale = _sprite_scale * Vector2(1.3, 0.75)
+	create_tween().tween_property(_sprite, "scale", _sprite_scale, 0.2)
 
 
 func _die() -> void:
@@ -161,6 +218,49 @@ func _die() -> void:
 	_respawn()
 
 
+## Turns this slime into an elite: more HP, damage, XP, gold and loot, a glow
+## and a bigger body (numbers from the "elite" part of combat.json).
+func make_elite() -> void:
+	if is_elite:
+		return
+	var elite: Dictionary = CombatRules.settings["elite"]
+	is_elite = true
+	max_hp = roundi(max_hp * float(elite["hp"]))
+	hp = max_hp
+	attack_damage = roundi(attack_damage * float(elite["damage"]))
+	xp_reward = roundi(xp_reward * float(elite["xp"]))
+	gold_min = roundi(gold_min * float(elite["gold"]))
+	gold_max = roundi(gold_max * float(elite["gold"]))
+	drops = drops + elite.get("extra_drops", [])
+	display_name = "Elite " + display_name
+	_sprite_scale = Vector2.ONE * float(elite["scale"])
+	if is_node_ready():
+		_sprite.scale = _sprite_scale
+		_hp_bar.set_label("Lv.%d %s" % [level, display_name])
+		_hp_bar.set_values(hp, max_hp)
+		_glow = create_tween().set_loops()
+		_glow.tween_property(_sprite, "self_modulate", Color(1.6, 1.4, 0.8), 0.5)
+		_glow.tween_property(_sprite, "self_modulate", Color.WHITE, 0.5)
+
+
+func _roll_elite() -> void:
+	var chance: float = elite_chance_override
+	if chance < 0.0:
+		chance = float(CombatRules.settings["elite"]["chance"])
+	if randf() < chance:
+		make_elite()
+
+
+func _clear_elite() -> void:
+	is_elite = false
+	_sprite_scale = Vector2.ONE
+	_sprite.scale = _sprite_scale
+	if _glow != null:
+		_glow.kill()
+		_glow = null
+	_sprite.self_modulate = Color.WHITE
+
+
 func _load_monster_data() -> void:
 	var data: Dictionary = GameData.table("monsters").get(monster_id, {})
 	if data.is_empty():
@@ -173,6 +273,8 @@ func _load_monster_data() -> void:
 	detect_radius = float(data["detect_radius"])
 	attack_range = float(data["attack_range"])
 	attack_damage = int(data["attack_damage"])
+	defense = int(data.get("defense", 0))
+	evasion = float(data.get("evasion", 0.0))
 	attack_cooldown = float(data["attack_cooldown"])
 	respawn_seconds = float(data["respawn_seconds"])
 	xp_reward = int(data["xp"])
@@ -194,11 +296,16 @@ func _drop(kind: String, amount: int, item_id: String = "") -> void:
 
 func _respawn() -> void:
 	global_position = _spawn_position
+	_threat.clear()
+	_load_monster_data()
+	_clear_elite()
+	_roll_elite()
 	hp = max_hp
 	is_dead = false
 	_is_returning = false
 	_attack_ready_in = attack_cooldown
 	_collision.set_deferred("disabled", false)
 	_sprite.modulate = tint
+	_hp_bar.set_label("Lv.%d %s" % [level, display_name])
 	_hp_bar.set_values(hp, max_hp)
 	_hp_bar.show()

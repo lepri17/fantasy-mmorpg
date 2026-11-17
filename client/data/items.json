@@ -21,7 +21,8 @@
       "slot": "head",
       "max_hp": 5,
       "icon": "res://assets/items/icons/headband.png",
-      "text": "Cloth band with a small gold plate."
+      "text": "Cloth band with a small gold plate.",
+      "defense": 1
     },
     "training_sword": {
       "name": "Training Sword",
@@ -35,7 +36,8 @@
       "slot": "gloves",
       "attack": 1,
       "icon": "res://assets/items/icons/gloves.png",
-      "text": "Steel bracers keep the grip steady."
+      "text": "Steel bracers keep the grip steady.",
+      "crit_chance": 0.03
     },
     "red_cape": {
       "name": "Red Cape",
@@ -49,14 +51,16 @@
       "slot": "armor",
       "max_hp": 20,
       "icon": "res://assets/items/icons/armor.png",
-      "text": "Light plates over padded cloth."
+      "text": "Light plates over padded cloth.",
+      "defense": 3
     },
     "leather_boots": {
       "name": "Leather Boots",
       "slot": "boots",
       "max_hp": 5,
       "icon": "res://assets/items/icons/boots.png",
-      "text": "Good for long walks."
+      "text": "Good for long walks.",
+      "evasion": 0.02
     },
     "red_potion": {
       "name": "Red Potion",

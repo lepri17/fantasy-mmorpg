@@ -10,6 +10,8 @@ extends SceneTree
 const SAVE_PATH := "user://smoke_test_save.cfg"
 const PlayerStats = preload("res://scripts/player/player_stats.gd")
 const SaveFile = preload("res://scripts/player/save_file.gd")
+const CombatRules = preload("res://scripts/combat/combat_rules.gd")
+const SlimeScript = preload("res://scripts/enemies/slime.gd")
 
 var _failures: int = 0
 
@@ -21,6 +23,7 @@ func _initialize() -> void:
 func _run() -> void:
 	SaveFile.path = SAVE_PATH
 	_remove_test_save()
+	SlimeScript.elite_chance_override = 0.0  # random elites would change the numbers below
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await _frames(5)
@@ -40,6 +43,19 @@ func _run() -> void:
 	)
 	var enemies: Array = get_nodes_in_group("enemies")
 	_check(enemies.size() == 6, "six slimes on the map (found %d)" % enemies.size())
+	for enemy in enemies:
+		enemy.evasion = 0.0  # no random misses in the checks below
+
+	# --- combat rules: miss, crit, defense
+	_check(CombatRules.resolve_hit(10, 0.0, 0, 1.0)["miss"], "100% evasion always misses")
+	var crit_hit: Dictionary = CombatRules.resolve_hit(10, 1.0, 3, 0.0)
+	_check(
+		crit_hit["crit"] and crit_hit["damage"] >= roundi(8 * 1.5) - 3,
+		"a crit multiplies the damage before defense (%d)" % crit_hit["damage"]
+	)
+	var tiny_hit: Dictionary = CombatRules.resolve_hit(1, 0.0, 50, 0.0)
+	_check(tiny_hit["damage"] == 1, "defense never takes a hit below 1")
+	_check(player.stats.defense() == 4, "the starting gear gives 4 defense")
 	_check(sprite.animation == &"idle_down", "starts in idle_down")
 	_check(player.stats.level == 1 and player.max_hp == 100, "starts at level 1 with 100 HP")
 
@@ -82,6 +98,9 @@ func _run() -> void:
 	_check(player.facing == "right", "auto-aim turns the warrior to the slime")
 	_check(String(sprite.animation).begins_with("attack_"), "attack animation plays")
 	_check(slime.hp < slime.max_hp, "attack damages the slime (hp %d/%d)" % [slime.hp, slime.max_hp])
+	_check(player.cooldown_left("attack") > 0.0, "ATK shows a cooldown right after a swing")
+	await _frames(15)
+	_check(player.get("_target_marker").visible, "a ring marks the enemy auto-aim will hit")
 	var waited: int = 0
 	while not slime.is_dead and waited < 600:
 		await _frames(1)
@@ -248,6 +267,18 @@ func _run() -> void:
 	joystick.call("_input", thumb)
 	_check(Input.get_action_strength("move_right") == 0.0, "letting go of the joystick stops")
 	await _frames(2)
+
+	# --- combo and elites
+	player.combo_step = 0
+	for i in 3:
+		player.call("_attack")
+	_check(player.combo_step == 3, "three quick swings reach the combo finisher")
+	var elite = enemies[2]
+	elite.make_elite()
+	_check(
+		elite.max_hp == 120 and elite.xp_reward == 60 and elite.display_name.begins_with("Elite"),
+		"an elite slime has 3x HP and XP (%d HP, %d XP)" % [elite.max_hp, elite.xp_reward]
+	)
 
 	# --- skill: spin slash hits a slime that is BEHIND the warrior
 	var second = enemies[1]

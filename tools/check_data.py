@@ -20,6 +20,7 @@ CLIENT = ROOT / "client"
 DATA = CLIENT / "data"
 
 errors: list[str] = []
+check_items_cache: dict = {}
 
 
 def error(message: str) -> None:
@@ -83,11 +84,14 @@ def check_items(items_data: dict) -> dict:
                 error(f"{where}: {key} '{item[key]}' does not exist")
         if "icon" not in item:
             error(f"{where}: needs an 'icon'")
-        for key in ("attack", "max_hp"):
+        for key in ("attack", "max_hp", "defense"):
             if key in item:
                 value = need_number(where, item, key)
                 if value is not None and value != int(value):
                     error(f"{where}: '{key}' must be a whole number")
+        for key in ("crit_chance", "evasion"):
+            if key in item:
+                need_number(where, item, key, 0.0, 1.0)
         if item.get("usable"):
             if slot != "":
                 error(f"{where}: gear cannot be 'usable'")
@@ -102,8 +106,11 @@ def check_character(character: dict, items: dict, gear_slots: list) -> None:
                 "attack_cooldown", "max_stamina", "bag_size", "respawn_seconds"):
         need_number(where, character, key, 0.01)
     for key in ("hp_per_level", "damage_per_level", "stamina_regen_per_second",
-                "regen_delay_seconds", "regen_hp_per_second", "hit_invincible_seconds"):
+                "regen_delay_seconds", "regen_hp_per_second", "hit_invincible_seconds",
+                "defense"):
         need_number(where, character, key)
+    for key in ("crit_chance", "evasion"):
+        need_number(where, character, key, 0.0, 1.0)
     skill = character.get("skill", {})
     for key in ("stamina_cost", "radius", "damage_multiplier", "cooldown"):
         need_number(f"{where} skill", skill, key)
@@ -135,6 +142,8 @@ def check_monsters(monsters: dict, items: dict) -> None:
         for key in ("level", "max_hp", "move_speed", "detect_radius", "attack_range",
                     "attack_damage", "attack_cooldown", "respawn_seconds", "xp"):
             need_number(where, monster, key, 0.01 if key != "xp" else 0)
+        need_number(where, monster, "defense")
+        need_number(where, monster, "evasion", 0.0, 1.0)
         gold = monster.get("gold")
         if not (isinstance(gold, list) and len(gold) == 2 and all(map(is_number, gold))
                 and 0 <= gold[0] <= gold[1]):
@@ -165,10 +174,22 @@ def check_art(items: dict) -> None:
 def main() -> int:
     items_data = load("items")
     items = check_items(items_data)
+    check_items_cache.update(items)
     check_character(load("character"), items, items_data.get("gear_slots", []))
     check_monsters(load("monsters"), items)
     combat = load("combat")
     need_number("combat.json", combat, "damage_spread", 0.0, 1.0)
+    need_number("combat.json", combat, "crit_multiplier", 1.0)
+    for key in ("combo_window_seconds", "combo_finisher_multiplier", "combo_finisher_knockback",
+                "hit_stop_seconds", "crit_hit_stop_seconds"):
+        need_number("combat.json", combat, key)
+    elite = combat.get("elite", {})
+    need_number("combat.json elite", elite, "chance", 0.0, 1.0)
+    for key in ("hp", "damage", "xp", "gold", "scale"):
+        need_number("combat.json elite", elite, key, 1.0)
+    for drop in elite.get("extra_drops", []):
+        if drop.get("item") not in check_items_cache:
+            error(f"combat.json elite: drop '{drop.get('item')}' is not an item")
     check_art(items)
     if errors:
         print("DATA PROBLEMS:")

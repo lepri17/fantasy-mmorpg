@@ -13,6 +13,13 @@ var badge: String = "":
 		if value != badge:
 			badge = value
 			queue_redraw()
+## Part of the cooldown still to go, from 1 down to 0: drawn as a dark wedge.
+var cooldown: float = 0.0:
+	set(value):
+		value = clampf(value, 0.0, 1.0)
+		if not is_equal_approx(value, cooldown):
+			cooldown = value
+			queue_redraw()
 ## Faded when the action cannot be used right now.
 var dimmed: bool = false:
 	set(value):
@@ -53,6 +60,13 @@ func _draw() -> void:
 	var is_held: bool = _touch_index != NO_TOUCH
 	draw_circle(center, radius, Color(color, 0.85 if is_held else 0.5))
 	draw_arc(center, radius, 0.0, TAU, 48, Color(1, 1, 1, 0.7), 3.0, true)
+	if cooldown > 0.0:
+		var wedge := PackedVector2Array([center])
+		var steps: int = maxi(2, int(40 * cooldown))
+		for i in steps + 1:
+			var angle: float = -PI / 2.0 + TAU * cooldown * float(i) / steps
+			wedge.append(center + Vector2(cos(angle), sin(angle)) * radius)
+		draw_colored_polygon(wedge, Color(0, 0, 0, 0.45))
 	if badge != "":
 		var spot: Vector2 = center + Vector2(radius, radius) * 0.68
 		draw_circle(spot, 17.0, Color(0.1, 0.06, 0.1, 0.9))

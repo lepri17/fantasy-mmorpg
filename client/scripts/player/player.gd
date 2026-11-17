@@ -20,6 +20,8 @@ const SaveFile = preload("res://scripts/player/save_file.gd")
 const FloatingText = preload("res://scripts/ui/floating_text.gd")
 const ItemDb = preload("res://scripts/items/item_db.gd")
 const WarriorLook = preload("res://scripts/player/warrior_look.gd")
+const HitSpark = preload("res://scripts/combat/hit_spark.gd")
+const TargetMarker = preload("res://scripts/combat/target_marker.gd")
 const PICKUP_SCENE = preload("res://scenes/items/pickup.tscn")
 
 const ACTION_LEFT := "move_left"
@@ -48,6 +50,9 @@ const XP_COLOR := Color(0.6, 0.85, 1.0)
 const GOLD_COLOR := Color(1.0, 0.86, 0.4)
 const LEVEL_COLOR := Color(1.0, 0.9, 0.3)
 const WARNING_COLOR := Color(1.0, 0.5, 0.45)
+const MISS_COLOR := Color(0.8, 0.85, 0.95)
+## The ring under the auto-aim target shows for enemies this much past the reach.
+const TARGET_MARKER_REACH := 1.6
 
 ## Walking speed in pixels per second.
 @export var move_speed: float = 220.0
@@ -68,6 +73,9 @@ var max_stamina: float = 100.0
 var is_dead: bool = false
 ## The sprite sheet built for the gear worn now (see warrior_look.gd).
 var look_texture: Texture2D = null
+## 1, 2 or 3: which swing of the combo comes next counts from here. The third is
+## the finisher: stronger, with more knockback.
+var combo_step: int = 0
 
 var _attack_ready_in: float = 0.0
 var _skill_ready_in: float = 0.0
@@ -76,6 +84,8 @@ var _seconds_since_damage: float = 0.0
 var _regen_progress: float = 0.0
 var _spawn_position: Vector2 = Vector2.ZERO
 var _invincible_left: float = 0.0
+var _combo_left: float = 0.0
+var _target_marker: Node2D = null
 # Tuning from res://data/character.json (see _load_tuning).
 var _stamina_regen: float = 12.0
 var _skill_cost: float = 40.0
@@ -103,6 +113,10 @@ func _ready() -> void:
 	_spawn_position = global_position
 	_apply_camera_limits()
 	_apply_look()
+	_target_marker = TargetMarker.new()
+	_target_marker.z_index = -1
+	_target_marker.hide()
+	get_parent().call_deferred("add_child", _target_marker)
 	_play("idle_" + facing)
 
 
@@ -127,6 +141,8 @@ func _physics_process(delta: float) -> void:
 
 	_recover(delta)
 	_blink_while_invincible(delta)
+	_combo_left = maxf(0.0, _combo_left - delta)
+	_update_target_marker()
 
 	_attack_ready_in = maxf(0.0, _attack_ready_in - delta)
 	_skill_ready_in = maxf(0.0, _skill_ready_in - delta)
@@ -148,6 +164,7 @@ func take_damage(amount: int) -> void:
 	FloatingText.spawn(self, str(amount), DAMAGE_TAKEN_COLOR, 100.0)
 	_sfx("hurt")
 	_shake_camera()
+	_vibrate(40)
 	if hp == 0:
 		_die()
 		return
@@ -265,6 +282,9 @@ func use_potion() -> void:
 
 func _attack() -> void:
 	_attack_ready_in = attack_cooldown
+	combo_step = combo_step % 3 + 1 if _combo_left > 0.0 else 1
+	_combo_left = float(CombatRules.settings["combo_window_seconds"])
+	var finisher: bool = combo_step == 3
 
 	# Auto-aim: if an enemy is within reach, turn to it and swing at it.
 	var aim: Vector2 = FACING_VECTORS[facing]
@@ -275,7 +295,7 @@ func _attack() -> void:
 			aim = to_target.normalized()
 			facing = _facing_for(aim)
 
-	_slash.play(aim)
+	_slash.play(aim, finisher)
 	_attack_animation_left = ATTACK_ANIMATION_SECONDS
 	_sprite.stop()
 	_sprite.play("attack_" + facing)
@@ -283,13 +303,16 @@ func _attack() -> void:
 	lunge.tween_property(_sprite, "position", aim * 8.0, 0.06)
 	lunge.tween_property(_sprite, "position", Vector2.ZERO, 0.1)
 
-	var did_hit: bool = false
+	var base_damage: int = stats.attack_damage()
+	var knockback: float = 1.0
+	if finisher:
+		base_damage = roundi(base_damage * float(CombatRules.settings["combo_finisher_multiplier"]))
+		knockback = float(CombatRules.settings["combo_finisher_knockback"])
+	var hits: Array[Dictionary] = []
 	for enemy in _alive_enemies():
 		if _can_hit(enemy.global_position, aim):
-			var damage: int = CombatRules.roll_damage(stats.attack_damage())
-			enemy.call("take_damage", damage, global_position)
-			did_hit = true
-	_sfx("hit" if did_hit else "swing")
+			hits.append(_strike(enemy, base_damage, knockback))
+	_after_strikes(hits)
 
 
 ## Spin slash: costs stamina and hits every enemy around the warrior.
@@ -302,9 +325,55 @@ func _use_skill() -> void:
 	_slash.play_spin()
 	_sfx("skill")
 	var base_damage: int = roundi(stats.attack_damage() * _skill_multiplier)
+	var hits: Array[Dictionary] = []
 	for enemy in _alive_enemies():
 		if enemy.global_position.distance_to(global_position) <= _skill_radius:
-			enemy.call("take_damage", CombatRules.roll_damage(base_damage), global_position)
+			hits.append(_strike(enemy, base_damage))
+	_after_strikes(hits, false)
+
+
+## One hit on one enemy. Miss, crit and the enemy's defense are worked out by
+## CombatRules; the enemy only takes the result.
+func _strike(enemy: Node2D, base_damage: int, knockback: float = 1.0) -> Dictionary:
+	var hit: Dictionary = CombatRules.resolve_hit(
+		base_damage, stats.crit_chance(), int(enemy.get("defense")), float(enemy.get("evasion"))
+	)
+	if hit["miss"]:
+		FloatingText.spawn(enemy, "MISS", MISS_COLOR, 80.0, 22)
+		return hit
+	enemy.call("take_damage", hit["damage"], global_position, hit["crit"], self, knockback)
+	var spark_color := Color(1.0, 0.5, 0.2) if hit["crit"] else Color(1.0, 0.9, 0.5)
+	HitSpark.spawn(enemy.get_parent(), enemy.position + Vector2(0, -20), spark_color, 14)
+	return hit
+
+
+## Sound, hit stop and vibration after a swing, by what it hit.
+func _after_strikes(hits: Array[Dictionary], swing_sound: bool = true) -> void:
+	var landed: bool = false
+	var crit: bool = false
+	for hit in hits:
+		landed = landed or not hit["miss"]
+		crit = crit or hit["crit"]
+	if not landed:
+		if swing_sound:
+			_sfx("swing")
+		return
+	if swing_sound:
+		_sfx("hit")
+	var stop_key: String = "crit_hit_stop_seconds" if crit else "hit_stop_seconds"
+	_hit_stop(float(CombatRules.settings[stop_key]))
+	if crit:
+		_vibrate(30)
+
+
+## For the buttons: how much of an action's cooldown is left, from 1 down to 0.
+func cooldown_left(action: String) -> float:
+	match action:
+		"attack":
+			return _attack_ready_in / maxf(attack_cooldown, 0.01)
+		"skill":
+			return _skill_ready_in / maxf(_skill_cooldown, 0.01)
+	return 0.0
 
 
 func _alive_enemies() -> Array[Node2D]:
@@ -432,6 +501,31 @@ func _drop_on_ground(item_id: String) -> void:
 	pickup.position = position + FACING_VECTORS[facing] * DROP_DISTANCE
 	get_parent().call_deferred("add_child", pickup)
 	_say("Dropped %s." % _item_name(item_id))
+
+
+## Freezes the game for a blink when a hit lands, so hits feel heavy. The timer
+## ignores the slowed time; Engine itself restores the speed, so nothing is
+## left slowed if this node goes away meanwhile.
+func _hit_stop(seconds: float) -> void:
+	if seconds <= 0.0:
+		return
+	Engine.time_scale = 0.08
+	var timer: SceneTreeTimer = get_tree().create_timer(seconds, true, false, true)
+	timer.timeout.connect(Engine.set.bind("time_scale", 1.0))
+
+
+func _vibrate(milliseconds: int) -> void:
+	if OS.has_feature("mobile"):
+		Input.vibrate_handheld(milliseconds)
+
+
+func _update_target_marker() -> void:
+	if _target_marker == null or not is_instance_valid(_target_marker):
+		return
+	var target: Node2D = _nearest_enemy(attack_range * TARGET_MARKER_REACH)
+	_target_marker.visible = target != null
+	if target != null:
+		_target_marker.global_position = target.global_position
 
 
 func _blink_while_invincible(delta: float) -> void:

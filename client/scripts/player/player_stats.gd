@@ -48,11 +48,34 @@ func attack_damage() -> int:
 	return int(rules["base_damage"]) + per_level * (level - 1) + gear_bonus("attack")
 
 
-## Sum of one bonus ("attack" or "max_hp") over all the gear worn.
+## Damage taken from each hit goes down by this much (never below 1).
+func defense() -> int:
+	return int(rules.get("defense", 0)) + gear_bonus("defense")
+
+
+## Chance (0..1) that a hit is critical.
+func crit_chance() -> float:
+	return float(rules.get("crit_chance", 0.0)) + gear_bonus_fraction("crit_chance")
+
+
+## Chance (0..1) that a monster's hit misses.
+func evasion() -> float:
+	return float(rules.get("evasion", 0.0)) + gear_bonus_fraction("evasion")
+
+
+## Sum of one whole-number bonus ("attack", "max_hp", "defense") over the gear worn.
 func gear_bonus(stat: String) -> int:
 	var total: int = 0
 	for item_id in equipment.values():
 		total += int(ItemDb.items[item_id].get(stat, 0))
+	return total
+
+
+## Sum of one fraction bonus ("crit_chance", "evasion") over the gear worn.
+func gear_bonus_fraction(stat: String) -> float:
+	var total: float = 0.0
+	for item_id in equipment.values():
+		total += float(ItemDb.items[item_id].get(stat, 0.0))
 	return total
 
 

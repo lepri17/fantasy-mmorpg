@@ -6,7 +6,7 @@
     "move_speed": 70,
     "detect_radius": 260,
     "attack_range": 48,
-    "attack_damage": 6,
+    "attack_damage": 9,
     "attack_cooldown": 1.2,
     "respawn_seconds": 5,
     "xp": 20,
@@ -25,7 +25,9 @@
       1.0,
       1.0,
       1.0
-    ]
+    ],
+    "defense": 0,
+    "evasion": 0.05
   },
   "blue_slime": {
     "name": "Blue Slime",
@@ -34,7 +36,7 @@
     "move_speed": 85,
     "detect_radius": 260,
     "attack_range": 48,
-    "attack_damage": 14,
+    "attack_damage": 18,
     "attack_cooldown": 1.2,
     "respawn_seconds": 5,
     "xp": 70,
@@ -53,6 +55,8 @@
       0.78,
       1.5,
       1.0
-    ]
+    ],
+    "defense": 2,
+    "evasion": 0.05
   }
 }
