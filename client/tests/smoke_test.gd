@@ -268,10 +268,15 @@ func _run() -> void:
 	_check(Input.get_action_strength("move_right") == 0.0, "letting go of the joystick stops")
 	await _frames(2)
 
-	# --- combo and elites
+	# --- combo and elites (swing in an empty spot, so no slime gets killed here)
+	var combo_spot: Vector2 = player.global_position
+	player.global_position = Vector2(1000, 500)
+	await _frames(2)
 	player.combo_step = 0
 	for i in 3:
 		player.call("_attack")
+	player.global_position = combo_spot
+	await _frames(2)
 	_check(player.combo_step == 3, "three quick swings reach the combo finisher")
 	var elite = enemies[2]
 	elite.make_elite()
