@@ -10,8 +10,12 @@ const NO_TOUCH := -1
 var _touch_index: int = NO_TOUCH
 
 
+func _ready() -> void:
+	add_to_group("action_buttons")  # the HUD hides this group while the inventory is open
+
+
 func _input(event: InputEvent) -> void:
-	if not (event is InputEventScreenTouch):
+	if not (event is InputEventScreenTouch) or not is_visible_in_tree():
 		return
 	if event.pressed and _touch_index == NO_TOUCH:
 		if get_global_rect().has_point(event.position):
@@ -23,9 +27,11 @@ func _input(event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_EXIT_TREE:
-		if _touch_index != NO_TOUCH:
-			_release()
+	var lost: bool = what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_EXIT_TREE
+	if what == NOTIFICATION_VISIBILITY_CHANGED and not is_visible_in_tree():
+		lost = true
+	if lost and _touch_index != NO_TOUCH:
+		_release()
 
 
 func _draw() -> void:

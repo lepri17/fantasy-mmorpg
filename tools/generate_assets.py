@@ -10,7 +10,8 @@ Outputs (under client/assets):
   monsters/slime/slime_frames.tres        Godot SpriteFrames for the slime
 
 Sheet layout: rows = down, left, right, up. Columns 0-3 = idle, 4-9 = walk, 10-14 = attack.
-Also writes environment/tree.png, environment/rock.png and the app icon (client/icon.png).
+Also writes environment/tree.png, environment/rock.png, the app icon (client/icon.png)
+and 64 px inventory icons in items/icons/ (gear, potion, coin, bag).
 
 Run:  python tools/generate_assets.py
 Needs: Pillow (pip install pillow)
@@ -666,23 +667,114 @@ def build_rock() -> Image.Image:
     return c.finish()
 
 
-def build_coin() -> Image.Image:
+def build_coin(out_size: int = 32, shadow: bool = True) -> Image.Image:
     c = Canvas(32)
-    c.ellipse(16, 27, 9, 3, SHADOW, outline=False)
+    if shadow:
+        c.ellipse(16, 27, 9, 3, SHADOW, outline=False)
     c.ellipse(16, 15, 10, 10, GOLD)
     c.ellipse(16, 15, 6, 6, (255, 228, 140, 255), outline=False)
     c.ellipse(13.5, 12.5, 2, 2, WHITE, outline=False)
-    return c.finish()
+    return c.finish(out_size)
 
 
-def build_potion() -> Image.Image:
+def build_potion(out_size: int = 32, shadow: bool = True) -> Image.Image:
     c = Canvas(32)
-    c.ellipse(16, 28, 9, 3, SHADOW, outline=False)
+    if shadow:
+        c.ellipse(16, 28, 9, 3, SHADOW, outline=False)
     c.rect(13, 5, 19, 14, (214, 234, 244, 255), radius=1.5)
     c.rect(12, 3, 20, 7, GRIP, radius=1.5)
     c.ellipse(16, 19, 9, 8.5, (232, 70, 86, 255))
     c.ellipse(13, 16, 2.6, 2, (255, 170, 176, 255), outline=False)
-    return c.finish()
+    return c.finish(out_size)
+
+
+# ---------------------------------------------------------------- inventory icons
+# Drawn on a 48 grid, saved at ICON px. Same palette as the warrior's gear.
+
+ICON = 64
+
+
+def icon_sword(c: Canvas) -> None:
+    draw_sword(c, (16, 33), (40, 9))
+
+
+def icon_headband(c: Canvas) -> None:
+    back = arc_points(24, 21, 15, 7, 180, 360, 16)
+    front = arc_points(24, 21, 15, 7, 0, 180, 16)
+    c.line(back, width=5.5)
+    c.line(back, fill=CAPE_DARK, width=3)
+    draw_tails(c, (37.5, 24), 50, 15, 0.0)
+    c.line(front, width=6.5)
+    c.line(front, fill=CAPE, width=4)
+    c.rect(19.5, 24.5, 28.5, 31, GOLD, radius=1.5)  # forehead plate
+    c.ellipse(24, 27.8, 1.8, 1.8, GEM, outline=False)
+
+
+def icon_armor(c: Canvas) -> None:
+    c.rect(13, 13, 35, 38, ARMOR, radius=7)
+    c.rect(14.5, 29, 33.5, 36.8, ARMOR_DARK, radius=3, outline=False)
+    c.ellipse(19.5, 19, 4.5, 2.4, ARMOR_LIGHT, outline=False)
+    c.polygon([(24, 17), (27, 21.5), (24, 26), (21, 21.5)], GOLD)  # emblem
+    c.rect(12.6, 30, 35.4, 34, GRIP, radius=1)  # belt
+    c.rect(21.4, 29.2, 26.6, 34.8, GOLD, radius=0.8)  # buckle
+    c.rect(17, 10, 31, 15, CAPE, radius=2.5)  # collar
+    draw_pauldron(c, 12, 16)
+    draw_pauldron(c, 36, 16)
+
+
+def icon_gloves(c: Canvas) -> None:
+    c.rect(15, 26, 31, 39, STEEL_DARK, radius=3)  # bracer
+    c.line([(15.8, 30), (30.2, 30)], fill=GOLD, width=1.4)
+    c.ellipse(31.5, 21, 4, 5.5, GRIP)  # thumb
+    c.rect(14, 10, 30, 28, GRIP, radius=6)  # fingers and palm
+    for x in (18.5, 22.5, 26.5):
+        c.line([(x, 11.5), (x, 18)], fill=LEATHER_DARK, width=1.1)
+
+
+def icon_boots(c: Canvas) -> None:
+    c.rect(10, 28, 33, 39, BOOT, radius=5)  # foot, toe to the left
+    c.rect(20, 10, 33, 33, BOOT, radius=3)  # shaft
+    c.rect(19, 9, 34, 15, BOOT_LIGHT, radius=2)  # folded cuff
+    c.rect(10, 36, 33, 39.5, BOOT_DARK, radius=1.5)  # sole
+
+
+def icon_cape(c: Canvas) -> None:
+    hem = [(38, 40), (31, 38), (24, 41), (17, 38), (10, 40)]
+    c.polygon([(17, 10), (31, 10)] + hem, CAPE)
+    c.line([(x, y - 2.2) for x, y in hem], fill=GOLD, width=1.3)
+    c.line([(21, 15), (19, 36)], fill=CAPE_DARK, width=1.3)
+    c.line([(27, 15), (29, 36)], fill=CAPE_DARK, width=1.3)
+    c.rect(15, 7, 33, 13, CAPE_DARK, radius=2.5)  # collar
+    c.ellipse(24, 10, 2.8, 2.8, GOLD)  # clasp
+
+
+def icon_bag(c: Canvas) -> None:
+    c.polygon([(18, 13), (15, 6), (21, 9), (24, 5), (27, 9), (33, 6), (30, 13)], BOOT_LIGHT)
+    c.polygon([(18, 22), (30, 22), (29, 12), (19, 12)], BOOT)  # neck
+    c.ellipse(24, 31, 15, 12, BOOT)  # pouch
+    c.ellipse(18.5, 27, 4.5, 3, BOOT_LIGHT, outline=False)  # shine
+    c.rect(16, 18.5, 32, 23.5, BOOT_DARK, radius=2.5)  # cord
+    c.ellipse(24, 21, 3, 3, GOLD)  # clasp
+
+
+def build_item_icons() -> dict[str, Image.Image]:
+    """Icons for the inventory and the HUD bag button, by file name."""
+    icons = {}
+    for name, paint in (
+        ("sword", icon_sword),
+        ("headband", icon_headband),
+        ("armor", icon_armor),
+        ("gloves", icon_gloves),
+        ("boots", icon_boots),
+        ("cape", icon_cape),
+        ("bag", icon_bag),
+    ):
+        c = Canvas(48)
+        paint(c)
+        icons[name] = c.finish(ICON)
+    icons["potion"] = build_potion(ICON, shadow=False)
+    icons["coin"] = build_coin(ICON, shadow=False)
+    return icons
 
 
 def build_icon(sheet: Image.Image) -> Image.Image:
@@ -818,6 +910,10 @@ def main() -> None:
     items_dir.mkdir(parents=True, exist_ok=True)
     build_coin().save(items_dir / "coin.png")
     build_potion().save(items_dir / "potion.png")
+    icons_dir = items_dir / "icons"
+    icons_dir.mkdir(parents=True, exist_ok=True)
+    for name, image in build_item_icons().items():
+        image.save(icons_dir / f"{name}.png")
 
     slime_dir = ASSETS / "monsters" / "slime"
     slime_dir.mkdir(parents=True, exist_ok=True)

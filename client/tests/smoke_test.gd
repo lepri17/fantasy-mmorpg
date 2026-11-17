@@ -105,6 +105,40 @@ func _run() -> void:
 	_check(player.hp > 10, "potion heals (hp %d)" % player.hp)
 	_check(player.stats.potions == 0, "potion is used up")
 
+	# --- inventory: gear, bag and drinking a potion from the bag
+	var fresh = PlayerStats.new()
+	_check(
+		fresh.max_hp() == 100 and fresh.attack_damage() == 10,
+		"starting gear keeps 100 HP and 10 damage"
+	)
+	var hud = main.get_node("Hud")
+	var inventory = hud.get_node("Inventory")
+	var attack_button: Control = main.get_node("TouchControls/AttackButton")
+	player.stats.potions = 3
+	hud.get_node("BagButton").emit_signal("pressed")
+	await _frames(2)
+	_check(inventory.visible, "the bag button opens the inventory")
+	_check(not attack_button.visible, "action buttons hide while the inventory is open")
+	var worn: int = 0
+	for slot in inventory.gear_slots.values():
+		if slot.item_id != "":
+			worn += 1
+	_check(worn == 6, "six pieces of gear are shown (found %d)" % worn)
+	var first = inventory.bag_slots[0]
+	_check(
+		first.item_id == "red_potion" and first.count == 3,
+		"the bag shows the potions (%s x%d)" % [first.item_id, first.count]
+	)
+	player.hp = 10
+	first.emit_signal("tapped", first)
+	inventory.call("_on_use_pressed")
+	await _frames(2)
+	_check(player.hp > 10 and player.stats.potions == 2, "USE in the bag drinks a potion")
+	_check(first.count == 2, "the bag count follows (%d)" % first.count)
+	await _hold("inventory", 2)
+	_check(not inventory.visible, "the inventory key closes it")
+	_check(attack_button.visible, "action buttons come back after closing")
+
 	# --- skill: spin slash hits a slime that is BEHIND the warrior
 	var second = enemies[1]
 	player.global_position = second.global_position + Vector2(-90, 0)
