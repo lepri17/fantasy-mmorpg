@@ -147,15 +147,16 @@ func _die() -> void:
 		_player.call("gain_xp", xp_reward)
 	_drop("gold", randi_range(gold_min, gold_max))
 	if randf() < potion_chance:
-		_drop("potion", 1)
+		_drop("item", 1, "red_potion")
 	await get_tree().create_timer(respawn_seconds).timeout
 	_respawn()
 
 
-func _drop(kind: String, amount: int) -> void:
+func _drop(kind: String, amount: int, item_id: String = "") -> void:
 	var pickup: Node2D = PICKUP_SCENE.instantiate()
 	pickup.set("kind", kind)
 	pickup.set("amount", amount)
+	pickup.set("item_id", item_id)
 	pickup.position = position + Vector2(randf_range(-24.0, 24.0), randf_range(-16.0, 16.0))
 	get_parent().call_deferred("add_child", pickup)
 

@@ -1,8 +1,10 @@
 extends Control
 ## One square of the inventory: a frame, the item icon and the stack count.
-## Emits tapped when it is touched or clicked.
+## Emits tapped when it is touched or clicked, and double_tapped on a quick
+## second tap (like double-clicking an item in MapleStory).
 
 signal tapped(slot: Control)
+signal double_tapped(slot: Control)
 
 const ItemDb := preload("res://scripts/items/item_db.gd")
 const BACKGROUND := Color(0.27, 0.19, 0.26, 0.95)
@@ -11,7 +13,12 @@ const BORDER_GEAR := Color(0.78, 0.6, 0.3)
 const BORDER_SELECTED := Color(1.0, 0.92, 0.5)
 const HINT_COLOR := Color(1, 1, 1, 0.35)
 const COUNT_OUTLINE := Color(0.1, 0.05, 0.1)
+const DOUBLE_TAP_MSEC := 350
 
+## "gear" (worn) or "bag".
+var place: String = "bag"
+## Gear slot name ("weapon") for worn gear, or the index in the bag.
+var key: Variant = 0
 ## Item id shown here, "" when the slot is empty.
 var item_id: String = ""
 var count: int = 0
@@ -25,6 +32,7 @@ var selected: bool = false:
 		queue_redraw()
 
 var _icon: Texture2D = null
+var _last_tap_msec: int = -DOUBLE_TAP_MSEC
 var _box := StyleBoxFlat.new()
 
 
@@ -46,7 +54,13 @@ func show_item(id: String, amount: int = 1) -> void:
 func _gui_input(event: InputEvent) -> void:
 	var click := event as InputEventMouseButton
 	if click != null and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
+		var now: int = Time.get_ticks_msec()
 		tapped.emit(self)
+		if now - _last_tap_msec <= DOUBLE_TAP_MSEC:
+			_last_tap_msec = -DOUBLE_TAP_MSEC
+			double_tapped.emit(self)
+		else:
+			_last_tap_msec = now
 		accept_event()
 
 

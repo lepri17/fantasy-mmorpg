@@ -7,6 +7,19 @@ const NO_TOUCH := -1
 @export var action: String = "attack"
 @export var color: Color = Color(0.9, 0.25, 0.3)
 
+## Small text in the corner, such as how many potions are left. "" = none.
+var badge: String = "":
+	set(value):
+		if value != badge:
+			badge = value
+			queue_redraw()
+## Faded when the action cannot be used right now.
+var dimmed: bool = false:
+	set(value):
+		if value != dimmed:
+			dimmed = value
+			modulate.a = 0.45 if dimmed else 1.0
+
 var _touch_index: int = NO_TOUCH
 
 
@@ -40,6 +53,13 @@ func _draw() -> void:
 	var is_held: bool = _touch_index != NO_TOUCH
 	draw_circle(center, radius, Color(color, 0.85 if is_held else 0.5))
 	draw_arc(center, radius, 0.0, TAU, 48, Color(1, 1, 1, 0.7), 3.0, true)
+	if badge != "":
+		var spot: Vector2 = center + Vector2(radius, radius) * 0.68
+		draw_circle(spot, 17.0, Color(0.1, 0.06, 0.1, 0.9))
+		draw_arc(spot, 17.0, 0.0, TAU, 32, Color(1, 1, 1, 0.8), 2.0, true)
+		var font: Font = ThemeDB.fallback_font
+		var baseline := Vector2(spot.x - 17.0, spot.y + 6.0)
+		draw_string(font, baseline, badge, HORIZONTAL_ALIGNMENT_CENTER, 34.0, 17, Color.WHITE)
 
 
 func _release() -> void:

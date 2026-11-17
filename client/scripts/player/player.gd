@@ -1,7 +1,7 @@
 extends CharacterBody2D
 ## The warrior: movement, sword attack with auto-aim, spin skill, potions,
-## health / stamina, death and respawn. Progress (level, XP, gold, potions)
-## lives in PlayerStats; this script only applies it to the scene.
+## health / stamina, gear, death and respawn. Progress (level, XP, gold, bag,
+## gear) lives in PlayerStats; this script only applies it to the scene.
 ##
 ## Input goes through actions only (move_*, attack, skill, use_potion), so the
 ## touch controls drive the same code as the keyboard.
@@ -11,11 +11,16 @@ signal stamina_changed(current: float, maximum: float)
 signal stats_changed
 signal died
 signal respawned
+## A line for the message log, such as "+20 EXP" or "Your bag is full."
+signal message(text: String, color: Color)
 
 const CombatRules = preload("res://scripts/combat/combat_rules.gd")
 const PlayerStats = preload("res://scripts/player/player_stats.gd")
 const SaveFile = preload("res://scripts/player/save_file.gd")
 const FloatingText = preload("res://scripts/ui/floating_text.gd")
+const ItemDb = preload("res://scripts/items/item_db.gd")
+const WarriorLook = preload("res://scripts/player/warrior_look.gd")
+const PICKUP_SCENE = preload("res://scenes/items/pickup.tscn")
 
 const ACTION_LEFT := "move_left"
 const ACTION_RIGHT := "move_right"
@@ -45,6 +50,16 @@ const POTION_HEAL_FRACTION := 0.4
 const REGEN_DELAY_SECONDS := 5.0
 const REGEN_HP_PER_SECOND := 2.0
 const RESPAWN_SECONDS := 2.5
+## After a hit the warrior blinks and cannot be hurt for this long.
+const HIT_INVINCIBLE_SECONDS := 1.0
+## Dropped items land this far in front of the warrior and stay this long.
+const DROP_DISTANCE := 56.0
+const DROPPED_ITEM_SECONDS := 120.0
+const DAMAGE_TAKEN_COLOR := Color(0.8, 0.55, 1.0)
+const XP_COLOR := Color(0.6, 0.85, 1.0)
+const GOLD_COLOR := Color(1.0, 0.86, 0.4)
+const LEVEL_COLOR := Color(1.0, 0.9, 0.3)
+const WARNING_COLOR := Color(1.0, 0.5, 0.45)
 
 ## Walking speed in pixels per second.
 @export var move_speed: float = 220.0
@@ -63,6 +78,8 @@ var max_hp: int = 0
 var stamina: float = 100.0
 var max_stamina: float = 100.0
 var is_dead: bool = false
+## The sprite sheet built for the gear worn now (see warrior_look.gd).
+var look_texture: Texture2D = null
 
 var _attack_ready_in: float = 0.0
 var _skill_ready_in: float = 0.0
@@ -70,6 +87,7 @@ var _attack_animation_left: float = 0.0
 var _seconds_since_damage: float = 0.0
 var _regen_progress: float = 0.0
 var _spawn_position: Vector2 = Vector2.ZERO
+var _invincible_left: float = 0.0
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
 @onready var _camera: Camera2D = $Camera
@@ -84,6 +102,7 @@ func _ready() -> void:
 	stamina = max_stamina
 	_spawn_position = global_position
 	_apply_camera_limits()
+	_apply_look()
 	_play("idle_" + facing)
 
 
@@ -107,6 +126,7 @@ func _physics_process(delta: float) -> void:
 			_play("idle_" + facing)
 
 	_recover(delta)
+	_blink_while_invincible(delta)
 
 	_attack_ready_in = maxf(0.0, _attack_ready_in - delta)
 	_skill_ready_in = maxf(0.0, _skill_ready_in - delta)
@@ -120,17 +140,18 @@ func _physics_process(delta: float) -> void:
 
 ## Called by enemies.
 func take_damage(amount: int) -> void:
-	if is_dead:
+	if is_dead or _invincible_left > 0.0:
 		return
 	hp = maxi(hp - amount, 0)
 	_seconds_since_damage = 0.0
 	hp_changed.emit(hp, max_hp)
-	FloatingText.spawn(self, str(amount), Color(1.0, 0.45, 0.45), 100.0)
+	FloatingText.spawn(self, str(amount), DAMAGE_TAKEN_COLOR, 100.0)
 	_sfx("hurt")
 	_shake_camera()
 	if hp == 0:
 		_die()
 		return
+	_invincible_left = HIT_INVINCIBLE_SECONDS
 	_sprite.modulate = Color(1.0, 0.4, 0.4)
 	create_tween().tween_property(_sprite, "modulate", Color.WHITE, 0.2)
 
@@ -138,12 +159,14 @@ func take_damage(amount: int) -> void:
 ## Called by enemies when they die.
 func gain_xp(amount: int) -> void:
 	var levels_gained: int = stats.add_xp(amount)
+	_say("+%d EXP" % amount, XP_COLOR)
 	if levels_gained > 0:
 		max_hp = stats.max_hp()
 		hp = max_hp
 		hp_changed.emit(hp, max_hp)
-		FloatingText.spawn(self, "LEVEL UP!", Color(1.0, 0.9, 0.3), 120.0, 32)
+		FloatingText.spawn(self, "LEVEL UP!", LEVEL_COLOR, 120.0, 32)
 		_sfx("levelup")
+		_say("Level up! You are now level %d." % stats.level, LEVEL_COLOR)
 	_progress_changed()
 
 
@@ -152,15 +175,78 @@ func add_gold(amount: int) -> void:
 	stats.gold += amount
 	FloatingText.spawn(self, "+%d G" % amount, Color(1.0, 0.85, 0.3), 100.0, 22)
 	_sfx("coin")
+	_say("+%d gold" % amount, GOLD_COLOR)
 	_progress_changed()
 
 
-## Called by potion pickups.
-func add_potions(amount: int) -> void:
-	stats.potions += amount
-	FloatingText.spawn(self, "+%d Potion" % amount, Color(1.0, 0.6, 0.65), 100.0, 22)
+## Called by item pickups. Returns false, and the item stays on the ground,
+## when the bag is full.
+func add_item(item_id: String, count: int = 1) -> bool:
+	if not stats.add_item(item_id, count):
+		_say("Your bag is full.", WARNING_COLOR)
+		return false
+	var text: String = _item_name(item_id) + (" x%d" % count if count > 1 else "")
+	FloatingText.spawn(self, "+" + text, Color(1.0, 0.6, 0.65), 100.0, 22)
 	_sfx("coin")
+	_say("Picked up %s." % text)
 	_progress_changed()
+	return true
+
+
+## Puts on the gear in a bag slot. Gear worn in that place goes to the bag.
+func equip_from_bag(index: int) -> void:
+	if is_dead or index < 0 or index >= stats.bag.size():
+		return
+	var item_id: String = stats.bag[index]["id"]
+	if stats.equip(index):
+		_say("Equipped %s." % _item_name(item_id))
+		_gear_changed()
+
+
+## Moves worn gear (by gear slot, such as "weapon") into the bag.
+func unequip(slot: String) -> void:
+	var item_id: String = stats.equipment.get(slot, "")
+	if is_dead or item_id == "":
+		return
+	if not stats.unequip(slot):
+		_say("Your bag is full.", WARNING_COLOR)
+		return
+	_say("Took off %s." % _item_name(item_id))
+	_gear_changed()
+
+
+## Drops one item from a bag slot on the ground in front of the warrior.
+func drop_from_bag(index: int) -> void:
+	if is_dead:
+		return
+	var item_id: String = stats.take_from_bag(index)
+	if item_id == "":
+		return
+	_drop_on_ground(item_id)
+	_progress_changed()
+
+
+## Takes worn gear off and drops it on the ground.
+func drop_equipped(slot: String) -> void:
+	if is_dead:
+		return
+	var item_id: String = stats.remove_equipped(slot)
+	if item_id == "":
+		return
+	_drop_on_ground(item_id)
+	_gear_changed()
+
+
+## Uses the item in a bag slot. Potions are the only usable item so far.
+func use_from_bag(index: int) -> void:
+	if index >= 0 and index < stats.bag.size():
+		if stats.bag[index]["id"] == PlayerStats.POTION_ID:
+			use_potion()
+
+
+## For the SPIN button: true when the skill would work right now.
+func can_use_skill() -> bool:
+	return not is_dead and _skill_ready_in == 0.0 and stamina >= SKILL_STAMINA_COST
 
 
 ## Drinks one potion. Does nothing at full health or with no potions left.
@@ -284,6 +370,8 @@ func _respawn() -> void:
 	hp = max_hp
 	stamina = max_stamina
 	is_dead = false
+	_invincible_left = 0.0
+	_sprite.self_modulate.a = 1.0
 	_sprite.modulate = Color.WHITE
 	hp_changed.emit(hp, max_hp)
 	stamina_changed.emit(stamina, max_stamina)
@@ -293,6 +381,53 @@ func _respawn() -> void:
 func _progress_changed() -> void:
 	SaveFile.save_data(stats.to_dict())
 	stats_changed.emit()
+
+
+## After the gear changed: health limits, look, save.
+func _gear_changed() -> void:
+	max_hp = stats.max_hp()
+	hp = mini(hp, max_hp)
+	hp_changed.emit(hp, max_hp)
+	_apply_look()
+	_progress_changed()
+
+
+## Rebuilds the sprite sheet for the gear worn now and points every frame at it.
+func _apply_look() -> void:
+	look_texture = WarriorLook.build(stats.equipment)
+	var frames: SpriteFrames = _sprite.sprite_frames
+	for animation in frames.get_animation_names():
+		for i in frames.get_frame_count(animation):
+			var frame := frames.get_frame_texture(animation, i) as AtlasTexture
+			if frame != null:
+				frame.atlas = look_texture
+
+
+func _drop_on_ground(item_id: String) -> void:
+	var pickup: Node2D = PICKUP_SCENE.instantiate()
+	pickup.set("kind", "item")
+	pickup.set("item_id", item_id)
+	pickup.set("lifetime", DROPPED_ITEM_SECONDS)
+	pickup.set("pickup_delay", 1.0)
+	pickup.position = position + FACING_VECTORS[facing] * DROP_DISTANCE
+	get_parent().call_deferred("add_child", pickup)
+	_say("Dropped %s." % _item_name(item_id))
+
+
+func _blink_while_invincible(delta: float) -> void:
+	if _invincible_left <= 0.0:
+		return
+	_invincible_left = maxf(0.0, _invincible_left - delta)
+	var shown: bool = _invincible_left == 0.0 or int(_invincible_left * 12.0) % 2 == 0
+	_sprite.self_modulate.a = 1.0 if shown else 0.35
+
+
+func _say(text: String, color: Color = Color.WHITE) -> void:
+	message.emit(text, color)
+
+
+func _item_name(item_id: String) -> String:
+	return ItemDb.ITEMS[item_id]["name"]
 
 
 func _shake_camera() -> void:

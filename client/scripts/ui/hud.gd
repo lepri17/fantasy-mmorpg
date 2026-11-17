@@ -1,9 +1,14 @@
 extends CanvasLayer
-## Connects the HUD widgets to the player. Only shows state, decides nothing.
+## Connects the HUD widgets to the player. Only shows state, decides nothing:
+## requests from the inventory are passed on to the player.
 
 const ACTION_INVENTORY := "inventory"
 ## The round touch buttons on the right (ATK, SPIN, POT) are in this group.
 const ACTION_BUTTONS_GROUP := "action_buttons"
+## Player methods the inventory may ask for.
+const ITEM_ACTIONS := [
+	"equip_from_bag", "unequip", "use_from_bag", "drop_from_bag", "drop_equipped"
+]
 
 var _player: Node = null
 
@@ -11,6 +16,7 @@ var _player: Node = null
 @onready var _message: Label = $Message
 @onready var _bag_button: Button = $BagButton
 @onready var _inventory = $Inventory
+@onready var _log = $MessageLog
 
 
 func _ready() -> void:
@@ -18,7 +24,7 @@ func _ready() -> void:
 	_style_bag_button()
 	_bag_button.pressed.connect(toggle_inventory)
 	_inventory.connect("close_requested", toggle_inventory)
-	_inventory.connect("use_requested", _on_use_requested)
+	_inventory.connect("item_action", _on_item_action)
 	_player = get_tree().get_first_node_in_group("player")
 	if _player == null:
 		push_warning("Hud: no node in group 'player'")
@@ -28,6 +34,7 @@ func _ready() -> void:
 	_player.connect("stats_changed", _refresh_progress)
 	_player.connect("died", _on_player_died)
 	_player.connect("respawned", _message.hide)
+	_player.connect("message", Callable(_log, "add_message"))
 	_panel.set_hp(_player.get("hp"), _player.get("max_hp"))
 	_panel.set_stamina(_player.get("stamina"), _player.get("max_stamina"))
 	_refresh_progress()
@@ -37,6 +44,8 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if Input.is_action_just_pressed(ACTION_INVENTORY):
 		toggle_inventory()
+	if _player != null:
+		_update_action_buttons()
 
 
 ## Opens or closes the inventory. While it is open the round action buttons
@@ -44,20 +53,32 @@ func _physics_process(_delta: float) -> void:
 func toggle_inventory() -> void:
 	_inventory.visible = not _inventory.visible
 	if _inventory.visible and _player != null:
-		_inventory.refresh(_player.get("stats"))
+		_inventory.refresh(_player.get("stats"), _player.get("look_texture"))
 	get_tree().call_group(ACTION_BUTTONS_GROUP, "set_visible", not _inventory.visible)
 
 
-func _on_use_requested(item_id: String) -> void:
-	if item_id == "red_potion" and _player != null:
-		_player.call("use_potion")
+func _on_item_action(method: String, argument: Variant) -> void:
+	if _player != null and method in ITEM_ACTIONS:
+		_player.call(method, argument)
+
+
+## POT shows how many potions are left; SPIN and POT fade when they would do nothing.
+func _update_action_buttons() -> void:
+	var potions: int = _player.get("stats").potions
+	for button in get_tree().get_nodes_in_group(ACTION_BUTTONS_GROUP):
+		match button.get("action"):
+			"use_potion":
+				button.set("badge", str(potions))
+				button.set("dimmed", potions == 0)
+			"skill":
+				button.set("dimmed", not _player.call("can_use_skill"))
 
 
 func _refresh_progress() -> void:
 	var stats = _player.get("stats")
 	_panel.set_progress(stats.level, stats.xp, stats.xp_to_next(), stats.gold, stats.potions)
 	if _inventory.visible:
-		_inventory.refresh(stats)
+		_inventory.refresh(stats, _player.get("look_texture"))
 
 
 func _style_bag_button() -> void:

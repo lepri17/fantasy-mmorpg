@@ -4,6 +4,8 @@ extends RefCounted
 ## dependencies, so the server can use the same table later.
 ##
 ## Bonuses: "attack" adds to the sword damage, "max_hp" to maximum health.
+## "usable" items can be used from the bag; "world_icon" is the picture on the
+## ground when it should differ from the inventory icon.
 
 ## Gear slots in the order the inventory shows them: left column, then right.
 const GEAR_SLOTS := ["head", "weapon", "gloves", "cape", "armor", "boots"]
@@ -65,6 +67,7 @@ const ITEMS := {
 		"slot": "",
 		"usable": true,
 		"icon": "res://assets/items/icons/potion.png",
+		"world_icon": "res://assets/items/potion.png",
 		# Keep in step with POTION_HEAL_FRACTION in player.gd.
 		"text": "Heals 40% of max HP.",
 	},

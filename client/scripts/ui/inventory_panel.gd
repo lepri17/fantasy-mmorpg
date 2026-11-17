@@ -1,15 +1,18 @@
 extends PanelContainer
 ## Small inventory on the right side of the screen: the gear the warrior wears
-## around his portrait, the bag, gold, and details of the last item tapped.
-## It only shows state. Using an item is asked for with use_requested.
+## around his portrait, the bag, gold, and the item last tapped with its
+## buttons (EQUIP / REMOVE / USE, and DROP). A double tap does the first button.
+## It only shows state. What to do with an item is asked for with item_action,
+## naming the player method to call and its argument.
 
 signal close_requested
-signal use_requested(item_id: String)
+signal item_action(method: String, argument: Variant)
 
 const ItemDb := preload("res://scripts/items/item_db.gd")
+const CombatRules := preload("res://scripts/combat/combat_rules.gd")
 const InventorySlot := preload("res://scripts/ui/inventory_slot.gd")
 
-const SLOT_SIZE := Vector2(54, 54)
+const SLOT_SIZE := Vector2(52, 52)
 const BAG_COLUMNS := 5
 const BAG_ROWS := 3
 const PORTRAIT_SIZE := Vector2(128, 128)
@@ -23,11 +26,13 @@ var gear_slots: Dictionary = {}
 var bag_slots: Array = []
 
 var _selected = null
+var _portrait_frame := AtlasTexture.new()
 var _gold_label: Label
 var _stats_label: Label
 var _name_label: Label
 var _info_label: Label
-var _use_button: Button
+var _primary_button: Button
+var _drop_button: Button
 
 
 func _ready() -> void:
@@ -40,12 +45,14 @@ func _ready() -> void:
 	column.add_child(_gear_row())
 	column.add_child(_bag_header())
 	column.add_child(_bag_grid())
-	column.add_child(_info_row())
+	column.add_child(_info_box())
+	column.add_child(_actions_row())
 	_show_details()
 
 
-## Shows the current gear, bag and gold. stats is a player_stats.gd object.
-func refresh(stats) -> void:
+## Shows the current gear, bag and gold. stats is a player_stats.gd object,
+## look the warrior's current sprite sheet (for the portrait).
+func refresh(stats, look: Texture2D = null) -> void:
 	for slot_name in gear_slots:
 		gear_slots[slot_name].show_item(stats.equipment.get(slot_name, ""))
 	var items: Array = stats.bag_items()
@@ -55,7 +62,10 @@ func refresh(stats) -> void:
 		else:
 			bag_slots[i].show_item("")
 	_gold_label.text = str(stats.gold)
-	_stats_label.text = "ATK %d   HP %d" % [stats.attack_damage(), stats.max_hp()]
+	var damage: Vector2i = CombatRules.damage_range(stats.attack_damage())
+	_stats_label.text = "ATK %d~%d   HP %d" % [damage.x, damage.y, stats.max_hp()]
+	if look != null:
+		_portrait_frame.atlas = look
 	if _selected != null and _selected.item_id == "":
 		_select(null)
 	_show_details()
@@ -74,11 +84,17 @@ func _on_slot_tapped(slot) -> void:
 	_select(slot if slot.item_id != "" else null)
 
 
+func _on_slot_double_tapped(slot) -> void:
+	if slot == _selected and _primary_button.visible:
+		_on_primary_pressed()
+
+
 func _show_details() -> void:
 	if _selected == null:
 		_name_label.text = "Tap an item"
-		_info_label.text = "to see what it does."
-		_use_button.hide()
+		_info_label.text = "to see it. Double tap to wear, remove or use."
+		_primary_button.hide()
+		_drop_button.hide()
 		return
 	var item: Dictionary = ItemDb.ITEMS[_selected.item_id]
 	var parts: PackedStringArray = []
@@ -89,12 +105,32 @@ func _show_details() -> void:
 	parts.append(item["text"])
 	_name_label.text = item["name"]
 	_info_label.text = " ".join(parts)
-	_use_button.visible = item.get("usable", false)
+	_primary_button.text = _primary_action()[0]
+	_primary_button.visible = _primary_button.text != ""
+	_drop_button.show()
 
 
-func _on_use_pressed() -> void:
-	if _selected != null:
-		use_requested.emit(_selected.item_id)
+## [button text, player method] for the selected item. Text "" = no such button.
+func _primary_action() -> Array:
+	if _selected.place == "gear":
+		return ["REMOVE", "unequip"]
+	var item: Dictionary = ItemDb.ITEMS[_selected.item_id]
+	if item.get("slot", "") != "":
+		return ["EQUIP", "equip_from_bag"]
+	if item.get("usable", false):
+		return ["USE", "use_from_bag"]
+	return ["", ""]
+
+
+func _on_primary_pressed() -> void:
+	if _selected != null and _selected.item_id != "":
+		item_action.emit(_primary_action()[1], _selected.key)
+
+
+func _on_drop_pressed() -> void:
+	if _selected != null and _selected.item_id != "":
+		var method: String = "drop_equipped" if _selected.place == "gear" else "drop_from_bag"
+		item_action.emit(method, _selected.key)
 
 
 # --- building the panel
@@ -119,10 +155,9 @@ func _gear_row() -> Control:
 	var middle := VBoxContainer.new()
 	middle.alignment = BoxContainer.ALIGNMENT_CENTER
 	var portrait := TextureRect.new()
-	var frame := AtlasTexture.new()
-	frame.atlas = load(WARRIOR_SHEET)
-	frame.region = Rect2(Vector2.ZERO, PORTRAIT_SIZE)  # first idle frame, facing down
-	portrait.texture = frame
+	_portrait_frame.atlas = load(WARRIOR_SHEET)
+	_portrait_frame.region = Rect2(Vector2.ZERO, PORTRAIT_SIZE)  # first idle frame, facing down
+	portrait.texture = _portrait_frame
 	portrait.custom_minimum_size = PORTRAIT_SIZE
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -139,7 +174,7 @@ func _gear_column(slot_names: Array) -> Control:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 6)
 	for slot_name in slot_names:
-		var slot = _new_slot()
+		var slot = _new_slot("gear", slot_name)
 		slot.is_gear = true
 		slot.hint = ItemDb.SLOT_NAMES[slot_name]
 		gear_slots[slot_name] = slot
@@ -168,37 +203,47 @@ func _bag_grid() -> Control:
 	grid.columns = BAG_COLUMNS
 	grid.add_theme_constant_override("h_separation", 6)
 	grid.add_theme_constant_override("v_separation", 6)
-	for _i in BAG_COLUMNS * BAG_ROWS:
-		var slot = _new_slot()
+	for i in BAG_COLUMNS * BAG_ROWS:
+		var slot = _new_slot("bag", i)
 		bag_slots.append(slot)
 		grid.add_child(slot)
 	return grid
 
 
-func _info_row() -> Control:
-	var row := HBoxContainer.new()
-	row.custom_minimum_size = Vector2(0, 66)
-	row.add_theme_constant_override("separation", 8)
-	var text := VBoxContainer.new()
-	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+func _info_box() -> Control:
+	var box := VBoxContainer.new()
+	box.custom_minimum_size = Vector2(0, 44)
 	_name_label = _label("", 17, Color.WHITE)
 	_info_label = _label("", 14, Color(0.85, 0.85, 0.9))
 	_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_info_label.custom_minimum_size = Vector2(200, 0)
-	text.add_child(_name_label)
-	text.add_child(_info_label)
-	row.add_child(text)
-	_use_button = _button("USE", Color(0.22, 0.48, 0.3), Vector2(72, 48))
-	_use_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_use_button.pressed.connect(_on_use_pressed)
-	row.add_child(_use_button)
+	_info_label.custom_minimum_size = Vector2(280, 0)
+	box.add_child(_name_label)
+	box.add_child(_info_label)
+	return box
+
+
+func _actions_row() -> Control:
+	var row := HBoxContainer.new()
+	row.custom_minimum_size = Vector2(0, 44)
+	row.add_theme_constant_override("separation", 10)
+	_primary_button = _button("EQUIP", Color(0.22, 0.48, 0.3), Vector2(0, 44))
+	_primary_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_primary_button.pressed.connect(_on_primary_pressed)
+	row.add_child(_primary_button)
+	_drop_button = _button("DROP", Color(0.5, 0.3, 0.18), Vector2(0, 44))
+	_drop_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_drop_button.pressed.connect(_on_drop_pressed)
+	row.add_child(_drop_button)
 	return row
 
 
-func _new_slot():
+func _new_slot(place: String, key: Variant):
 	var slot = InventorySlot.new()
+	slot.place = place
+	slot.key = key
 	slot.custom_minimum_size = SLOT_SIZE
 	slot.connect("tapped", _on_slot_tapped)
+	slot.connect("double_tapped", _on_slot_double_tapped)
 	return slot
 
 

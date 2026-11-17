@@ -131,10 +131,84 @@ func _run() -> void:
 	)
 	player.hp = 10
 	first.emit_signal("tapped", first)
-	inventory.call("_on_use_pressed")
+	inventory.call("_on_primary_pressed")
 	await _frames(2)
 	_check(player.hp > 10 and player.stats.potions == 2, "USE in the bag drinks a potion")
 	_check(first.count == 2, "the bag count follows (%d)" % first.count)
+	var pot_button = main.get_node("TouchControls/PotionButton")
+	_check(pot_button.badge == "2", "POT shows the potions left (%s)" % pot_button.badge)
+
+	# --- gear: take off, put back on, drop on the ground, pick up again
+	_check(
+		load("res://assets/characters/warrior/warrior_parts.png") is Image,
+		"the warrior parts load as an Image (no GPU read-back)"
+	)
+	var attack_with_sword: int = player.stats.attack_damage()
+	var look_with_sword: PackedByteArray = player.look_texture.get_image().get_data()
+	var weapon_slot = inventory.gear_slots["weapon"]
+	weapon_slot.emit_signal("tapped", weapon_slot)
+	inventory.call("_on_primary_pressed")
+	await _frames(2)
+	_check(not player.stats.equipment.has("weapon"), "REMOVE takes the sword off")
+	_check(player.stats.count_of("training_sword") == 1, "the sword goes into the bag")
+	_check(
+		player.stats.attack_damage() == attack_with_sword - 4,
+		"without the sword the attack drops by 4"
+	)
+	_check(weapon_slot.item_id == "", "the weapon slot shows empty")
+	var look_without_sword: PackedByteArray = player.look_texture.get_image().get_data()
+	_check(look_without_sword != look_with_sword, "the warrior is drawn without the sword")
+	var sword_slot = inventory.bag_slots[_bag_index(player, "training_sword")]
+	sword_slot.emit_signal("tapped", sword_slot)
+	sword_slot.emit_signal("double_tapped", sword_slot)
+	await _frames(2)
+	_check(
+		player.stats.equipment.get("weapon", "") == "training_sword",
+		"a double tap in the bag puts the sword back on"
+	)
+	_check(player.stats.attack_damage() == attack_with_sword, "the attack is back")
+
+	var max_hp_with_boots: int = player.max_hp
+	var boots_slot = inventory.gear_slots["boots"]
+	boots_slot.emit_signal("tapped", boots_slot)
+	inventory.call("_on_drop_pressed")
+	await _frames(3)
+	_check(player.max_hp == max_hp_with_boots - 5, "dropping the boots lowers max HP by 5")
+	var boots_on_ground = null
+	for pickup in get_nodes_in_group("pickups"):
+		if pickup.get("item_id") == "leather_boots":
+			boots_on_ground = pickup
+	_check(boots_on_ground != null, "the dropped boots lie on the ground")
+	if boots_on_ground != null:
+		await _frames(70)  # a dropped item waits a second before it can be picked up
+		player.global_position = boots_on_ground.global_position
+		await _frames(4)
+	_check(player.stats.count_of("leather_boots") == 1, "walking over the boots picks them up")
+	player.equip_from_bag(_bag_index(player, "leather_boots"))
+	_check(player.max_hp == max_hp_with_boots, "boots back on, max HP back")
+	_check(hud.get_node("MessageLog").get_child_count() > 0, "the message log shows what happened")
+
+	# --- a full bag
+	while player.stats.add_item("red_headband"):
+		pass
+	_check(player.stats.bag.size() == 15, "the bag holds 15 stacks")
+	player.unequip("cape")
+	_check(player.stats.equipment.has("cape"), "with a full bag the cape stays on")
+	player.stats.bag = player.stats.bag.filter(func(stack): return stack["id"] != "red_headband")
+
+	# --- save version 2, and a save from the version before
+	var copy = PlayerStats.new()
+	copy.from_dict(player.stats.to_dict())
+	_check(
+		copy.equipment == player.stats.equipment and copy.bag == player.stats.bag,
+		"gear and bag survive saving"
+	)
+	var old_save = PlayerStats.new()
+	old_save.from_dict({"level": 3, "xp": 10, "gold": 7, "potions": 4})
+	_check(
+		old_save.potions == 4 and old_save.equipment.size() == 6,
+		"an old save keeps its potions and gets the starting gear"
+	)
 	await _hold("inventory", 2)
 	_check(not inventory.visible, "the inventory key closes it")
 	_check(attack_button.visible, "action buttons come back after closing")
@@ -155,9 +229,16 @@ func _run() -> void:
 	_check(loaded.level == player.stats.level, "saved level matches (level %d)" % loaded.level)
 	_check(loaded.gold == player.stats.gold, "saved gold matches")
 
-	# --- death and respawn
+	# --- a moment of invincibility after a hit
 	player.global_position = Vector2(1000, 500)
-	await _frames(2)
+	await _frames(70)  # any blinking from earlier hits is over
+	var hp_before_hits: int = player.hp
+	player.take_damage(5)
+	player.take_damage(5)
+	_check(player.hp == hp_before_hits - 5, "right after a hit the warrior cannot be hurt again")
+	await _frames(70)
+
+	# --- death and respawn
 	player.take_damage(99999)
 	_check(player.is_dead, "the warrior dies at 0 HP")
 	var death_position: Vector2 = player.global_position
@@ -169,6 +250,13 @@ func _run() -> void:
 
 	print("SMOKE TEST: %s" % ("PASSED" if _failures == 0 else "%d FAILED" % _failures))
 	quit(1 if _failures > 0 else 0)
+
+
+func _bag_index(player, item_id: String) -> int:
+	for i in player.stats.bag.size():
+		if player.stats.bag[i]["id"] == item_id:
+			return i
+	return -1
 
 
 func _hold(action: String, frames: int) -> void:

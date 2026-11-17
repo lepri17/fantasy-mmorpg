@@ -5,6 +5,8 @@ Everything here is drawn from code, so the art is original and fully owned.
 Outputs (under client/assets):
   characters/warrior/warrior.png          sprite sheet, 4 rows x 15 columns, 128 px frames
   characters/warrior/warrior_frames.tres  Godot SpriteFrames using that sheet
+  characters/warrior/warrior_parts.png    the same frames split into body and gear parts
+  characters/warrior/warrior_parts.gd     where each part is, and the order to lay them
   environment/grass.png                   seamless grass tile
   monsters/slime/slime.png                slime sheet, 2 idle frames
   monsters/slime/slime_frames.tres        Godot SpriteFrames for the slime
@@ -73,6 +75,10 @@ IRIS = (80, 132, 220, 255)
 GEM = (110, 226, 248, 255)
 TRAIL = (255, 255, 255, 150)
 TRAIL_EDGE = (200, 236, 255, 220)
+TUNIC = (240, 230, 206, 255)
+TUNIC_DARK = (212, 198, 168, 255)
+ROPE = (170, 124, 80, 255)
+SHOE = (104, 70, 50, 255)
 
 SLIME_FRAME = 64
 SLIME_FEET_Y = 56
@@ -207,6 +213,10 @@ class Canvas:
             for x, y in (start, end):
                 self.draw.ellipse(self._box(x, y, r, r), fill=color)
 
+    def use(self, part: str) -> None:
+        """Pick the part the next drawing goes to. A plain canvas has one layer for
+        everything (icons reuse the warrior's drawing helpers); see PartCanvas."""
+
     def layer(self) -> Canvas:
         """A clear canvas of the same size, to draw see-through things on (see blend)."""
         return Canvas(self.size)
@@ -298,15 +308,103 @@ def sword_for(pose: Pose, rest_hand, rest_reach):
 
 def sword_layer(c: Canvas, pose: Pose, sword, center, layer: str) -> None:
     """Draws the sword and its slash trail if they belong to this layer of the frame:
-    "back" = behind the body, "body" = over the body but under the head, "front" = over all."""
+    "back" = behind the body, "body" = over the body but under the head, "front" = over all.
+    Over the body the hand is drawn again, closed round the grip."""
     hand, tip, sword_layer_name = sword
     if sword_layer_name != layer:
         return
+    c.use(f"sword_{layer}")
     if pose.trail:
         draw_trail(c, *pose.trail, center)
     draw_sword(c, hand, tip)
     if layer != "back":
-        draw_fist(c, hand)  # the glove closes over the grip
+        c.use(f"grip_hand_{layer}")
+        c.ellipse(hand[0], hand[1], 3.0, 3.0, SKIN)
+        c.use(f"grip_glove_{layer}")
+        draw_fist(c, hand)
+
+
+# ---------------------------------------------------------------- parts
+# Every frame is drawn as separate parts: the plain body (tunic, sleeves, bare
+# hands, shoes) and one or more parts per piece of gear. The game lays the parts
+# of the gear the warrior wears over each other, so taking off the armour shows
+# the tunic under it. PART_ORDER is the order the parts are laid, per view.
+
+PART_ORDER = {
+    "down": [
+        "shadow", "cape", "sword_back", "legs", "boots", "torso", "armor", "arms",
+        "armor_arms", "bracers", "hands", "gloves", "pauldrons", "scarf", "sword_body",
+        "grip_hand_body", "grip_glove_body", "tails", "head", "headband", "sword_front",
+        "grip_hand_front", "grip_glove_front",
+    ],
+    "up": [
+        "shadow", "sword_back", "legs", "boots", "torso", "armor", "arms", "armor_arms",
+        "bracers", "hands", "gloves", "cape", "pauldrons", "sword_body", "grip_hand_body",
+        "grip_glove_body", "head", "headband", "sword_front", "grip_hand_front",
+        "grip_glove_front",
+    ],
+    "side": [
+        "shadow", "cape", "arm_far", "armor_arm_far", "bracer_far", "hand_far", "glove_far",
+        "sword_back", "legs_far", "boots_far", "legs_near", "boots_near", "torso", "armor",
+        "arms", "armor_arms", "bracers", "hands", "gloves", "pauldrons", "scarf",
+        "sword_body", "grip_hand_body", "grip_glove_body", "tails", "head", "headband",
+        "sword_front", "grip_hand_front", "grip_glove_front",
+    ],
+}
+
+# Item ids (see client/scripts/items/item_db.gd) a part needs; parts not listed are body.
+PART_REQUIRES = {
+    "cape": ["red_cape"],
+    "scarf": ["red_cape"],
+    "sword_back": ["training_sword"],
+    "sword_body": ["training_sword"],
+    "sword_front": ["training_sword"],
+    "grip_hand_body": ["training_sword"],
+    "grip_hand_front": ["training_sword"],
+    "grip_glove_body": ["training_sword", "leather_gloves"],
+    "grip_glove_front": ["training_sword", "leather_gloves"],
+    "boots": ["leather_boots"],
+    "boots_far": ["leather_boots"],
+    "boots_near": ["leather_boots"],
+    "armor": ["blue_plate"],
+    "armor_arms": ["blue_plate"],
+    "armor_arm_far": ["blue_plate"],
+    "pauldrons": ["blue_plate"],
+    "bracers": ["leather_gloves"],
+    "gloves": ["leather_gloves"],
+    "bracer_far": ["leather_gloves"],
+    "glove_far": ["leather_gloves"],
+    "tails": ["red_headband"],
+    "headband": ["red_headband"],
+}
+ALL_GEAR = {item for items in PART_REQUIRES.values() for item in items}
+
+
+class PartCanvas(Canvas):
+    """A canvas with one layer per part. use() picks the layer the next drawing goes to."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.layers: dict[str, tuple] = {}
+        self.use("shadow")
+
+    def use(self, part: str) -> None:
+        if part not in self.layers:
+            size = self.size * SCALE
+            image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+            self.layers[part] = (image, ImageDraw.Draw(image))
+        self.image, self.draw = self.layers[part]
+
+    def finish_parts(self, out_size: int) -> dict[str, Image.Image]:
+        return {
+            part: image.resize((out_size, out_size), Image.LANCZOS)
+            for part, (image, _) in self.layers.items()
+            if image.getchannel("A").getbbox()
+        }
+
+
+def view_of(direction: str) -> str:
+    return "side" if direction in ("left", "right") else direction
 
 
 # ---------------------------------------------------------------- body parts
@@ -316,22 +414,38 @@ def draw_fist(c: Canvas, hand) -> None:
     c.ellipse(hand[0], hand[1], 3.3, 3.3, GRIP)  # leather glove
 
 
-def draw_arm(c: Canvas, shoulder, hand) -> None:
-    """Armoured arm from shoulder to hand: dark sleeve, steel bracer, glove."""
+def draw_arm(c: Canvas, shoulder, hand, far: bool = False) -> None:
+    """Arm from shoulder to hand: cloth sleeve, armoured sleeve, steel bracer,
+    bare hand and glove, each on its own part."""
+    c.use("arm_far" if far else "arms")
+    c.capsule(shoulder, hand, 3.4, TUNIC)
+    c.use("armor_arm_far" if far else "armor_arms")
     c.capsule(shoulder, hand, 3.8, ARMOR_DARK)
+    c.use("bracer_far" if far else "bracers")
     c.capsule(lerp(shoulder, hand, 0.55), lerp(shoulder, hand, 0.85), 4.0, STEEL_DARK)
+    c.use("hand_far" if far else "hands")
+    c.ellipse(hand[0], hand[1], 3.0, 3.0, SKIN)
+    c.use("glove_far" if far else "gloves")
     draw_fist(c, hand)
 
 
 def draw_pauldron(c: Canvas, x, y) -> None:
+    c.use("pauldrons")
     c.ellipse(x, y, 6.8, 5.6, ARMOR)
     c.line(arc_points(x, y + 0.4, 5.8, 4.6, 25, 155, 10), fill=GOLD, width=1.5)
     c.ellipse(x - 2.2, y - 2.0, 2.2, 1.4, ARMOR_LIGHT, outline=False)
 
 
 def draw_torso_front(c: Canvas, cx, oy, back=False) -> None:
-    """Chest plate (or back plate), belt with buckle and two hip plates."""
+    """Plain tunic with a rope belt; over it the chest (or back) plate, belt and hip plates."""
     top, bottom = 54 + oy, 71 + oy
+    c.use("torso")
+    c.rect(cx - 12, top + 0.5, cx + 12, bottom + 3.2, TUNIC, radius=6)
+    c.rect(cx - 10.6, bottom - 6, cx + 10.6, bottom + 1.8, TUNIC_DARK, radius=3, outline=False)
+    c.rect(cx - 12.2, bottom - 5.5, cx + 12.2, bottom - 3, ROPE, radius=1)
+    if not back:
+        c.line([(cx - 3, top + 1), (cx, top + 5), (cx + 3, top + 1)], width=1.2)  # collar
+    c.use("armor")
     c.rect(cx - 13, top, cx + 13, bottom, ARMOR, radius=7)
     c.rect(cx - 11.6, bottom - 8, cx + 11.6, bottom - 1.2, ARMOR_DARK, radius=3, outline=False)
     if back:
@@ -354,6 +468,11 @@ def draw_torso_front(c: Canvas, cx, oy, back=False) -> None:
 
 def draw_torso_side(c: Canvas, cx, oy) -> None:
     top, bottom = 54 + oy, 71 + oy
+    c.use("torso")
+    c.rect(cx - 8.8, top + 0.5, cx + 9.2, bottom + 3, TUNIC, radius=5)
+    c.rect(cx - 7.5, bottom - 6, cx + 7.8, bottom + 1.6, TUNIC_DARK, radius=3, outline=False)
+    c.rect(cx - 9, bottom - 5.5, cx + 9.4, bottom - 3, ROPE, radius=1)
+    c.use("armor")
     c.rect(cx - 9.5, top, cx + 10, bottom, ARMOR, radius=6)
     c.rect(cx - 8, bottom - 8, cx + 8.6, bottom - 1.2, ARMOR_DARK, radius=3, outline=False)
     c.ellipse(cx - 4, top + 5.5, 3.6, 2.4, ARMOR_LIGHT, outline=False)
@@ -377,19 +496,26 @@ def draw_legs_front(c: Canvas, cx, oy, legs, toward_camera: bool) -> None:
         ground_y = FEET_Y + sign * forward * 0.9
         placed.append((ground_y, x, ground_y - lift))
     for _, x, foot_y in sorted(placed):
-        c.capsule((x, 69 + oy), (x, foot_y - 6), 4.4, PANTS)
+        c.use("legs")
+        c.capsule((x, 69 + oy), (x, foot_y - 4), 4.2, PANTS)
+        c.rect(x - 4.6, foot_y - 5, x + 4.6, foot_y, SHOE, radius=2.4)
+        c.use("boots")
         draw_boot_front(c, x, foot_y)
 
 
 def draw_leg_side(c: Canvas, x, oy, forward, lift, far: bool) -> None:
     fx, fy = x - forward * 2.2, FEET_Y - lift
-    c.capsule((x, 69 + oy), (fx + 0.5, fy - 6), 4.3, PANTS_DARK if far else PANTS)
+    c.use("legs_far" if far else "legs_near")
+    c.capsule((x, 69 + oy), (fx + 0.5, fy - 4), 4.1, PANTS_DARK if far else PANTS)
+    c.rect(fx - 5.8, fy - 5, fx + 3.6, fy, SHOE, radius=2.4)
+    c.use("boots_far" if far else "boots_near")
     c.rect(fx - 6.5, fy - 8, fx + 4.2, fy, BOOT_DARK if far else BOOT, radius=2.8)
     c.rect(fx - 4.8, fy - 9, fx + 4.8, fy - 5.6, BOOT if far else BOOT_LIGHT, radius=1.4)
 
 
 def draw_cape_front(c: Canvas, cx, oy, sway) -> None:
     """From the front only the dark inside of the cape shows, flaring around the legs."""
+    c.use("cape")
     s = sway * 1.2
     c.polygon(
         [(cx - 12, 56 + oy), (cx + 12, 56 + oy), (cx + 18 + s, 79 + oy), (cx + 9 + s, 77.5 + oy),
@@ -399,6 +525,7 @@ def draw_cape_front(c: Canvas, cx, oy, sway) -> None:
 
 
 def draw_cape_back(c: Canvas, cx, oy, sway) -> None:
+    c.use("cape")
     s = sway * 1.6
     hem = [(cx + 17 + s, 80 + oy), (cx + 8.5 + s, 78 + oy), (cx + s, 81 + oy),
            (cx - 8.5 + s, 78 + oy), (cx - 17 + s, 80 + oy)]
@@ -411,11 +538,17 @@ def draw_cape_back(c: Canvas, cx, oy, sway) -> None:
 
 def draw_cape_side(c: Canvas, cx, oy, sway, wind) -> None:
     """Hangs behind the warrior; streams back while he walks."""
+    c.use("cape")
     back = (cx + 17 + wind * 6 + sway * 1.5, 79 + oy - wind * 4)
     mid = (cx + 12 + wind * 4 + sway, 76.5 + oy - wind * 2)
     front = (cx + 8 + wind * 2 + sway * 0.5, 79 + oy - wind)
     c.polygon([(cx + 2, 55 + oy), (cx + 10, 56 + oy), back, mid, front, (cx + 3, 73 + oy)], CAPE)
     c.line([(cx + 7, 60 + oy), lerp(mid, back, 0.3)], fill=CAPE_DARK, width=1.2)
+
+
+def draw_scarf(c: Canvas, x0, x1, oy) -> None:
+    c.use("scarf")
+    c.rect(x0, 51.5 + oy, x1, 57.5 + oy, CAPE, radius=3)
 
 
 # ---------------------------------------------------------------- head
@@ -457,7 +590,9 @@ def draw_band(c: Canvas, cx, cy, rx) -> None:
 
 
 def draw_head_front(c: Canvas, cx, cy, sway) -> None:
+    c.use("tails")
     draw_tails(c, (cx + 17, cy - 5), 32, 14, sway)
+    c.use("head")
     draw_tuft(c, cx, cy, sway)
     c.ellipse(cx, cy, 22, 20, SKIN)
     for side in (-1, 1):
@@ -468,12 +603,14 @@ def draw_head_front(c: Canvas, cx, cy, sway) -> None:
               (cx - 6, cy + 8), (cx - 12, cy + 1), (cx - 18, cy + 7), (cx - 22, cy)]
     c.polygon(arc_points(cx, cy, 23, 21.5, 180, 360) + fringe, HAIR)
     c.line(arc_points(cx, cy - 4, 16, 13, 215, 260, 8), fill=HAIR_LIGHT, width=2.2)
+    c.use("headband")
     draw_band(c, cx, cy, 21.8)
     c.rect(cx - 4.2, cy - 4.4, cx + 4.2, cy + 1.4, GOLD, radius=1.2)  # forehead plate
     c.ellipse(cx, cy - 1.5, 1.5, 1.5, GEM, outline=False)
 
 
 def draw_head_back(c: Canvas, cx, cy, sway) -> None:
+    c.use("head")
     draw_tuft(c, cx, cy, sway)
     spikes = [(cx + 21, cy + 6), (cx + 16, cy + 19), (cx + 10, cy + 15), (cx + 5, cy + 23),
               (cx, cy + 17), (cx - 5, cy + 23), (cx - 10, cy + 15), (cx - 16, cy + 19),
@@ -481,13 +618,16 @@ def draw_head_back(c: Canvas, cx, cy, sway) -> None:
     c.polygon(arc_points(cx, cy, 23, 21.5, 165, 375) + spikes, HAIR)
     c.line(arc_points(cx, cy + 2, 14, 10, 30, 150, 10), fill=HAIR_DARK, width=1.4)
     c.line(arc_points(cx, cy - 4, 16, 13, 215, 260, 8), fill=HAIR_LIGHT, width=2.2)
+    c.use("headband")
     draw_band(c, cx, cy, 21.8)
     draw_tails(c, (cx, cy - 0.5), 90, 15, sway)
     c.ellipse(cx, cy - 1.3, 2.8, 2.3, CAPE)  # knot
 
 
 def draw_head_side(c: Canvas, cx, cy, sway, wind) -> None:
+    c.use("tails")
     draw_tails(c, (cx + 19, cy - 6), 28 - wind * 18, 15 + wind * 2, sway)
+    c.use("head")
     draw_tuft(c, cx + 2, cy, sway)
     c.ellipse(cx, cy, 21, 20, SKIN)
     draw_eye(c, cx - 11.5, cy + 7.5, rx=2.7)
@@ -497,6 +637,7 @@ def draw_head_side(c: Canvas, cx, cy, sway, wind) -> None:
              (cx - 10, cy), (cx - 16, cy + 6)]
     c.polygon(arc_points(cx, cy, 22, 21.5, 188, 425) + inner, HAIR)
     c.line(arc_points(cx + 1, cy - 4, 16, 13, 220, 265, 8), fill=HAIR_LIGHT, width=2.2)
+    c.use("headband")
     draw_band(c, cx, cy, 20.8)
     c.rect(cx - 21.8, cy - 8.6, cx - 18.4, cy - 3, GOLD, radius=1)  # edge of the forehead plate
     c.ellipse(cx + 19.3, cy - 6, 2.8, 2.3, CAPE)  # knot
@@ -505,10 +646,11 @@ def draw_head_side(c: Canvas, cx, cy, sway, wind) -> None:
 # ---------------------------------------------------------------- whole frames
 
 
-def draw_down(c: Canvas, pose: Pose) -> None:
+def draw_down(c: PartCanvas, pose: Pose) -> None:
     ox, oy = pose.lean[0], pose.bob + pose.lean[1]
     cx, center = 48 + ox, (48 + ox, 62 + oy)
     sword = sword_for(pose, (cx - 17, 70 + oy + pose.arm * 1.2), (-13, -27))
+    c.use("shadow")
     draw_shadow(c)
     draw_cape_front(c, cx, oy, pose.sway)
     sword_layer(c, pose, sword, center, "back")
@@ -518,16 +660,17 @@ def draw_down(c: Canvas, pose: Pose) -> None:
     draw_arm(c, (cx + 14, 58 + oy), (cx + 17, 70 + oy - pose.arm * 2.2))
     draw_pauldron(c, cx - 15, 57.5 + oy)
     draw_pauldron(c, cx + 15, 57.5 + oy)
-    c.rect(cx - 10, 51.5 + oy, cx + 10, 57.5 + oy, CAPE, radius=3)  # scarf
+    draw_scarf(c, cx - 10, cx + 10, oy)
     sword_layer(c, pose, sword, center, "body")
     draw_head_front(c, cx, 35 + oy, pose.sway)
     sword_layer(c, pose, sword, center, "front")
 
 
-def draw_up(c: Canvas, pose: Pose) -> None:
+def draw_up(c: PartCanvas, pose: Pose) -> None:
     ox, oy = pose.lean[0], pose.bob + pose.lean[1]
     cx, center = 48 + ox, (48 + ox, 62 + oy)
     sword = sword_for(pose, (cx + 17, 70 + oy + pose.arm * 1.2), (13, -27))
+    c.use("shadow")
     draw_shadow(c)
     sword_layer(c, pose, sword, center, "back")
     draw_legs_front(c, 48 + ox * 0.3, oy, pose.legs, toward_camera=False)
@@ -542,15 +685,16 @@ def draw_up(c: Canvas, pose: Pose) -> None:
     sword_layer(c, pose, sword, center, "front")
 
 
-def draw_side(c: Canvas, pose: Pose) -> None:
+def draw_side(c: PartCanvas, pose: Pose) -> None:
     """Facing left. The "right" frames are these, mirrored."""
     ox, oy = pose.lean[0], pose.bob + pose.lean[1]
     cx, center = 47 + ox, (47 + ox, 62 + oy)
     sword = sword_for(pose, (cx - 6 - pose.arm * 3.5, 70 + oy), (-26, -16))
     (near_forward, near_lift), (far_forward, far_lift) = pose.legs
+    c.use("shadow")
     draw_shadow(c)
     draw_cape_side(c, cx, oy, pose.sway, pose.wind)
-    draw_arm(c, (cx + 4, 58 + oy), (cx + 6 + pose.arm * 3.5, 69 + oy))  # far arm
+    draw_arm(c, (cx + 4, 58 + oy), (cx + 6 + pose.arm * 3.5, 69 + oy), far=True)
     sword_layer(c, pose, sword, center, "back")
     base = 48 + ox * 0.3
     draw_leg_side(c, base, oy, far_forward, far_lift, far=True)
@@ -558,7 +702,7 @@ def draw_side(c: Canvas, pose: Pose) -> None:
     draw_torso_side(c, cx, oy)
     draw_arm(c, (cx + 1, 58 + oy), sword[0])
     draw_pauldron(c, cx + 1, 57.5 + oy)
-    c.rect(cx - 8, 51.5 + oy, cx + 9, 57.5 + oy, CAPE, radius=3)  # scarf
+    draw_scarf(c, cx - 8, cx + 9, oy)
     sword_layer(c, pose, sword, center, "body")
     draw_head_side(c, cx, 35 + oy, pose.sway, pose.wind)
     sword_layer(c, pose, sword, center, "front")
@@ -568,25 +712,130 @@ def warrior_poses(direction: str) -> list[Pose]:
     return idle_poses() + walk_poses() + attack_poses(direction)
 
 
-def draw_frame(direction: str, pose: Pose) -> Image.Image:
-    canvas = Canvas()
-    if direction == "down":
-        draw_down(canvas, pose)
-    elif direction == "up":
-        draw_up(canvas, pose)
-    else:
-        draw_side(canvas, pose)
-    frame = canvas.finish(CELL)
-    return ImageOps.mirror(frame) if direction == "right" else frame
+def draw_frame_parts(direction: str, pose: Pose) -> dict[str, Image.Image]:
+    """One frame as {part: image}, each image CELL x CELL."""
+    canvas = PartCanvas()
+    view = view_of(direction)
+    {"down": draw_down, "up": draw_up, "side": draw_side}[view](canvas, pose)
+    parts = canvas.finish_parts(CELL)
+    unknown = set(parts) - set(PART_ORDER[view])
+    assert not unknown, f"parts missing from PART_ORDER[{view}]: {unknown}"
+    if direction == "right":
+        parts = {part: ImageOps.mirror(image) for part, image in parts.items()}
+    return parts
 
 
-def build_warrior_sheet() -> Image.Image:
-    columns = IDLE_FRAMES + WALK_FRAMES + ATTACK_FRAMES
-    sheet = Image.new("RGBA", (CELL * columns, CELL * len(DIRECTIONS)), (0, 0, 0, 0))
+def compose(parts: dict[str, Image.Image], view: str, worn: set[str]) -> Image.Image:
+    """Lays the parts of one frame over each other, keeping only the gear that is worn."""
+    frame = Image.new("RGBA", (CELL, CELL), (0, 0, 0, 0))
+    for part in PART_ORDER[view]:
+        if part in parts and set(PART_REQUIRES.get(part, [])) <= worn:
+            frame.alpha_composite(parts[part])
+    return frame
+
+
+def build_warrior_parts() -> dict[tuple[int, int], dict[str, Image.Image]]:
+    """Every frame of the sheet as parts, keyed by (row, column)."""
+    frames = {}
     for row, direction in enumerate(DIRECTIONS):
         for col, pose in enumerate(warrior_poses(direction)):
-            sheet.paste(draw_frame(direction, pose), (col * CELL, row * CELL))
+            frames[(row, col)] = draw_frame_parts(direction, pose)
+    return frames
+
+
+def build_warrior_sheet(frames, worn: set[str] = ALL_GEAR) -> Image.Image:
+    columns = IDLE_FRAMES + WALK_FRAMES + ATTACK_FRAMES
+    sheet = Image.new("RGBA", (CELL * columns, CELL * len(DIRECTIONS)), (0, 0, 0, 0))
+    for (row, col), parts in frames.items():
+        frame = compose(parts, view_of(DIRECTIONS[row]), worn)
+        sheet.paste(frame, (col * CELL, row * CELL))
     return sheet
+
+
+def pack_warrior_parts(frames, width: int = 2048):
+    """Crops every part of every frame to its content and packs the crops into one atlas.
+    Returns (atlas, pieces) with pieces[part][row] = [[column, x, y, w, h, x in cell,
+    y in cell], ...]."""
+    crops = []
+    for (row, col), parts in frames.items():
+        for part, image in parts.items():
+            box = image.getchannel("A").getbbox()
+            if box:
+                crops.append((part, row, col, image.crop(box), box[0], box[1]))
+    crops.sort(key=lambda crop: (-crop[3].height, crop[0], crop[1], crop[2]))
+    x = y = shelf = 0
+    placed = []
+    for part, row, col, crop, dx, dy in crops:
+        if x + crop.width > width:
+            x, y, shelf = 0, y + shelf + 1, 0
+        placed.append((part, row, col, crop, x, y, dx, dy))
+        x += crop.width + 1
+        shelf = max(shelf, crop.height)
+    atlas = Image.new("RGBA", (width, y + shelf), (0, 0, 0, 0))
+    all_parts = sorted({part for order in PART_ORDER.values() for part in order})
+    pieces = {part: [[] for _ in DIRECTIONS] for part in all_parts}
+    for part, row, col, crop, ax, ay, dx, dy in placed:
+        atlas.paste(crop, (ax, ay))
+        pieces[part][row].append([col, ax, ay, crop.width, crop.height, dx, dy])
+    for rows in pieces.values():
+        for row_pieces in rows:
+            row_pieces.sort()
+    return atlas, pieces
+
+
+def _gd_list(values) -> str:
+    return "[" + ", ".join(f'"{v}"' for v in values) + "]"
+
+
+def build_parts_script(pieces) -> str:
+    """Text of client/assets/characters/warrior/warrior_parts.gd (generated data)."""
+    lines = [
+        "extends RefCounted",
+        "## Generated by tools/generate_assets.py - do not edit by hand.",
+        "## Where each part of the warrior is in warrior_parts.png, the order the parts",
+        "## are laid over each other in each direction, and the gear each part needs.",
+        "",
+        f"const CELL := {CELL}",
+        f"const COLUMNS := {IDLE_FRAMES + WALK_FRAMES + ATTACK_FRAMES}",
+        f"const DIRECTIONS := {_gd_list(DIRECTIONS)}",
+        "",
+        "const ORDER := {",
+    ]
+    for direction in DIRECTIONS:
+        lines.append(f'\t"{direction}": [')
+        order = PART_ORDER[view_of(direction)]
+        for i in range(0, len(order), 5):
+            lines.append("\t\t" + ", ".join(f'"{p}"' for p in order[i:i + 5]) + ",")
+        lines.append("\t],")
+    lines += ["}", "", "## Part -> item ids it needs. Parts not listed are the plain body.", ""]
+    lines.append("const REQUIRES := {")
+    for part, items in PART_REQUIRES.items():
+        lines.append(f'\t"{part}": {_gd_list(items)},')
+    lines += [
+        "}",
+        "",
+        "## Part -> one list per row: [column, atlas x, atlas y, width, height, x, y in cell].",
+        "const PIECES := {",
+    ]
+    for part, rows in pieces.items():
+        lines.append(f'\t"{part}": [')
+        for row_pieces in rows:
+            if not row_pieces:
+                lines.append("\t\t[],")
+                continue
+            lines.append("\t\t[")
+            texts = [str(p).replace(" ", "") for p in row_pieces]
+            line = "\t\t\t"
+            for text in texts:
+                if len(line) + len(text) > 92:
+                    lines.append(line.rstrip())
+                    line = "\t\t\t"
+                line += text + ", "
+            lines.append(line.rstrip())
+            lines.append("\t\t],")
+        lines.append("\t],")
+    lines += ["}", ""]
+    return "\n".join(lines)
 
 
 def build_sprite_frames(sheet_res_path: str) -> str:
@@ -896,8 +1145,12 @@ def main() -> None:
     warrior_dir.mkdir(parents=True, exist_ok=True)
     environment_dir.mkdir(parents=True, exist_ok=True)
 
-    sheet = build_warrior_sheet()
+    frames = build_warrior_parts()
+    sheet = build_warrior_sheet(frames)
     sheet.save(warrior_dir / "warrior.png")
+    atlas, pieces = pack_warrior_parts(frames)
+    atlas.save(warrior_dir / "warrior_parts.png")
+    (warrior_dir / "warrior_parts.gd").write_text(build_parts_script(pieces), encoding="utf-8")
     build_icon(sheet).save(ROOT / "client" / "icon.png")
     (warrior_dir / "warrior_frames.tres").write_text(
         build_sprite_frames("res://assets/characters/warrior/warrior.png"), encoding="utf-8"

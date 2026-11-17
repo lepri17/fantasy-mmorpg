@@ -7,7 +7,7 @@ const TEXT_SIZE := 18
 const HP_TOP := 28.0
 const HP_HEIGHT := 24.0
 const STAMINA_HEIGHT := 12.0
-const XP_HEIGHT := 8.0
+const XP_HEIGHT := 15.0
 const GAP := 6.0
 
 var _hp: int = 1
@@ -60,7 +60,12 @@ func _draw() -> void:
 	_draw_bar(stamina_rect, _stamina / maxf(_max_stamina, 1.0), Color(0.95, 0.75, 0.2))
 
 	var xp_rect := Rect2(0.0, stamina_rect.end.y + GAP, size.x, XP_HEIGHT)
-	_draw_bar(xp_rect, float(_xp) / float(maxi(_xp_to_next, 1)), Color(0.45, 0.7, 1.0))
+	var xp_ratio: float = float(_xp) / float(maxi(_xp_to_next, 1))
+	_draw_bar(xp_rect, xp_ratio, Color(0.45, 0.7, 1.0))
+	var xp_text: String = "EXP %d / %d  (%.2f%%)" % [_xp, _xp_to_next, xp_ratio * 100.0]
+	var xp_baseline := Vector2(8.0, xp_rect.end.y - 2.0)
+	draw_string_outline(font, xp_baseline, xp_text, left, -1, 12, 3, Color(0.05, 0.1, 0.2))
+	draw_string(font, xp_baseline, xp_text, left, -1, 12, Color.WHITE)
 
 
 func _draw_bar(rect: Rect2, ratio: float, color: Color) -> void:
