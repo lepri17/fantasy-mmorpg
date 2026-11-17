@@ -239,6 +239,7 @@ func _start_slam() -> void:
 	var warning: float = float(special["warning_seconds"])
 	var radius: float = float(special["radius"])
 	_casting_left = warning
+	var center: Vector2 = global_position  # the circle frees itself when it is full
 	var circle: Node2D = Telegraph.new()
 	circle.radius = radius
 	circle.seconds = warning
@@ -249,7 +250,7 @@ func _start_slam() -> void:
 	if is_dead or not is_inside_tree():
 		return
 	var target: Node2D = _chase_target()
-	if target == null or target.global_position.distance_to(circle.global_position) > radius:
+	if target == null or target.global_position.distance_to(center) > radius:
 		return
 	var target_stats = target.get("stats")
 	var hit: Dictionary = CombatRules.resolve_hit(

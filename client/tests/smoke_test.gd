@@ -304,11 +304,13 @@ func _run() -> void:
 
 	# --- skills from skills.json, dash, statuses, telegraphed slam
 	await _frames(70)
+	_freeze(enemies, true)
+	for enemy in enemies:
+		enemy.evasion = 0.0
 	player.stamina = player.max_stamina
-	var struck = _first_alive(enemies)
-	struck.evasion = 0.0
-	player.global_position = struck.global_position + Vector2(-80, 0)
+	player.global_position = _first_alive(enemies).global_position + Vector2(-80, 0)
 	await _frames(2)
+	var struck = player.call("_nearest_enemy", 110.0)
 	var struck_hp: int = struck.hp
 	_check(player.use_skill("power_strike"), "Power Strike can be used")
 	_check(struck.hp < struck_hp, "Power Strike hits the nearest enemy (hp %d)" % struck.hp)
@@ -321,11 +323,13 @@ func _run() -> void:
 	)
 	player.stamina = player.max_stamina
 	var slammed = _first_alive(enemies)
-	slammed.evasion = 0.0
+	slammed.max_hp = 500
+	slammed.hp = 500  # tough enough to live through the slam, so the stun shows
 	player.global_position = slammed.global_position + Vector2(-60, 0)
 	await _frames(2)
 	_check(player.use_skill("ground_slam"), "Ground Slam can be used at level 5")
 	_check(slammed.statuses.is_active("stun"), "Ground Slam stuns the enemies it hits")
+	_freeze(enemies, false)
 
 	player.global_position = Vector2(1000, 500)
 	await _frames(70)
@@ -351,15 +355,22 @@ func _run() -> void:
 	player.take_damage(1)
 	_check(String(sprite.animation).begins_with("hurt_"), "getting hit plays the hurt frame")
 
-	var blue = blue_slimes[0]
+	var blue = _first_alive(blue_slimes)
+	_freeze(enemies, true)
+	blue.set_physics_process(true)
+	blue.set("_attack_ready_in", 99.0)  # only the slam may hurt the warrior in this check
 	player.global_position = blue.global_position + Vector2(30, 0)
-	await _frames(70)
-	player.set("_invincible_left", 0.0)  # a normal hit just before must not shield the warrior
+	await _frames(5)
+	player.set("_invincible_left", 0.0)
 	var hp_before_slam: int = player.hp
 	blue.call("_start_slam")
 	_check(get_nodes_in_group("telegraphs").size() > 0, "a red circle warns before the slam")
 	await _frames(60)
-	_check(player.hp < hp_before_slam, "standing in the red circle gets you hit")
+	_check(
+		player.hp < hp_before_slam, "standing in the red circle gets you hit (hp %d)" % player.hp
+	)
+	blue.set("_attack_ready_in", 0.0)
+	_freeze(enemies, false)
 
 	# --- a moment of invincibility after a hit
 	player.global_position = Vector2(1000, 500)
@@ -383,6 +394,11 @@ func _run() -> void:
 	_remove_test_save()
 	print("SMOKE TEST: %s" % ("PASSED" if _failures == 0 else "%d FAILED" % _failures))
 	quit(1 if _failures > 0 else 0)
+
+
+func _freeze(enemies: Array, frozen: bool) -> void:
+	for enemy in enemies:
+		enemy.set_physics_process(not frozen)
 
 
 func _first_alive(enemies: Array):
