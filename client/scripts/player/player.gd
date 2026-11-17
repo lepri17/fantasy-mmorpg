@@ -32,8 +32,9 @@ const FACING_VECTORS := {
 	"up": Vector2.UP,
 }
 
-## How long the swing animation keeps priority over walk / idle.
-const ATTACK_ANIMATION_SECONDS := 0.22
+## How long the swing animation keeps priority over walk / idle
+## (5 frames at 18 fps in warrior_frames.tres).
+const ATTACK_ANIMATION_SECONDS := 0.28
 const STAMINA_REGEN_PER_SECOND := 12.0
 const SKILL_STAMINA_COST := 40.0
 const SKILL_RADIUS := 130.0
