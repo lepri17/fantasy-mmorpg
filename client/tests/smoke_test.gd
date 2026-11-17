@@ -107,6 +107,7 @@ func _run() -> void:
 		waited += 1
 	Input.action_release("attack")
 	_check(slime.is_dead, "slime dies under repeated attacks (after %d frames)" % waited)
+	_check(slime.get_node("Sprite").animation == "die", "a dead slime plays its death animation")
 	_check(player.hp < player.max_hp, "slime hurt the warrior (hp %d/%d)" % [player.hp, player.max_hp])
 	_check(player.stats.xp == 20, "killing a slime gives 20 XP (xp %d)" % player.stats.xp)
 
@@ -301,6 +302,65 @@ func _run() -> void:
 	_check(loaded.level == player.stats.level, "saved level matches (level %d)" % loaded.level)
 	_check(loaded.gold == player.stats.gold, "saved gold matches")
 
+	# --- skills from skills.json, dash, statuses, telegraphed slam
+	await _frames(70)
+	player.stamina = player.max_stamina
+	var struck = _first_alive(enemies)
+	struck.evasion = 0.0
+	player.global_position = struck.global_position + Vector2(-80, 0)
+	await _frames(2)
+	var struck_hp: int = struck.hp
+	_check(player.use_skill("power_strike"), "Power Strike can be used")
+	_check(struck.hp < struck_hp, "Power Strike hits the nearest enemy (hp %d)" % struck.hp)
+	_check(player.cooldown_left("skill_2") > 0.9, "STRIKE starts its cooldown")
+	_check(not player.use_skill("war_cry"), "War Cry is locked below level 3")
+	player.stats.level = 5
+	player.stamina = player.max_stamina
+	_check(
+		player.use_skill("war_cry") and player.has_damage_bonus(), "War Cry gives a damage boost"
+	)
+	player.stamina = player.max_stamina
+	var slammed = _first_alive(enemies)
+	slammed.evasion = 0.0
+	player.global_position = slammed.global_position + Vector2(-60, 0)
+	await _frames(2)
+	_check(player.use_skill("ground_slam"), "Ground Slam can be used at level 5")
+	_check(slammed.statuses.is_active("stun"), "Ground Slam stuns the enemies it hits")
+
+	player.global_position = Vector2(1000, 500)
+	await _frames(70)
+	player.stamina = player.max_stamina
+	var before_dash: Vector2 = player.global_position
+	_check(player.dash(Vector2.RIGHT), "dash starts")
+	var hp_dashing: int = player.hp
+	player.take_damage(5)
+	_check(player.hp == hp_dashing, "no damage while dashing")
+	await _frames(14)
+	var dashed: float = player.global_position.x - before_dash.x
+	_check(dashed > 80.0, "a dash covers ground fast (%d px)" % dashed)
+
+	player.apply_status("slow", 1.0, 0.5)
+	_check(is_equal_approx(player.statuses.speed_factor(), 0.5), "slow halves the walking speed")
+	player.statuses.clear()
+	var hp_poisoned: int = player.hp
+	player.apply_status("poison", 2.0, 10.0)
+	await _frames(40)
+	_check(player.hp < hp_poisoned, "poison hurts over time (hp %d)" % player.hp)
+	player.statuses.clear()
+	await _frames(70)
+	player.take_damage(1)
+	_check(String(sprite.animation).begins_with("hurt_"), "getting hit plays the hurt frame")
+
+	var blue = blue_slimes[0]
+	player.global_position = blue.global_position + Vector2(30, 0)
+	await _frames(70)
+	player.set("_invincible_left", 0.0)  # a normal hit just before must not shield the warrior
+	var hp_before_slam: int = player.hp
+	blue.call("_start_slam")
+	_check(get_nodes_in_group("telegraphs").size() > 0, "a red circle warns before the slam")
+	await _frames(60)
+	_check(player.hp < hp_before_slam, "standing in the red circle gets you hit")
+
 	# --- a moment of invincibility after a hit
 	player.global_position = Vector2(1000, 500)
 	await _frames(70)  # any blinking from earlier hits is over
@@ -323,6 +383,13 @@ func _run() -> void:
 	_remove_test_save()
 	print("SMOKE TEST: %s" % ("PASSED" if _failures == 0 else "%d FAILED" % _failures))
 	quit(1 if _failures > 0 else 0)
+
+
+func _first_alive(enemies: Array):
+	for enemy in enemies:
+		if not enemy.is_dead:
+			return enemy
+	return enemies[0]
 
 
 func _remove_test_save() -> void:

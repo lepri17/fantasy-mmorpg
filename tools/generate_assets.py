@@ -40,9 +40,12 @@ DIRECTIONS = ["down", "left", "right", "up"]
 IDLE_FRAMES = 4
 WALK_FRAMES = 6
 ATTACK_FRAMES = 5
+HURT_FRAMES = 1
 IDLE_FPS = 4.0
 WALK_FPS = 12.0
 ATTACK_FPS = 18.0
+HURT_FPS = 5.0
+COLUMNS = IDLE_FRAMES + WALK_FRAMES + ATTACK_FRAMES + HURT_FRAMES
 
 OUTLINE = (52, 38, 60, 255)
 SKIN = (255, 222, 194, 255)
@@ -96,6 +99,7 @@ class Pose:
     lean: tuple = (0.0, 0.0)  # shift of the upper body (attack lunge)
     sword: tuple | None = None  # attack frames: (hand, tip, layer) - see sword_layer()
     trail: tuple | None = None  # attack frames: (tip in the previous frame, tip now)
+    hurt: bool = False  # squeezed eyes and an open mouth
 
 
 def idle_poses() -> list[Pose]:
@@ -143,6 +147,12 @@ ATTACKS = {
         ((42, 70), (14, 62), "front", 0.5, (-0.5, 0.5), False),  # back to guard
     ],
 }
+
+
+def hurt_pose(direction: str) -> Pose:
+    """Knocked back by a hit: leaning away from the facing, eyes squeezed shut."""
+    lean = {"down": (0.0, -1.6), "up": (0.0, 1.2)}.get(direction, (2.6, -0.6))
+    return Pose(bob=-0.4, lean=lean, arm=0.6, sway=1.0, hurt=True)
 
 
 def attack_poses(direction: str) -> list[Pose]:
@@ -589,16 +599,28 @@ def draw_band(c: Canvas, cx, cy, rx) -> None:
     c.polygon(top + [(x, y + 3.4) for x, y in reversed(top)], CAPE)
 
 
-def draw_head_front(c: Canvas, cx, cy, sway) -> None:
+def draw_squeezed_eye(c: Canvas, ex, ey, pointing: int) -> None:
+    """A shut eye drawn as ">" (pointing = 1) or "<" (pointing = -1)."""
+    c.line([(ex - 2.4 * pointing, ey - 2.6), (ex + 2.2 * pointing, ey), (ex - 2.4 * pointing, ey + 2.6)],
+           width=1.7)
+
+
+def draw_head_front(c: Canvas, cx, cy, sway, hurt: bool = False) -> None:
     c.use("tails")
     draw_tails(c, (cx + 17, cy - 5), 32, 14, sway)
     c.use("head")
     draw_tuft(c, cx, cy, sway)
     c.ellipse(cx, cy, 22, 20, SKIN)
     for side in (-1, 1):
-        draw_eye(c, cx + side * 8.5, cy + 7.5)
+        if hurt:
+            draw_squeezed_eye(c, cx + side * 8.5, cy + 7.5, -side)
+        else:
+            draw_eye(c, cx + side * 8.5, cy + 7.5)
         c.ellipse(cx + side * 14, cy + 13.5, 3.2, 1.8, BLUSH, outline=False)
-    c.line(arc_points(cx, cy + 13.5, 2.4, 1.8, 20, 160, 8), width=1.2)
+    if hurt:
+        c.ellipse(cx, cy + 14, 2.0, 1.7, (150, 60, 70, 255))
+    else:
+        c.line(arc_points(cx, cy + 13.5, 2.4, 1.8, 20, 160, 8), width=1.2)
     fringe = [(cx + 22, cy), (cx + 18, cy + 7), (cx + 12, cy + 1), (cx + 6, cy + 8), (cx, cy + 1),
               (cx - 6, cy + 8), (cx - 12, cy + 1), (cx - 18, cy + 7), (cx - 22, cy)]
     c.polygon(arc_points(cx, cy, 23, 21.5, 180, 360) + fringe, HAIR)
@@ -624,13 +646,16 @@ def draw_head_back(c: Canvas, cx, cy, sway) -> None:
     c.ellipse(cx, cy - 1.3, 2.8, 2.3, CAPE)  # knot
 
 
-def draw_head_side(c: Canvas, cx, cy, sway, wind) -> None:
+def draw_head_side(c: Canvas, cx, cy, sway, wind, hurt: bool = False) -> None:
     c.use("tails")
     draw_tails(c, (cx + 19, cy - 6), 28 - wind * 18, 15 + wind * 2, sway)
     c.use("head")
     draw_tuft(c, cx + 2, cy, sway)
     c.ellipse(cx, cy, 21, 20, SKIN)
-    draw_eye(c, cx - 11.5, cy + 7.5, rx=2.7)
+    if hurt:
+        draw_squeezed_eye(c, cx - 11.5, cy + 7.5, -1)
+    else:
+        draw_eye(c, cx - 11.5, cy + 7.5, rx=2.7)
     c.ellipse(cx - 8.5, cy + 13.5, 3.0, 1.8, BLUSH, outline=False)
     c.line(arc_points(cx - 15, cy + 13.5, 1.6, 1.4, 20, 160, 6), width=1.2)
     inner = [(cx + 9, cy + 15), (cx + 3, cy + 9), (cx + 1, cy + 1), (cx - 5, cy + 8),
@@ -662,7 +687,7 @@ def draw_down(c: PartCanvas, pose: Pose) -> None:
     draw_pauldron(c, cx + 15, 57.5 + oy)
     draw_scarf(c, cx - 10, cx + 10, oy)
     sword_layer(c, pose, sword, center, "body")
-    draw_head_front(c, cx, 35 + oy, pose.sway)
+    draw_head_front(c, cx, 35 + oy, pose.sway, pose.hurt)
     sword_layer(c, pose, sword, center, "front")
 
 
@@ -704,12 +729,12 @@ def draw_side(c: PartCanvas, pose: Pose) -> None:
     draw_pauldron(c, cx + 1, 57.5 + oy)
     draw_scarf(c, cx - 8, cx + 9, oy)
     sword_layer(c, pose, sword, center, "body")
-    draw_head_side(c, cx, 35 + oy, pose.sway, pose.wind)
+    draw_head_side(c, cx, 35 + oy, pose.sway, pose.wind, pose.hurt)
     sword_layer(c, pose, sword, center, "front")
 
 
 def warrior_poses(direction: str) -> list[Pose]:
-    return idle_poses() + walk_poses() + attack_poses(direction)
+    return idle_poses() + walk_poses() + attack_poses(direction) + [hurt_pose(direction)]
 
 
 def draw_frame_parts(direction: str, pose: Pose) -> dict[str, Image.Image]:
@@ -744,8 +769,7 @@ def build_warrior_parts() -> dict[tuple[int, int], dict[str, Image.Image]]:
 
 
 def build_warrior_sheet(frames, worn: set[str] = ALL_GEAR) -> Image.Image:
-    columns = IDLE_FRAMES + WALK_FRAMES + ATTACK_FRAMES
-    sheet = Image.new("RGBA", (CELL * columns, CELL * len(DIRECTIONS)), (0, 0, 0, 0))
+    sheet = Image.new("RGBA", (CELL * COLUMNS, CELL * len(DIRECTIONS)), (0, 0, 0, 0))
     for (row, col), parts in frames.items():
         frame = compose(parts, view_of(DIRECTIONS[row]), worn)
         sheet.paste(frame, (col * CELL, row * CELL))
@@ -796,7 +820,7 @@ def build_parts_script(pieces) -> str:
         "## are laid over each other in each direction, and the gear each part needs.",
         "",
         f"const CELL := {CELL}",
-        f"const COLUMNS := {IDLE_FRAMES + WALK_FRAMES + ATTACK_FRAMES}",
+        f"const COLUMNS := {COLUMNS}",
         f"const DIRECTIONS := {_gd_list(DIRECTIONS)}",
         "",
         "const ORDER := {",
@@ -843,11 +867,13 @@ def build_sprite_frames(sheet_res_path: str) -> str:
     idle_end = IDLE_FRAMES
     walk_end = idle_end + WALK_FRAMES
     attack_end = walk_end + ATTACK_FRAMES
+    hurt_end = attack_end + HURT_FRAMES
     animations = []  # (name, fps, loop, [(row, column), ...])
     for kind, fps, loop, columns in (
         ("idle", IDLE_FPS, True, range(0, idle_end)),
         ("walk", WALK_FPS, True, range(idle_end, walk_end)),
         ("attack", ATTACK_FPS, False, range(walk_end, attack_end)),
+        ("hurt", HURT_FPS, False, range(attack_end, hurt_end)),
     ):
         for row, direction in enumerate(DIRECTIONS):
             cells = [(row, col) for col in columns]
@@ -1084,58 +1110,90 @@ def build_grass_tile(size: int = 256, seed: int = 7) -> Image.Image:
     return small.crop((size, size, size * 2, size * 2)).convert("RGB")
 
 
-def draw_slime(squash: float) -> Image.Image:
-    """One slime frame. squash 0 = tall, 1 = flattened (for the idle bounce)."""
+# (animation, half width, half height, face, droplets) for each slime frame.
+SLIME_POSES = [
+    ("idle", 22, 17, "normal", 0),
+    ("idle", 24, 15, "normal", 0),
+    ("attack", 19, 21, "angry", 0),
+    ("attack", 27, 12, "angry", 0),
+    ("die", 26, 11, "dead", 0),
+    ("die", 30, 7, "dead", 6),
+    ("die", 31, 4, "none", 5),
+]
+SLIME_ANIMATIONS = [("idle", 3.0, True), ("attack", 8.0, False), ("die", 8.0, False)]
+
+
+def draw_slime(rx: float, ry: float, face: str = "normal", droplets: int = 0) -> Image.Image:
+    """One slime frame. Its bottom stays on the ground; rx / ry give the squash."""
     c = Canvas(SLIME_FRAME)
-    cx, cy = 32, 39 + 2 * squash
-    rx, ry = 22 + 2 * squash, 17 - 2 * squash
-    c.ellipse(cx, SLIME_FEET_Y + 1, 20, 4, SHADOW, outline=False)
+    cx, cy = 32, SLIME_FEET_Y - ry
+    c.ellipse(cx, SLIME_FEET_Y + 1, max(20, rx - 2), 4, SHADOW, outline=False)
     top = cy - ry
-    c.line([(cx, top + 2), (cx, top - 6)], width=1.6)
-    c.polygon([(cx, top - 5), (cx + 9, top - 11), (cx + 8, top - 3)], LEAF)
-    c.polygon([(cx, top - 5), (cx - 8, top - 10), (cx - 7, top - 3)], LEAF)
+    if face != "none":
+        c.line([(cx, top + 2), (cx, top - 6)], width=1.6)
+        c.polygon([(cx, top - 5), (cx + 9, top - 11), (cx + 8, top - 3)], LEAF)
+        c.polygon([(cx, top - 5), (cx - 8, top - 10), (cx - 7, top - 3)], LEAF)
+    for i in range(droplets):
+        side = -1 if i % 2 else 1
+        dx = side * (rx + 2 + (i // 2) * 4)
+        c.ellipse(cx + dx, SLIME_FEET_Y - 3 - (i % 3) * 3, 2.4, 2.0, SLIME)
     c.ellipse(cx, cy, rx, ry, SLIME)
-    c.ellipse(cx - 9, cy - 8, 6, 3.5, SLIME_LIGHT, outline=False)
+    if ry > 6:
+        c.ellipse(cx - rx * 0.4, cy - ry * 0.45, rx * 0.27, ry * 0.2, SLIME_LIGHT, outline=False)
+    if face == "none":
+        return c.finish()
+    eye_y = cy - min(1.0, ry * 0.08)
     for side in (-1, 1):
         ex = cx + side * 8
-        c.ellipse(ex, cy - 1, 3.2, 4.6, EYE, outline=False)
-        c.ellipse(ex - 1, cy - 3, 1.3, 1.3, WHITE, outline=False)
-        c.ellipse(cx + side * 15, cy + 6, 3.0, 1.8, BLUSH, outline=False)
-    c.line(arc_points(cx, cy + 5, 2.6, 1.8, 20, 160, 8), width=1.2)
+        if face == "dead":
+            c.line([(ex - 2.2, eye_y - 2.2), (ex + 2.2, eye_y + 2.2)], width=1.4)
+            c.line([(ex - 2.2, eye_y + 2.2), (ex + 2.2, eye_y - 2.2)], width=1.4)
+            continue
+        c.ellipse(ex, eye_y, 3.2, min(4.6, ry * 0.3), EYE, outline=False)
+        c.ellipse(ex - 1, eye_y - 2, 1.3, 1.3, WHITE, outline=False)
+        if face == "angry":
+            c.line([(ex + side * 4, eye_y - 7), (ex - side * 2.5, eye_y - 4.5)], width=1.5)
+        c.ellipse(cx + side * min(15, rx - 6), cy + min(6, ry * 0.4), 3.0, 1.8, BLUSH, outline=False)
+    if face == "angry":
+        c.line(arc_points(cx, cy + min(8, ry * 0.5), 2.6, 1.6, 200, 340, 8), width=1.2)
+    elif face == "normal":
+        c.line(arc_points(cx, cy + 5, 2.6, 1.8, 20, 160, 8), width=1.2)
     return c.finish()
 
 
 def build_slime_sheet() -> Image.Image:
-    sheet = Image.new("RGBA", (SLIME_FRAME * 2, SLIME_FRAME), (0, 0, 0, 0))
-    for col, squash in enumerate((0.0, 1.0)):
-        sheet.paste(draw_slime(squash), (col * SLIME_FRAME, 0))
+    sheet = Image.new("RGBA", (SLIME_FRAME * len(SLIME_POSES), SLIME_FRAME), (0, 0, 0, 0))
+    for col, (_, rx, ry, face, droplets) in enumerate(SLIME_POSES):
+        sheet.paste(draw_slime(rx, ry, face, droplets), (col * SLIME_FRAME, 0))
     return sheet
 
 
 def build_slime_frames(sheet_res_path: str) -> str:
-    """SpriteFrames text with one looping animation: idle (2 frames)."""
+    """SpriteFrames text for the slime: idle (loops), attack and die."""
     lines = [
-        '[gd_resource type="SpriteFrames" load_steps=4 format=3]',
+        f'[gd_resource type="SpriteFrames" load_steps={len(SLIME_POSES) + 2} format=3]',
         "",
         f'[ext_resource type="Texture2D" path="{sheet_res_path}" id="1_sheet"]',
         "",
     ]
-    for col in range(2):
+    for col in range(len(SLIME_POSES)):
         lines += [
             f'[sub_resource type="AtlasTexture" id="frame_{col}"]',
             'atlas = ExtResource("1_sheet")',
             f"region = Rect2({col * SLIME_FRAME}, 0, {SLIME_FRAME}, {SLIME_FRAME})",
             "",
         ]
-    frames = ", ".join(
-        '{\n"duration": 1.0,\n"texture": SubResource("frame_%d")\n}' % col for col in range(2)
-    )
-    lines += [
-        "[resource]",
-        'animations = [{\n"frames": [%s],\n"loop": true,\n"name": &"idle",\n"speed": 3.0\n}]'
-        % frames,
-        "",
-    ]
+    blocks = []
+    for name, fps, loop in SLIME_ANIMATIONS:
+        columns = [col for col, pose in enumerate(SLIME_POSES) if pose[0] == name]
+        frames = ", ".join(
+            '{\n"duration": 1.0,\n"texture": SubResource("frame_%d")\n}' % col for col in columns
+        )
+        blocks.append(
+            '{\n"frames": [%s],\n"loop": %s,\n"name": &"%s",\n"speed": %.1f\n}'
+            % (frames, "true" if loop else "false", name, fps)
+        )
+    lines += ["[resource]", "animations = [" + ", ".join(blocks) + "]", ""]
     return "\n".join(lines)
 
 

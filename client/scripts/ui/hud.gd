@@ -62,20 +62,24 @@ func _on_item_action(method: String, argument: Variant) -> void:
 		_player.call(method, argument)
 
 
-## POT shows how many potions are left; SPIN and POT fade when they would do
-## nothing; ATK and SPIN show their cooldown.
+## POT shows how many potions are left. Skill buttons show their cooldown, fade
+## when they would do nothing, and show the level that unlocks them ("Lv3").
 func _update_action_buttons() -> void:
-	var potions: int = _player.get("stats").potions
+	var stats = _player.get("stats")
 	for button in get_tree().get_nodes_in_group(ACTION_BUTTONS_GROUP):
-		match button.get("action"):
-			"use_potion":
-				button.set("badge", str(potions))
-				button.set("dimmed", potions == 0)
-			"skill":
-				button.set("dimmed", not _player.call("can_use_skill"))
-				button.set("cooldown", _player.call("cooldown_left", "skill"))
-			"attack":
-				button.set("cooldown", _player.call("cooldown_left", "attack"))
+		var action: String = button.get("action")
+		if action == "use_potion":
+			button.set("badge", str(stats.potions))
+			button.set("dimmed", stats.potions == 0)
+			continue
+		button.set("cooldown", _player.call("cooldown_left", action))
+		var skill_id: String = _player.call("skill_for_action", action)
+		if skill_id == "":
+			continue
+		var unlocked: bool = _player.call("skill_unlocked", skill_id)
+		var unlock_level: int = int(_player.call("skills_data")[skill_id]["unlock_level"])
+		button.set("badge", "" if unlocked else "Lv%d" % unlock_level)
+		button.set("dimmed", not _player.call("can_use", skill_id))
 
 
 func _refresh_progress() -> void:

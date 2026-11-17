@@ -1,0 +1,51 @@
+{
+  "spin_slash": {
+    "name": "Spin Slash",
+    "button": "SPIN",
+    "action": "skill",
+    "type": "spin",
+    "stamina": 40,
+    "cooldown": 1.0,
+    "unlock_level": 1,
+    "radius": 130,
+    "damage_multiplier": 2.0,
+    "text": "Hits every enemy around you."
+  },
+  "power_strike": {
+    "name": "Power Strike",
+    "button": "STRIKE",
+    "action": "skill_2",
+    "type": "strike",
+    "stamina": 25,
+    "cooldown": 4.0,
+    "unlock_level": 1,
+    "range": 110,
+    "damage_multiplier": 3.0,
+    "text": "One heavy blow on the nearest enemy."
+  },
+  "war_cry": {
+    "name": "War Cry",
+    "button": "CRY",
+    "action": "skill_3",
+    "type": "buff",
+    "stamina": 30,
+    "cooldown": 20.0,
+    "unlock_level": 3,
+    "seconds": 8.0,
+    "damage_bonus": 0.3,
+    "text": "+30% damage for 8 seconds."
+  },
+  "ground_slam": {
+    "name": "Ground Slam",
+    "button": "SLAM",
+    "action": "skill_4",
+    "type": "slam",
+    "stamina": 35,
+    "cooldown": 8.0,
+    "unlock_level": 5,
+    "radius": 150,
+    "damage_multiplier": 1.5,
+    "stun_seconds": 1.2,
+    "text": "Hits all around and stuns for a moment."
+  }
+}

@@ -111,9 +111,6 @@ def check_character(character: dict, items: dict, gear_slots: list) -> None:
         need_number(where, character, key)
     for key in ("crit_chance", "evasion"):
         need_number(where, character, key, 0.0, 1.0)
-    skill = character.get("skill", {})
-    for key in ("stamina_cost", "radius", "damage_multiplier", "cooldown"):
-        need_number(f"{where} skill", skill, key)
     gear = character.get("starting_gear", {})
     for slot, item_id in gear.items():
         if slot not in gear_slots:
@@ -157,6 +154,39 @@ def check_monsters(monsters: dict, items: dict) -> None:
             error(f"{where}: 'tint' must be four numbers")
 
 
+SKILL_TYPES = {
+    "spin": ("radius", "damage_multiplier"),
+    "strike": ("range", "damage_multiplier"),
+    "buff": ("seconds", "damage_bonus"),
+    "slam": ("radius", "damage_multiplier", "stun_seconds"),
+}
+SKILL_ACTIONS = {"skill", "skill_2", "skill_3", "skill_4"}
+
+
+def check_skills(skills: dict) -> None:
+    used_actions = set()
+    for skill_id, skill in skills.items():
+        where = f"skills.json: '{skill_id}'"
+        for key in ("name", "button", "text"):
+            if not isinstance(skill.get(key), str):
+                error(f"{where}: needs a '{key}'")
+        action = skill.get("action")
+        if action not in SKILL_ACTIONS:
+            error(f"{where}: action '{action}' is not one of {sorted(SKILL_ACTIONS)}")
+        elif action in used_actions:
+            error(f"{where}: action '{action}' is used by two skills")
+        used_actions.add(action)
+        for key in ("stamina", "cooldown"):
+            need_number(where, skill, key)
+        need_number(where, skill, "unlock_level", 1)
+        kind = skill.get("type")
+        if kind not in SKILL_TYPES:
+            error(f"{where}: type '{kind}' is not one of {sorted(SKILL_TYPES)}")
+            continue
+        for key in SKILL_TYPES[kind]:
+            need_number(where, skill, key)
+
+
 def check_art(items: dict) -> None:
     """The warrior's gear parts must name real items."""
     sys.path.insert(0, str(ROOT / "tools"))
@@ -177,6 +207,10 @@ def main() -> int:
     check_items_cache.update(items)
     check_character(load("character"), items, items_data.get("gear_slots", []))
     check_monsters(load("monsters"), items)
+    check_skills(load("skills"))
+    dash = load("character").get("dash", {})
+    for key in ("stamina", "cooldown", "seconds", "speed_multiplier"):
+        need_number("character.json dash", dash, key, 0.01)
     combat = load("combat")
     need_number("combat.json", combat, "damage_spread", 0.0, 1.0)
     need_number("combat.json", combat, "crit_multiplier", 1.0)

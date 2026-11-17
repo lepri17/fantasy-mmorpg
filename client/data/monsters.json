@@ -57,6 +57,18 @@
       1.0
     ],
     "defense": 2,
-    "evasion": 0.05
+    "evasion": 0.05,
+    "on_hit": {
+      "status": "slow",
+      "chance": 0.25,
+      "seconds": 2.0,
+      "value": 0.4
+    },
+    "special": {
+      "every": 3,
+      "radius": 80,
+      "warning_seconds": 0.8,
+      "damage_multiplier": 2.0
+    }
   }
 }

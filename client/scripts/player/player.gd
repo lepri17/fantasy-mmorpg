@@ -3,8 +3,9 @@ extends CharacterBody2D
 ## health / stamina, gear, death and respawn. Progress (level, XP, gold, bag,
 ## gear) lives in PlayerStats; this script only applies it to the scene.
 ##
-## Input goes through actions only (move_*, attack, skill, use_potion), so the
-## touch controls drive the same code as the keyboard.
+## Input goes through actions only (move_*, attack, skill, skill_2..4, dash,
+## use_potion), so the touch controls drive the same code as the keyboard.
+## Skills come from res://data/skills.json; each names the action that uses it.
 
 signal hp_changed(current: int, maximum: int)
 signal stamina_changed(current: float, maximum: float)
@@ -22,6 +23,8 @@ const ItemDb = preload("res://scripts/items/item_db.gd")
 const WarriorLook = preload("res://scripts/player/warrior_look.gd")
 const HitSpark = preload("res://scripts/combat/hit_spark.gd")
 const TargetMarker = preload("res://scripts/combat/target_marker.gd")
+const StatusEffects = preload("res://scripts/combat/status_effects.gd")
+const GameData = preload("res://scripts/data/game_data.gd")
 const PICKUP_SCENE = preload("res://scenes/items/pickup.tscn")
 
 const ACTION_LEFT := "move_left"
@@ -29,7 +32,7 @@ const ACTION_RIGHT := "move_right"
 const ACTION_UP := "move_up"
 const ACTION_DOWN := "move_down"
 const ACTION_ATTACK := "attack"
-const ACTION_SKILL := "skill"
+const ACTION_DASH := "dash"
 const ACTION_POTION := "use_potion"
 
 const FACING_VECTORS := {
@@ -53,6 +56,8 @@ const WARNING_COLOR := Color(1.0, 0.5, 0.45)
 const MISS_COLOR := Color(0.8, 0.85, 0.95)
 ## The ring under the auto-aim target shows for enemies this much past the reach.
 const TARGET_MARKER_REACH := 1.6
+const HURT_ANIMATION_SECONDS := 0.2
+const STATUS_COLOR := Color(0.75, 0.9, 1.0)
 
 ## Walking speed in pixels per second.
 @export var move_speed: float = 220.0
@@ -76,9 +81,19 @@ var look_texture: Texture2D = null
 ## 1, 2 or 3: which swing of the combo comes next counts from here. The third is
 ## the finisher: stronger, with more knockback.
 var combo_step: int = 0
+## Poison, slow and stun on the warrior.
+var statuses = StatusEffects.new()
 
 var _attack_ready_in: float = 0.0
-var _skill_ready_in: float = 0.0
+## Skill id -> seconds until it can be used again.
+var _skill_cooldowns: Dictionary = {}
+var _hurt_animation_left: float = 0.0
+var _damage_bonus: float = 0.0
+var _damage_bonus_left: float = 0.0
+var _dash: Dictionary = {}
+var _dash_left: float = 0.0
+var _dash_ready_in: float = 0.0
+var _dash_direction: Vector2 = Vector2.DOWN
 var _attack_animation_left: float = 0.0
 var _seconds_since_damage: float = 0.0
 var _regen_progress: float = 0.0
@@ -88,10 +103,6 @@ var _combo_left: float = 0.0
 var _target_marker: Node2D = null
 # Tuning from res://data/character.json (see _load_tuning).
 var _stamina_regen: float = 12.0
-var _skill_cost: float = 40.0
-var _skill_radius: float = 130.0
-var _skill_multiplier: float = 2.0
-var _skill_cooldown: float = 1.0
 var _regen_delay: float = 5.0
 var _regen_per_second: float = 2.0
 var _respawn_seconds: float = 2.5
@@ -124,16 +135,27 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
+	_tick_statuses(delta)
+	if is_dead:
+		return
+	var stunned: bool = statuses.is_active("stun")
 	var direction: Vector2 = Input.get_vector(ACTION_LEFT, ACTION_RIGHT, ACTION_UP, ACTION_DOWN)
+	if stunned:
+		direction = Vector2.ZERO
 	var is_moving: bool = direction != Vector2.ZERO
 	if is_moving:
 		direction = direction.normalized()
 		facing = _facing_for(direction)
-	velocity = direction * move_speed
+	if _dash_left > 0.0:
+		_dash_left = maxf(0.0, _dash_left - delta)
+		velocity = _dash_direction * move_speed * float(_dash["speed_multiplier"])
+	else:
+		velocity = direction * move_speed * statuses.speed_factor()
 	move_and_slide()
 
 	_attack_animation_left = maxf(0.0, _attack_animation_left - delta)
-	if _attack_animation_left == 0.0:
+	_hurt_animation_left = maxf(0.0, _hurt_animation_left - delta)
+	if _attack_animation_left == 0.0 and _hurt_animation_left == 0.0:
 		if is_moving:
 			_play("walk_" + facing)
 		else:
@@ -145,18 +167,28 @@ func _physics_process(delta: float) -> void:
 	_update_target_marker()
 
 	_attack_ready_in = maxf(0.0, _attack_ready_in - delta)
-	_skill_ready_in = maxf(0.0, _skill_ready_in - delta)
+	_dash_ready_in = maxf(0.0, _dash_ready_in - delta)
+	_damage_bonus_left = maxf(0.0, _damage_bonus_left - delta)
+	if _damage_bonus_left == 0.0:
+		_damage_bonus = 0.0
+	for skill_id in _skill_cooldowns:
+		_skill_cooldowns[skill_id] = maxf(0.0, float(_skill_cooldowns[skill_id]) - delta)
+	if stunned:
+		return
 	if Input.is_action_pressed(ACTION_ATTACK) and _attack_ready_in == 0.0:
 		_attack()
-	if Input.is_action_just_pressed(ACTION_SKILL):
-		_use_skill()
+	for skill_id in skills_data():
+		if Input.is_action_just_pressed(skills_data()[skill_id]["action"]):
+			use_skill(skill_id)
+	if Input.is_action_just_pressed(ACTION_DASH):
+		dash(direction)
 	if Input.is_action_just_pressed(ACTION_POTION):
 		use_potion()
 
 
 ## Called by enemies.
 func take_damage(amount: int) -> void:
-	if is_dead or _invincible_left > 0.0:
+	if is_dead or _invincible_left > 0.0 or _dash_left > 0.0:
 		return
 	hp = maxi(hp - amount, 0)
 	_seconds_since_damage = 0.0
@@ -169,6 +201,8 @@ func take_damage(amount: int) -> void:
 		_die()
 		return
 	_invincible_left = _hit_invincible_seconds
+	_hurt_animation_left = HURT_ANIMATION_SECONDS
+	_sprite.play("hurt_" + facing)
 	_sprite.modulate = Color(1.0, 0.4, 0.4)
 	create_tween().tween_property(_sprite, "modulate", Color.WHITE, 0.2)
 
@@ -261,9 +295,81 @@ func use_from_bag(index: int) -> void:
 			use_potion()
 
 
-## For the SPIN button: true when the skill would work right now.
+## Called by monsters whose hits poison, slow or stun.
+func apply_status(effect: String, seconds: float, value: float = 0.0) -> void:
+	if is_dead or _dash_left > 0.0:
+		return
+	statuses.apply(effect, seconds, value)
+	FloatingText.spawn(self, effect.to_upper() + "!", STATUS_COLOR, 120.0, 20)
+
+
+## The skill a button or key action uses ("skill" -> "spin_slash"), or "".
+func skill_for_action(action: String) -> String:
+	for skill_id in skills_data():
+		if skills_data()[skill_id]["action"] == action:
+			return skill_id
+	return ""
+
+
+func skill_unlocked(skill_id: String) -> bool:
+	return stats.level >= int(skills_data()[skill_id]["unlock_level"])
+
+
+## True when the skill would work right now: unlocked, ready, enough stamina.
+func can_use(skill_id: String) -> bool:
+	if is_dead or statuses.is_active("stun") or not skills_data().has(skill_id):
+		return false
+	var skill: Dictionary = skills_data()[skill_id]
+	return (
+		skill_unlocked(skill_id)
+		and float(_skill_cooldowns.get(skill_id, 0.0)) == 0.0
+		and stamina >= float(skill["stamina"])
+	)
+
+
+## For the SPIN button.
 func can_use_skill() -> bool:
-	return not is_dead and _skill_ready_in == 0.0 and stamina >= _skill_cost
+	return can_use("spin_slash")
+
+
+## Uses a skill from skills.json. Returns false if it could not be used now.
+func use_skill(skill_id: String) -> bool:
+	if not can_use(skill_id):
+		return false
+	var skill: Dictionary = skills_data()[skill_id]
+	_skill_cooldowns[skill_id] = float(skill["cooldown"])
+	stamina -= float(skill["stamina"])
+	stamina_changed.emit(stamina, max_stamina)
+	match skill["type"]:
+		"spin":
+			_skill_spin(skill)
+		"strike":
+			_skill_strike(skill)
+		"buff":
+			_skill_buff(skill)
+		"slam":
+			_skill_slam(skill)
+	return true
+
+
+## A quick dash with no damage taken on the way. Costs stamina.
+func dash(direction: Vector2 = Vector2.ZERO) -> bool:
+	var cost: float = float(_dash["stamina"])
+	if is_dead or statuses.is_active("stun") or _dash_ready_in > 0.0 or stamina < cost:
+		return false
+	_dash_direction = direction.normalized() if direction != Vector2.ZERO else FACING_VECTORS[facing]
+	_dash_left = float(_dash["seconds"])
+	_dash_ready_in = float(_dash["cooldown"])
+	stamina -= cost
+	stamina_changed.emit(stamina, max_stamina)
+	HitSpark.spawn(get_parent(), position, Color(0.85, 0.85, 0.8, 0.8), 10)
+	_sfx("swing")
+	return true
+
+
+## All skills from skills.json.
+static func skills_data() -> Dictionary:
+	return GameData.table("skills")
 
 
 ## Drinks one potion. Does nothing at full health or with no potions left.
@@ -315,28 +421,71 @@ func _attack() -> void:
 	_after_strikes(hits)
 
 
-## Spin slash: costs stamina and hits every enemy around the warrior.
-func _use_skill() -> void:
-	if _skill_ready_in > 0.0 or stamina < _skill_cost:
-		return
-	_skill_ready_in = _skill_cooldown
-	stamina -= _skill_cost
-	stamina_changed.emit(stamina, max_stamina)
+## Spin Slash: hits every enemy around the warrior.
+func _skill_spin(skill: Dictionary) -> void:
 	_slash.play_spin()
 	_sfx("skill")
-	var base_damage: int = roundi(stats.attack_damage() * _skill_multiplier)
+	var base_damage: int = _skill_damage(skill)
 	var hits: Array[Dictionary] = []
 	for enemy in _alive_enemies():
-		if enemy.global_position.distance_to(global_position) <= _skill_radius:
+		if enemy.global_position.distance_to(global_position) <= float(skill["radius"]):
 			hits.append(_strike(enemy, base_damage))
 	_after_strikes(hits, false)
+
+
+## Power Strike: one heavy blow on the nearest enemy in reach.
+func _skill_strike(skill: Dictionary) -> void:
+	var target: Node2D = _nearest_enemy(float(skill["range"]))
+	var aim: Vector2 = FACING_VECTORS[facing]
+	if target != null and target.global_position.distance_to(global_position) > 1.0:
+		aim = global_position.direction_to(target.global_position)
+		facing = _facing_for(aim)
+	_slash.play(aim, true)
+	_attack_animation_left = ATTACK_ANIMATION_SECONDS
+	_sprite.stop()
+	_sprite.play("attack_" + facing)
+	_sfx("skill")
+	var hits: Array[Dictionary] = []
+	if target != null:
+		hits.append(_strike(target, _skill_damage(skill), 2.5))
+		_shake_camera()
+	_after_strikes(hits, false)
+
+
+## War Cry: more damage for a while.
+func _skill_buff(skill: Dictionary) -> void:
+	_damage_bonus = float(skill["damage_bonus"])
+	_damage_bonus_left = float(skill["seconds"])
+	FloatingText.spawn(self, "WAR CRY!", Color(1.0, 0.45, 0.35), 130.0, 30)
+	_sfx("levelup")
+
+
+## Ground Slam: hits everything around and stuns it for a moment.
+func _skill_slam(skill: Dictionary) -> void:
+	_slash.play_spin()
+	_shake_camera()
+	_sfx("skill")
+	var base_damage: int = _skill_damage(skill)
+	var hits: Array[Dictionary] = []
+	for enemy in _alive_enemies():
+		if enemy.global_position.distance_to(global_position) <= float(skill["radius"]):
+			var hit: Dictionary = _strike(enemy, base_damage, 1.5)
+			hits.append(hit)
+			if not hit["miss"]:
+				enemy.call("apply_status", "stun", float(skill["stun_seconds"]))
+	_after_strikes(hits, false)
+
+
+func _skill_damage(skill: Dictionary) -> int:
+	return roundi(stats.attack_damage() * float(skill["damage_multiplier"]))
 
 
 ## One hit on one enemy. Miss, crit and the enemy's defense are worked out by
 ## CombatRules; the enemy only takes the result.
 func _strike(enemy: Node2D, base_damage: int, knockback: float = 1.0) -> Dictionary:
+	var boosted: int = roundi(base_damage * (1.0 + _damage_bonus))
 	var hit: Dictionary = CombatRules.resolve_hit(
-		base_damage, stats.crit_chance(), int(enemy.get("defense")), float(enemy.get("evasion"))
+		boosted, stats.crit_chance(), int(enemy.get("defense")), float(enemy.get("evasion"))
 	)
 	if hit["miss"]:
 		FloatingText.spawn(enemy, "MISS", MISS_COLOR, 80.0, 22)
@@ -368,12 +517,20 @@ func _after_strikes(hits: Array[Dictionary], swing_sound: bool = true) -> void:
 
 ## For the buttons: how much of an action's cooldown is left, from 1 down to 0.
 func cooldown_left(action: String) -> float:
-	match action:
-		"attack":
-			return _attack_ready_in / maxf(attack_cooldown, 0.01)
-		"skill":
-			return _skill_ready_in / maxf(_skill_cooldown, 0.01)
-	return 0.0
+	if action == ACTION_ATTACK:
+		return _attack_ready_in / maxf(attack_cooldown, 0.01)
+	if action == ACTION_DASH:
+		return _dash_ready_in / maxf(float(_dash["cooldown"]), 0.01)
+	var skill_id: String = skill_for_action(action)
+	if skill_id == "":
+		return 0.0
+	var cooldown: float = maxf(float(skills_data()[skill_id]["cooldown"]), 0.01)
+	return float(_skill_cooldowns.get(skill_id, 0.0)) / cooldown
+
+
+## True while War Cry (or another damage boost) is on.
+func has_damage_bonus() -> bool:
+	return _damage_bonus > 0.0
 
 
 func _alive_enemies() -> Array[Node2D]:
@@ -430,7 +587,10 @@ func _die() -> void:
 	died.emit()
 	_sfx("defeat")
 	_sprite.stop()
-	create_tween().tween_property(_sprite, "modulate:a", 0.0, 0.6)
+	statuses.clear()
+	var fall: Tween = create_tween()
+	fall.tween_property(_sprite, "rotation", PI / 2.0 * (-1.0 if facing == "left" else 1.0), 0.3)
+	fall.tween_property(_sprite, "modulate:a", 0.0, 0.6)
 	await get_tree().create_timer(_respawn_seconds).timeout
 	_respawn()
 
@@ -441,6 +601,8 @@ func _respawn() -> void:
 	stamina = max_stamina
 	is_dead = false
 	_invincible_left = 0.0
+	_dash_left = 0.0
+	_sprite.rotation = 0.0
 	_sprite.self_modulate.a = 1.0
 	_sprite.modulate = Color.WHITE
 	hp_changed.emit(hp, max_hp)
@@ -476,16 +638,12 @@ func _apply_look() -> void:
 ## Reads speed, ranges, stamina, skill and regeneration from character.json.
 func _load_tuning() -> void:
 	var rules: Dictionary = PlayerStats.rules
-	var skill: Dictionary = rules["skill"]
+	_dash = rules["dash"]
 	move_speed = float(rules["move_speed"])
 	attack_range = float(rules["attack_range"])
 	attack_cooldown = float(rules["attack_cooldown"])
 	max_stamina = float(rules["max_stamina"])
 	_stamina_regen = float(rules["stamina_regen_per_second"])
-	_skill_cost = float(skill["stamina_cost"])
-	_skill_radius = float(skill["radius"])
-	_skill_multiplier = float(skill["damage_multiplier"])
-	_skill_cooldown = float(skill["cooldown"])
 	_regen_delay = float(rules["regen_delay_seconds"])
 	_regen_per_second = float(rules["regen_hp_per_second"])
 	_respawn_seconds = float(rules["respawn_seconds"])
@@ -526,6 +684,19 @@ func _update_target_marker() -> void:
 	_target_marker.visible = target != null
 	if target != null:
 		_target_marker.global_position = target.global_position
+
+
+## Counts statuses down; poison hurts even through the blink after a hit.
+func _tick_statuses(delta: float) -> void:
+	var poison: int = statuses.update(delta)
+	if poison <= 0 or is_dead:
+		return
+	hp = maxi(hp - poison, 0)
+	_seconds_since_damage = 0.0
+	hp_changed.emit(hp, max_hp)
+	FloatingText.spawn(self, str(poison), Color(0.5, 0.9, 0.3), 90.0, 20)
+	if hp == 0:
+		_die()
 
 
 func _blink_while_invincible(delta: float) -> void:

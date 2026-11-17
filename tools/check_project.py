@@ -61,7 +61,7 @@ def check_script(script: Path, actions: set[str]) -> None:
     name = script.relative_to(CLIENT)
     res_path = "res://" + name.as_posix()
 
-    for action in set(re.findall(r'"(move_(?:left|right|up|down)|attack|skill|use_potion|inventory)"', text)) - actions:
+    for action in set(re.findall(r'"(move_(?:left|right|up|down)|attack|skill(?:_[2-4])?|dash|use_potion|inventory)"', text)) - actions:
         errors.append(f"{name}: input action '{action}' is not in project.godot")
 
     scenes = [s for s in CLIENT.rglob("*.tscn") if res_path in s.read_text(encoding="utf-8")]

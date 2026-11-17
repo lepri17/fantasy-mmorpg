@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" load_steps=62 format=3]
+[gd_resource type="SpriteFrames" load_steps=66 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/characters/warrior/warrior.png" id="1_sheet"]
 
@@ -242,6 +242,22 @@ region = Rect2(1664, 384, 128, 128)
 atlas = ExtResource("1_sheet")
 region = Rect2(1792, 384, 128, 128)
 
+[sub_resource type="AtlasTexture" id="frame_0_15"]
+atlas = ExtResource("1_sheet")
+region = Rect2(1920, 0, 128, 128)
+
+[sub_resource type="AtlasTexture" id="frame_1_15"]
+atlas = ExtResource("1_sheet")
+region = Rect2(1920, 128, 128, 128)
+
+[sub_resource type="AtlasTexture" id="frame_2_15"]
+atlas = ExtResource("1_sheet")
+region = Rect2(1920, 256, 128, 128)
+
+[sub_resource type="AtlasTexture" id="frame_3_15"]
+atlas = ExtResource("1_sheet")
+region = Rect2(1920, 384, 128, 128)
+
 [resource]
 animations = [{
 "frames": [{
@@ -483,4 +499,36 @@ animations = [{
 "loop": false,
 "name": &"attack_up",
 "speed": 18.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("frame_0_15")
+}],
+"loop": false,
+"name": &"hurt_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("frame_1_15")
+}],
+"loop": false,
+"name": &"hurt_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("frame_2_15")
+}],
+"loop": false,
+"name": &"hurt_right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("frame_3_15")
+}],
+"loop": false,
+"name": &"hurt_up",
+"speed": 5.0
 }]

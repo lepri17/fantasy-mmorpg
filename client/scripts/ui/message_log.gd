@@ -1,5 +1,5 @@
 extends VBoxContainer
-## The last few game messages at the bottom of the screen ("+20 EXP",
+## The last few game messages on the left, under the status panel ("+20 EXP",
 ## "Picked up Red Potion."), newest at the bottom. Each one fades out.
 
 const MAX_LINES := 5
@@ -11,7 +11,7 @@ const OUTLINE := Color(0.1, 0.05, 0.1)
 func add_message(text: String, color: Color = Color.WHITE) -> void:
 	var label := Label.new()
 	label.text = text
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_font_size_override("font_size", 18)
 	label.add_theme_color_override("font_color", color)

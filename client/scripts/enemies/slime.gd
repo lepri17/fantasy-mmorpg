@@ -9,6 +9,8 @@ extends CharacterBody2D
 const FloatingText = preload("res://scripts/ui/floating_text.gd")
 const GameData = preload("res://scripts/data/game_data.gd")
 const CombatRules = preload("res://scripts/combat/combat_rules.gd")
+const StatusEffects = preload("res://scripts/combat/status_effects.gd")
+const Telegraph = preload("res://scripts/combat/telegraph.gd")
 const CRIT_COLOR := Color(1.0, 0.55, 0.2)
 const MISS_COLOR := Color(0.8, 0.85, 0.95)
 const PICKUP_SCENE := preload("res://scenes/items/pickup.tscn")
@@ -46,6 +48,13 @@ var gold_min: int = 1
 var gold_max: int = 5
 ## [{"item": item id, "chance": 0..1}, ...]
 var drops: Array = []
+## Status put on the warrior by a landed hit, or {}: {"status", "chance", "seconds", "value"}.
+var on_hit: Dictionary = {}
+## A telegraphed slam instead of every Nth attack, or {}:
+## {"every", "radius", "warning_seconds", "damage_multiplier"}.
+var special: Dictionary = {}
+## Stun (and any other effect) on this slime.
+var statuses = StatusEffects.new()
 ## Color multiplier, used to tell the kinds of slime apart.
 var tint: Color = Color.WHITE
 ## Elites have more HP, damage, XP and loot, glow, and are a bit bigger.
@@ -64,6 +73,8 @@ var _player: Node2D = null
 ## Attacker -> damage it has done: the slime goes after whoever hurt it most.
 var _threat: Dictionary = {}
 var _sprite_scale: Vector2 = Vector2.ONE
+var _attack_count: int = 0
+var _casting_left: float = 0.0
 var _glow: Tween = null
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
@@ -82,6 +93,7 @@ func _ready() -> void:
 	_hp_bar.set_label("Lv.%d %s" % [level, display_name])
 	_hp_bar.set_values(hp, max_hp)
 	_sprite.play("idle")
+	_sprite.animation_finished.connect(_on_animation_finished)
 
 
 func _physics_process(delta: float) -> void:
@@ -89,16 +101,22 @@ func _physics_process(delta: float) -> void:
 		return
 	_attack_ready_in = maxf(0.0, _attack_ready_in - delta)
 	_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
+	statuses.update(delta)
+	_casting_left = maxf(0.0, _casting_left - delta)
+	var stunned: bool = statuses.is_active("stun")
+	_sprite.speed_scale = 0.0 if stunned else 1.0
 
 	var movement := Vector2.ZERO
 	var target: Node2D = _chase_target()
-	if target == null:
+	if stunned or _casting_left > 0.0:
+		pass  # stays put: stunned, or winding up a slam
+	elif target == null:
 		movement = _wander(delta)
 	else:
 		var to_target: Vector2 = target.global_position - global_position
 		var distance: float = to_target.length()
 		if distance > attack_range:
-			movement = to_target / distance * move_speed
+			movement = to_target / distance * move_speed * statuses.speed_factor()
 		elif _attack_ready_in == 0.0:
 			_attack(target)
 
@@ -187,18 +205,65 @@ func _wander(delta: float) -> Vector2:
 	return global_position.direction_to(_wander_target) * move_speed * 0.5
 
 
+## Called by the warrior's Ground Slam (stun) and anything else that adds effects.
+func apply_status(effect: String, seconds: float, value: float = 0.0) -> void:
+	if is_dead:
+		return
+	statuses.apply(effect, seconds, value)
+	FloatingText.spawn(self, effect.to_upper() + "!", Color(1.0, 0.95, 0.6), 100.0, 20)
+
+
 func _attack(target: Node2D) -> void:
 	_attack_ready_in = attack_cooldown
+	_attack_count += 1
+	_sprite.play("attack")
+	if not special.is_empty() and _attack_count % int(special["every"]) == 0:
+		_start_slam()
+		return
 	var target_stats = target.get("stats")
 	var target_defense: int = target_stats.defense() if target_stats != null else 0
 	var target_evasion: float = target_stats.evasion() if target_stats != null else 0.0
 	var hit: Dictionary = CombatRules.resolve_hit(attack_damage, 0.0, target_defense, target_evasion)
 	if hit["miss"]:
 		FloatingText.spawn(target, "MISS", MISS_COLOR, 100.0, 22)
-	else:
-		target.call("take_damage", hit["damage"])
-	_sprite.scale = _sprite_scale * Vector2(1.3, 0.75)
-	create_tween().tween_property(_sprite, "scale", _sprite_scale, 0.2)
+		return
+	target.call("take_damage", hit["damage"])
+	if not on_hit.is_empty() and randf() < float(on_hit["chance"]):
+		target.call(
+			"apply_status", on_hit["status"], float(on_hit["seconds"]), float(on_hit.get("value", 0.0))
+		)
+
+
+## Telegraphed slam: a red circle fills up, then everything inside gets hit hard.
+func _start_slam() -> void:
+	var warning: float = float(special["warning_seconds"])
+	var radius: float = float(special["radius"])
+	_casting_left = warning
+	var circle: Node2D = Telegraph.new()
+	circle.radius = radius
+	circle.seconds = warning
+	circle.z_index = -1
+	circle.position = position
+	get_parent().add_child(circle)
+	await get_tree().create_timer(warning).timeout
+	if is_dead or not is_inside_tree():
+		return
+	var target: Node2D = _chase_target()
+	if target == null or target.global_position.distance_to(circle.global_position) > radius:
+		return
+	var target_stats = target.get("stats")
+	var hit: Dictionary = CombatRules.resolve_hit(
+		roundi(attack_damage * float(special["damage_multiplier"])),
+		0.0,
+		target_stats.defense() if target_stats != null else 0,
+		0.0
+	)
+	target.call("take_damage", hit["damage"])
+
+
+func _on_animation_finished() -> void:
+	if _sprite.animation == "attack" and not is_dead:
+		_sprite.play("idle")
 
 
 func _die() -> void:
@@ -207,7 +272,12 @@ func _die() -> void:
 	_knockback = Vector2.ZERO
 	_collision.set_deferred("disabled", true)
 	_hp_bar.hide()
-	create_tween().tween_property(_sprite, "modulate:a", 0.0, 0.35)
+	statuses.clear()
+	_sprite.speed_scale = 1.0
+	_sprite.play("die")
+	var fade: Tween = create_tween()
+	fade.tween_interval(0.4)
+	fade.tween_property(_sprite, "modulate:a", 0.0, 0.35)
 	if _player != null:
 		_player.call("gain_xp", xp_reward)
 	_drop("gold", randi_range(gold_min, gold_max))
@@ -281,6 +351,8 @@ func _load_monster_data() -> void:
 	gold_min = int(data["gold"][0])
 	gold_max = int(data["gold"][1])
 	drops = data.get("drops", [])
+	on_hit = data.get("on_hit", {})
+	special = data.get("special", {})
 	var rgba: Array = data.get("tint", [1, 1, 1, 1])
 	tint = Color(rgba[0], rgba[1], rgba[2], rgba[3])
 
@@ -297,6 +369,8 @@ func _drop(kind: String, amount: int, item_id: String = "") -> void:
 func _respawn() -> void:
 	global_position = _spawn_position
 	_threat.clear()
+	_attack_count = 0
+	_casting_left = 0.0
 	_load_monster_data()
 	_clear_elite()
 	_roll_elite()
@@ -306,6 +380,7 @@ func _respawn() -> void:
 	_attack_ready_in = attack_cooldown
 	_collision.set_deferred("disabled", false)
 	_sprite.modulate = tint
+	_sprite.play("idle")
 	_hp_bar.set_label("Lv.%d %s" % [level, display_name])
 	_hp_bar.set_values(hp, max_hp)
 	_hp_bar.show()
