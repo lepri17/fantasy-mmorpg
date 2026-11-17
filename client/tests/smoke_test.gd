@@ -4,9 +4,10 @@ extends SceneTree
 ##
 ## Run from the client folder:
 ##   godot --headless -s res://tests/smoke_test.gd
-## Exit code 0 = all checks passed. Note: it deletes the local save file.
+## Exit code 0 = all checks passed. It uses its own save file, so the real
+## save on this computer is left alone.
 
-const SAVE_PATH := "user://save.cfg"
+const SAVE_PATH := "user://smoke_test_save.cfg"
 const PlayerStats = preload("res://scripts/player/player_stats.gd")
 const SaveFile = preload("res://scripts/player/save_file.gd")
 
@@ -18,8 +19,8 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	SaveFile.path = SAVE_PATH
+	_remove_test_save()
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await _frames(5)
@@ -213,6 +214,34 @@ func _run() -> void:
 	_check(not inventory.visible, "the inventory key closes it")
 	_check(attack_button.visible, "action buttons come back after closing")
 
+	# --- touch controls: the ATK button and the joystick react to fingers
+	var touch_attack: Control = main.get_node("TouchControls/AttackButton")
+	var finger := InputEventScreenTouch.new()
+	finger.index = 0
+	finger.pressed = true
+	finger.position = touch_attack.get_global_rect().get_center()
+	touch_attack.call("_input", finger)
+	_check(Input.is_action_pressed("attack"), "touching ATK presses attack")
+	finger.pressed = false
+	touch_attack.call("_input", finger)
+	_check(not Input.is_action_pressed("attack"), "lifting the finger releases attack")
+	var joystick: Control = main.get_node("TouchControls/Joystick")
+	var stick_center: Vector2 = joystick.get_global_rect().get_center()
+	var thumb := InputEventScreenTouch.new()
+	thumb.index = 1
+	thumb.pressed = true
+	thumb.position = stick_center
+	joystick.call("_input", thumb)
+	var slide := InputEventScreenDrag.new()
+	slide.index = 1
+	slide.position = stick_center + Vector2(90, 0)
+	joystick.call("_input", slide)
+	_check(Input.get_action_strength("move_right") > 0.5, "dragging the joystick right moves right")
+	thumb.pressed = false
+	joystick.call("_input", thumb)
+	_check(Input.get_action_strength("move_right") == 0.0, "letting go of the joystick stops")
+	await _frames(2)
+
 	# --- skill: spin slash hits a slime that is BEHIND the warrior
 	var second = enemies[1]
 	player.global_position = second.global_position + Vector2(-90, 0)
@@ -248,8 +277,14 @@ func _run() -> void:
 	_check(not player.is_dead and player.hp == player.max_hp, "respawns with full HP")
 	_check(player.global_position.distance_to(Vector2(1280, 768)) < 5.0, "respawns at the start")
 
+	_remove_test_save()
 	print("SMOKE TEST: %s" % ("PASSED" if _failures == 0 else "%d FAILED" % _failures))
 	quit(1 if _failures > 0 else 0)
+
+
+func _remove_test_save() -> void:
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 
 
 func _bag_index(player, item_id: String) -> int:
