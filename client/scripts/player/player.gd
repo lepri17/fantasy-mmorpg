@@ -250,6 +250,7 @@ func use_skill(skill_id: String) -> bool:
 	_skill_cooldowns[skill_id] = float(skill["cooldown"])
 	stamina -= float(skill["stamina"])
 	stamina_changed.emit(stamina, max_stamina)
+	_count("skills_used")
 	match skill["type"]:
 		"spin":
 			_skill_spin(skill)

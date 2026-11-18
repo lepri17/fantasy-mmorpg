@@ -26,6 +26,7 @@ const UiStyle := preload("res://scripts/ui/ui_style.gd")
 const PlayerStats := preload("res://scripts/player/player_stats.gd")
 const ClassDb := preload("res://scripts/player/class_db.gd")
 const GameMenu := preload("res://scripts/ui/game_menu.gd")
+const Tutorial := preload("res://scripts/ui/tutorial.gd")
 const SafeArea := preload("res://scripts/ui/safe_area.gd")
 const SELECT_SCENE := "res://scenes/ui/character_select.tscn"
 ## The fifth skill button opens with the job advancement.
@@ -56,6 +57,8 @@ var _player: Node = null
 var _banner: Label
 var _menu: PanelContainer
 var _menu_button: Button
+var _tutorial: PanelContainer
+var _tutorial_check: float = 0.0
 ## The quests in the tracker, top to bottom (for tapping one).
 var _tracker_quests: Array = []
 var _dialog
@@ -110,9 +113,14 @@ func _ready() -> void:
 	_player.connect("died", _on_player_died)
 	_player.connect("respawned", _on_player_respawned)
 	_player.connect("message", Callable(_log, "add_message"))
+	_tutorial = Tutorial.new()
+	_tutorial.hero = _player
+	_tutorial.hud = self
+	add_child(_tutorial)
 	_panel.set_hp(_player.get("hp"), _player.get("max_hp"))
 	_panel.set_stamina(_player.get("stamina"), _player.get("max_stamina"))
 	_refresh_progress()
+	UiStyle.apply_text_scale(self)  # also the texts sized by hand after they were made
 
 
 ## The class decides the class name on the panel, the second bar's name and
@@ -136,7 +144,11 @@ func _apply_class(stats) -> void:
 
 
 ## Read in the physics step, the same way the player reads its actions.
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	_tutorial_check += delta
+	if _tutorial != null and _tutorial_check >= 0.25:
+		_tutorial.update(_tutorial_check)
+		_tutorial_check = 0.0
 	if Input.is_action_just_pressed(ACTION_INVENTORY):
 		toggle_inventory()
 	if Input.is_action_just_pressed(ACTION_CHARACTER):
@@ -212,6 +224,11 @@ func _on_menu_request(method: String) -> void:
 				toggle_menu()
 		"settings_changed":
 			get_tree().call_group("touch_controls", "apply_settings")
+			UiStyle.apply_text_scale(self)
+			_refresh_windows()
+		"edit_buttons":
+			_show_window(null, false)
+			get_tree().call_group("touch_controls", "start_editing")
 		"change_hero":
 			_player.call("_progress_changed")
 			_show_window(null, false)
@@ -219,11 +236,15 @@ func _on_menu_request(method: String) -> void:
 				get_tree().change_scene_to_file(SELECT_SCENE)
 
 
-## The phone's back button: closes the open window, or opens the menu.
+## The phone's back button: ends the button editor, closes the open window,
+## or opens the menu.
 func _notification(what: int) -> void:
 	if what != NOTIFICATION_WM_GO_BACK_REQUEST or _menu == null:
 		return
-	if not _menu.visible and _windows().any(func(window) -> bool: return window.visible):
+	var touch: Node = get_tree().get_first_node_in_group("touch_controls")
+	if touch != null and touch.get("editing") == true:
+		touch.call("stop_editing")
+	elif not _menu.visible and _windows().any(func(window) -> bool: return window.visible):
 		_close_windows()
 	else:
 		toggle_menu()

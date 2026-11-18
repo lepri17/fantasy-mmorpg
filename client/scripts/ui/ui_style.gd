@@ -23,6 +23,7 @@ const SHORT_NAMES := {
 	"skill_damage": "SKILL",
 }
 const PERCENT_BONUSES := ["crit_chance", "evasion", "skill_damage"]
+const Settings := preload("res://scripts/settings.gd")
 
 ## The second bar's name for the class played ("Stamina", or "Mana" for the mage).
 static var resource_name: String = "Stamina"
@@ -55,10 +56,37 @@ static func number(value: float) -> String:
 	return str(roundi(value)) if is_equal_approx(value, roundf(value)) else "%.1f" % value
 
 
+## U7: the text size setting (1 = as designed).
+static func text_scale() -> float:
+	return clampf(float(Settings.get_value("text_size")), 0.8, 1.4)
+
+
+## Sets every window text made by label() and button() to the text size
+## setting again.
+static func apply_text_scale(root: Node) -> void:
+	for node in root.find_children("*", "Control", true, false):
+		if node.has_meta("design_font_size"):
+			scale_text(node)
+
+
+## A text's size: the size it was designed with, times the text size setting.
+## A size set by hand after label() or button() counts as its design size.
+static func scale_text(node: Control, design: int = 0) -> void:
+	if design > 0:
+		node.set_meta("design_font_size", design)
+	elif node.has_theme_font_size_override("font_size"):
+		var now: int = node.get_theme_font_size("font_size")
+		if now != int(node.get_meta("scaled_font_size", -1)):
+			node.set_meta("design_font_size", now)
+	var size: int = roundi(int(node.get_meta("design_font_size")) * text_scale())
+	node.add_theme_font_size_override("font_size", size)
+	node.set_meta("scaled_font_size", size)
+
+
 static func label(text: String, font_size: int, color: Color) -> Label:
 	var new_label := Label.new()
 	new_label.text = text
-	new_label.add_theme_font_size_override("font_size", font_size)
+	scale_text(new_label, font_size)
 	new_label.add_theme_color_override("font_color", color)
 	return new_label
 
@@ -68,7 +96,7 @@ static func button(text: String, color: Color, min_size: Vector2) -> Button:
 	new_button.text = text
 	new_button.custom_minimum_size = min_size
 	new_button.focus_mode = Control.FOCUS_NONE
-	new_button.add_theme_font_size_override("font_size", 18)
+	scale_text(new_button, 18)
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		var box := StyleBoxFlat.new()
 		box.bg_color = color

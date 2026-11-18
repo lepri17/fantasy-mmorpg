@@ -11,6 +11,7 @@ extends RefCounted
 ## keep their own "rarity", "plus" (upgrade level) and "options" (random
 ## bonuses), so two swords can differ.
 
+const Settings := preload("res://scripts/settings.gd")
 const GameData := preload("res://scripts/data/game_data.gd")
 
 ## Bonuses written as fractions (0.03 = 3%); the rest are whole numbers.
@@ -103,6 +104,8 @@ static func rarity_rank(rarity: String) -> int:
 static func rarity_color(stack: Dictionary) -> Color:
 	var rarity: Dictionary = rarities.get(stack.get("rarity", ""), rarities.values()[0])
 	var rgba: Array = rarity["color"]
+	if Settings.get_value("colorblind") == true and rarity.has("colorblind_color"):
+		rgba = rarity["colorblind_color"]  # U7: colours told apart with any colour vision
 	return Color(rgba[0], rgba[1], rgba[2], rgba[3])
 
 

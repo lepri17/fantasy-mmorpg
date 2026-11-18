@@ -1,9 +1,11 @@
 extends PanelContainer
 ## The game menu: the MENU button, Esc, or the phone's back button opens it,
 ## and the game pauses while it is open. Its pages: the menu (RESUME, SETTINGS,
-## CHANGE HERO) and the settings (music, sounds, joystick, left-handed).
+## CONTROLS, CHANGE HERO), the settings (music, sounds, text size, colour-blind
+## colours, language) and the controls (joystick, left-handed, button editor).
 
-## The HUD acts on these: "resume", "change_hero", "settings_changed".
+## The HUD acts on these: "resume", "change_hero", "settings_changed",
+## "edit_buttons".
 signal request(method: String)
 
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
@@ -14,14 +16,19 @@ const BLUE := Color(0.22, 0.32, 0.55)
 const BROWN := Color(0.5, 0.3, 0.18)
 const DIM_TEXT := Color(0.78, 0.75, 0.84)
 const WIDTH := 480.0
-## [setting, name, lowest, highest, step]
+## [page, setting, name, lowest, highest, step]
 const SLIDERS := [
-	["music", "Music", 0.0, 1.0, 0.05],
-	["sounds", "Sounds", 0.0, 1.0, 0.05],
-	["joystick_size", "Joystick size", 0.7, 1.4, 0.1],
+	["settings", "music", "Music", 0.0, 1.0, 0.05],
+	["settings", "sounds", "Sounds", 0.0, 1.0, 0.05],
+	["settings", "text_size", "Text size", 0.85, 1.3, 0.05],
+	["controls", "joystick_size", "Joystick size", 0.7, 1.4, 0.1],
 ]
-## [setting, name]
-const TOGGLES := [["floating_joystick", "Floating joystick"], ["left_handed", "Left-handed"]]
+## [page, setting, name]
+const TOGGLES := [
+	["settings", "colorblind", "Colour-blind colours"],
+	["controls", "floating_joystick", "Floating joystick"],
+	["controls", "left_handed", "Left-handed"],
+]
 
 var _pages: Dictionary = {}
 var _sliders: Dictionary = {}
@@ -48,7 +55,8 @@ func _ready() -> void:
 	var stack := VBoxContainer.new()
 	add_child(stack)
 	_pages["main"] = _main_page()
-	_pages["settings"] = _settings_page()
+	_pages["settings"] = _settings_page("settings", "SETTINGS")
+	_pages["controls"] = _settings_page("controls", "CONTROLS")
 	for page in _pages.values():
 		stack.add_child(page)
 	show_page("main")
@@ -57,7 +65,7 @@ func _ready() -> void:
 func show_page(page_name: String) -> void:
 	for key in _pages:
 		_pages[key].visible = key == page_name
-	if page_name == "settings":
+	if page_name != "main":
 		_refresh_settings()
 	# As tall as the page shown, around the middle of the screen.
 	offset_top = -20.0
@@ -75,6 +83,7 @@ func _main_page() -> VBoxContainer:
 	var page := _page("MENU")
 	page.add_child(_button("RESUME", GREEN, func() -> void: request.emit("resume")))
 	page.add_child(_button("SETTINGS", BLUE, func() -> void: show_page("settings")))
+	page.add_child(_button("CONTROLS", BLUE, func() -> void: show_page("controls")))
 	page.add_child(_button("CHANGE HERO", BROWN, func() -> void: request.emit("change_hero")))
 	var hint := UiStyle.label("Your hero is saved all the time.", 15, DIM_TEXT)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -82,9 +91,12 @@ func _main_page() -> VBoxContainer:
 	return page
 
 
-func _settings_page() -> VBoxContainer:
-	var page := _page("SETTINGS")
-	for entry in SLIDERS:
+func _settings_page(page_id: String, heading: String) -> VBoxContainer:
+	var page := _page(heading)
+	for full in SLIDERS:
+		if full[0] != page_id:
+			continue
+		var entry: Array = full.slice(1)
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 10)
 		var title := UiStyle.label(entry[1], 19, Color.WHITE)
@@ -106,12 +118,17 @@ func _settings_page() -> VBoxContainer:
 		page.add_child(row)
 		_sliders[entry[0]] = slider
 		_value_labels[entry[0]] = value
-	for entry in TOGGLES:
-		var toggle := _button("", BLUE, _on_toggle.bind(entry[0]))
+	for full in TOGGLES:
+		if full[0] != page_id:
+			continue
+		var toggle := _button("", BLUE, _on_toggle.bind(full[1]))
 		page.add_child(toggle)
-		_toggles[entry[0]] = [toggle, entry[1]]
-	_language_button = _button("", BLUE, _on_language)
-	page.add_child(_language_button)
+		_toggles[full[1]] = [toggle, full[2]]
+	if page_id == "settings":
+		_language_button = _button("", BLUE, _on_language)
+		page.add_child(_language_button)
+	else:
+		page.add_child(_button("EDIT BUTTONS", BLUE, func() -> void: request.emit("edit_buttons")))
 	page.add_child(_button("BACK", BROWN, func() -> void: show_page("main")))
 	return page
 

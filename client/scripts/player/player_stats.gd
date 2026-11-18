@@ -18,7 +18,7 @@ const ClassDb := preload("res://scripts/player/class_db.gd")
 ## 6 = adds the storage in town.
 ## 7 = adds quests.
 ## 8 = adds dungeon entries per day.
-const SAVE_VERSION := 9
+const SAVE_VERSION := 10
 const POTION_ID := "red_potion"
 
 ## The numbers from res://data/character.json: health and damage without gear
@@ -36,6 +36,8 @@ var class_id: String = ClassDb.DEFAULT
 var advanced: bool = false
 ## The name the player gave the character on the character screen.
 var hero_name: String = ""
+## The step of the first-minutes hints (tutorial.gd); 8 = done (version 10).
+var tutorial: int = 0
 var level: int = 1
 var xp: int = 0
 var gold: int = 0
@@ -423,6 +425,7 @@ func to_dict() -> Dictionary:
 		"class": class_id,
 		"advanced": advanced,
 		"name": hero_name,
+		"tutorial": tutorial,
 		"level": level,
 		"xp": xp,
 		"gold": gold,
@@ -443,6 +446,8 @@ func from_dict(data: Dictionary) -> void:
 		class_id = ClassDb.DEFAULT
 	advanced = data.get("advanced", false) == true
 	hero_name = str(data.get("name", "")).left(16)
+	# Heroes from before the hints (they have gear saved) do not get them.
+	tutorial = clampi(int(data.get("tutorial", 0 if not data.has("equipment") else 99)), 0, 99)
 	level = maxi(1, int(data.get("level", 1)))
 	xp = maxi(0, int(data.get("xp", 0)))
 	gold = maxi(0, int(data.get("gold", 0)))

@@ -42,6 +42,8 @@ func _input(event: InputEvent) -> void:
 			_touch_index = event.index
 			Input.action_press(action)
 			queue_redraw()
+			# One touch is one button, even where moved or bigger buttons overlap.
+			get_viewport().set_input_as_handled()
 	elif not event.pressed and event.index == _touch_index:
 		_release()
 
