@@ -293,9 +293,9 @@ func _run() -> void:
 			and reloaded.knows_skill("ground_slam")
 			and reloaded.record.earned == trainee.record.earned
 			and reloaded.record.title == "slime_hunter"
-			and trainee.to_dict()["version"] == 3
+			and trainee.to_dict()["version"] == PlayerStats.SAVE_VERSION
 		),
-		"stat points, learned skills and titles survive saving (version 3)"
+		"stat points, learned skills and titles survive saving"
 	)
 
 	# --- gear with a rarity and random options, compared with what is worn (save version 4)
@@ -561,12 +561,15 @@ func _run() -> void:
 	_freeze(enemies, false)
 
 	# --- a moment of invincibility after a hit
+	_freeze(enemies, true)  # no slime may land a hit of its own in this check
 	player.global_position = Vector2(1000, 500)
-	await _frames(70)  # any blinking from earlier hits is over
+	await _frames(5)
+	player.set("_invincible_left", 0.0)
 	var hp_before_hits: int = player.hp
 	player.take_damage(5)
 	player.take_damage(5)
 	_check(player.hp == hp_before_hits - 5, "right after a hit the warrior cannot be hurt again")
+	_freeze(enemies, false)
 	await _frames(70)
 
 	# --- death and respawn
