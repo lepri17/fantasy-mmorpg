@@ -565,10 +565,14 @@ func _run() -> void:
 	player.global_position = Vector2(1000, 500)
 	await _frames(5)
 	player.set("_invincible_left", 0.0)
+	player.hp = player.max_hp  # earlier fights may have left too little HP for two hits
 	var hp_before_hits: int = player.hp
 	player.take_damage(5)
 	player.take_damage(5)
-	_check(player.hp == hp_before_hits - 5, "right after a hit the warrior cannot be hurt again")
+	_check(
+		player.hp == hp_before_hits - 5,
+		"right after a hit the warrior cannot be hurt again (%d -> %d)" % [hp_before_hits, player.hp]
+	)
 	_freeze(enemies, false)
 	await _frames(70)
 
