@@ -57,6 +57,12 @@ static func set_size(set_id: String) -> int:
 	return total
 
 
+## True when the class may wear the item (items.json "classes"; none = every class).
+static func usable_by(item_id: String, class_id: String) -> bool:
+	var classes: Array = items.get(item_id, {}).get("classes", [])
+	return classes.is_empty() or classes.has(class_id)
+
+
 static func is_gear(item_id: String) -> bool:
 	return items.has(item_id) and items[item_id].get("slot", "") != ""
 

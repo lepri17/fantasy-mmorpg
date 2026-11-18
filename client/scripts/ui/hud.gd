@@ -24,6 +24,9 @@ const QuestLog := preload("res://scripts/player/quest_log.gd")
 const Minimap := preload("res://scripts/ui/minimap.gd")
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
 const PlayerStats := preload("res://scripts/player/player_stats.gd")
+const ClassDb := preload("res://scripts/player/class_db.gd")
+## The fifth skill button opens with the job advancement.
+const JOB_ACTION := "skill_5"
 const DEATH_RED := Color(1.0, 0.45, 0.5)
 const BOSS_BAR_WIDTH := 520.0
 ## The boss bar shows while a boss is this close to the warrior.
@@ -99,6 +102,26 @@ func _ready() -> void:
 	_panel.set_hp(_player.get("hp"), _player.get("max_hp"))
 	_panel.set_stamina(_player.get("stamina"), _player.get("max_stamina"))
 	_refresh_progress()
+
+
+## The class decides the class name on the panel, the second bar's name and
+## colour, and what the skill buttons say (SPIN for the warrior, FIRE for the
+## mage...). The fifth button shows after the job advancement.
+func _apply_class(stats) -> void:
+	var info: Dictionary = ClassDb.info(stats.class_id)
+	UiStyle.resource_name = info["resource"]
+	UiStyle.resource_short = info["resource_short"]
+	var class_text: String = ClassDb.display_name(stats.class_id, stats.advanced)
+	_panel.set_identity(class_text, ClassDb.resource_color(stats.class_id))
+	for button in get_tree().get_nodes_in_group(ACTION_BUTTONS_GROUP):
+		var action: String = button.get("action")
+		if not action.begins_with("skill"):
+			continue
+		var skill_id: String = _player.call("skill_for_action", action)
+		var label := button.get_node_or_null("Label") as Label
+		if label != null and skill_id != "":
+			label.text = GameData.table("skills")[skill_id]["button"]
+		button.visible = skill_id != "" and (action != JOB_ACTION or stats.advanced)
 
 
 ## Read in the physics step, the same way the player reads its actions.
@@ -194,7 +217,7 @@ func _on_town_request(method: String, argument: Variant) -> void:
 		return
 	match method:
 		"open_shop":
-			_shop.open(argument)
+			_shop.open(argument, _player.get("stats").class_id)
 			_show_window(_shop, true)
 		"open_storage":
 			_show_window(_storage, true)
@@ -260,6 +283,7 @@ func _update_action_buttons() -> void:
 
 func _refresh_progress() -> void:
 	var stats = _player.get("stats")
+	_apply_class(stats)
 	_panel.set_progress(stats.level, stats.xp, stats.xp_to_next(), stats.gold, stats.potions)
 	var free: int = stats.free_points()
 	_stats_button.text = "STATS" if free == 0 else "STATS\n+%d" % free

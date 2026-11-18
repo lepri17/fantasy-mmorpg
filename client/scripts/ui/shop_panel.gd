@@ -60,8 +60,8 @@ func _ready() -> void:
 	show_page("buy")
 
 
-## Fills BUY with what this townsperson sells.
-func open(id: String) -> void:
+## Fills BUY with what this townsperson sells (only gear the class can wear).
+func open(id: String, class_id: String = "") -> void:
 	npc_id = id
 	var data: Dictionary = GameData.table("npcs")[id]
 	_title.text = "%s'S SHOP" % data["name"].to_upper()
@@ -69,7 +69,8 @@ func open(id: String) -> void:
 		_buy_rows.remove_child(child)
 		child.queue_free()
 	for item_id in data.get("shop", []):
-		_buy_rows.add_child(_buy_row(item_id))
+		if class_id == "" or ItemDb.usable_by(item_id, class_id):
+			_buy_rows.add_child(_buy_row(item_id))
 	_select(null)
 	show_page("buy")
 

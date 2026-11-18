@@ -13,6 +13,7 @@ const ItemDb := preload("res://scripts/items/item_db.gd")
 const CombatRules := preload("res://scripts/combat/combat_rules.gd")
 const InventorySlot := preload("res://scripts/ui/inventory_slot.gd")
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
+const ClassDb := preload("res://scripts/player/class_db.gd")
 
 const SLOT_SIZE := Vector2(52, 52)
 const BAG_COLUMNS := 5
@@ -128,6 +129,11 @@ func _show_details() -> void:
 			worn = _stats.equipment.get(item["slot"], {})
 		text = _gear_text(stack, worn) + _set_text(item) + "\n" + _upgrade_text(stack)
 		name_color = ItemDb.rarity_color(stack)
+		if _stats != null and not ItemDb.usable_by(stack["id"], _stats.class_id):
+			var names := PackedStringArray()
+			for class_id in item.get("classes", []):
+				names.append(ClassDb.display_name(class_id))
+			text = "For %s only.\n%s" % [" / ".join(names), text]
 	_name_label.text = ItemDb.display_name(stack, true)
 	_name_label.add_theme_color_override("font_color", name_color)
 	_info_label.text = text
@@ -146,7 +152,7 @@ func _gear_text(stack: Dictionary, worn: Dictionary) -> String:
 		var worn_value: float = 0.0 if worn.is_empty() else ItemDb.stat_of(worn, stat)
 		if is_zero_approx(value) and is_zero_approx(worn_value):
 			continue
-		var line: String = "%s %s" % [_amount(stat, value), UiStyle.SHORT_NAMES[stat]]
+		var line: String = "%s %s" % [_amount(stat, value), UiStyle.stat_name(stat, true)]
 		if not worn.is_empty():
 			var diff: float = value - worn_value
 			line += " (=)" if is_zero_approx(diff) else " (%s)" % _amount(stat, diff)

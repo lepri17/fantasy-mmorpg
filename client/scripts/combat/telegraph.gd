@@ -4,6 +4,8 @@ extends Node2D
 
 var radius: float = 80.0
 var seconds: float = 0.8
+## Red for a monster's attack; the hero's spells mark their spot in their colour.
+var color: Color = Color(1.0, 0.15, 0.1)
 
 var _elapsed: float = 0.0
 
@@ -22,5 +24,5 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	var fill: float = clampf(_elapsed / maxf(seconds, 0.01), 0.0, 1.0)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.5))
-	draw_circle(Vector2.ZERO, radius * fill, Color(1.0, 0.15, 0.1, 0.3))
-	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 48, Color(1.0, 0.2, 0.15, 0.85), 3.0, true)
+	draw_circle(Vector2.ZERO, radius * fill, Color(color, 0.3))
+	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 48, Color(color.lightened(0.05), 0.85), 3.0, true)

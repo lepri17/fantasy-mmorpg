@@ -10,6 +10,8 @@ build/
 __pycache__/
 *.pyc
 
-# Godot writes these on import; only the custom one for the warrior parts is kept
+# Godot writes these on import; only the custom ones for the class parts are kept
 *.import
 !client/assets/characters/warrior/warrior_parts.png.import
+!client/assets/characters/mage/mage_parts.png.import
+!client/assets/characters/archer/archer_parts.png.import

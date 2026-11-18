@@ -9,6 +9,7 @@ extends "res://scripts/player/player_base.gd"
 ## Skills come from res://data/skills.json; each names the action that uses it.
 
 const SkyClock = preload("res://scripts/world/sky.gd")
+const Spells = preload("res://scripts/player/spells.gd")
 ## A tree hides the warrior when its trunk is this close below him (Q12).
 const TREE_COVER := Vector2(70, 150)
 const SILHOUETTE_SHADER := """shader_type canvas_item;
@@ -25,8 +26,8 @@ var _silhouette_check: float = 0.0
 
 func _ready() -> void:
 	add_to_group("player")
-	_load_tuning()
 	stats.from_dict(SaveFile.load_data())
+	_load_tuning()
 	stats.record.check(stats.level)
 	max_hp = stats.max_hp()
 	hp = max_hp
@@ -86,13 +87,19 @@ func _physics_process(delta: float) -> void:
 	_damage_bonus_left = maxf(0.0, _damage_bonus_left - delta)
 	if _damage_bonus_left == 0.0:
 		_damage_bonus = 0.0
+	_crit_bonus_left = maxf(0.0, _crit_bonus_left - delta)
+	if _crit_bonus_left == 0.0:
+		_crit_bonus = 0.0
+	_guard_left = maxf(0.0, _guard_left - delta)
+	if _guard_left == 0.0:
+		_guard = 0.0
 	for skill_id in _skill_cooldowns:
 		_skill_cooldowns[skill_id] = maxf(0.0, float(_skill_cooldowns[skill_id]) - delta)
 	if stunned:
 		return
 	if Input.is_action_pressed(ACTION_ATTACK) and _attack_ready_in == 0.0:
 		_attack()
-	for skill_id in skills_data():
+	for skill_id in class_skills():
 		if Input.is_action_just_pressed(skills_data()[skill_id]["action"]):
 			if not use_skill(skill_id):
 				_explain_lock(skill_id)
@@ -106,6 +113,8 @@ func _physics_process(delta: float) -> void:
 func take_damage(amount: int) -> void:
 	if is_dead or _invincible_left > 0.0 or _dash_left > 0.0:
 		return
+	if _guard > 0.0:
+		amount = maxi(1, roundi(amount * (1.0 - _guard)))
 	hp = maxi(hp - amount, 0)
 	_seconds_since_damage = 0.0
 	hp_changed.emit(hp, max_hp)
@@ -159,7 +168,7 @@ func apply_status(effect: String, seconds: float, value: float = 0.0) -> void:
 
 ## The skill a button or key action uses ("skill" -> "spin_slash"), or "".
 func skill_for_action(action: String) -> String:
-	for skill_id in skills_data():
+	for skill_id in class_skills():
 		if skills_data()[skill_id]["action"] == action:
 			return skill_id
 	return ""
@@ -170,9 +179,14 @@ func skill_unlocked(skill_id: String) -> bool:
 
 
 ## Why a skill cannot be used yet: "Lv5" (level too low), "BOOK" (not learned
-## from its book yet), or "" when it is open.
+## from its book yet), "JOB" (needs the job advancement), "CLASS" (another
+## class's skill), or "" when it is open.
 func skill_lock(skill_id: String) -> String:
 	var skill: Dictionary = skills_data()[skill_id]
+	if skill.get("class", ClassDb.DEFAULT) != stats.class_id:
+		return "CLASS"
+	if skill.get("job", false) and not stats.advanced:
+		return "JOB"
 	if stats.level < int(skill["unlock_level"]):
 		return "Lv%d" % int(skill["unlock_level"])
 	if skill.has("book") and not stats.knows_skill(skill_id):
@@ -192,9 +206,9 @@ func can_use(skill_id: String) -> bool:
 	)
 
 
-## For the SPIN button.
+## For the first skill button (SPIN, FIRE or MULTI).
 func can_use_skill() -> bool:
-	return can_use("spin_slash")
+	return can_use(skill_for_action("skill"))
 
 
 ## Uses a skill from skills.json. Returns false if it could not be used now.
@@ -214,6 +228,8 @@ func use_skill(skill_id: String) -> bool:
 			_skill_buff(skill)
 		"slam":
 			_skill_slam(skill)
+		_:
+			Spells.cast(self, skill)
 	return true
 
 
@@ -246,6 +262,10 @@ func _attack() -> void:
 		if to_target.length() > 1.0:
 			aim = to_target.normalized()
 			facing = _facing_for(aim)
+	var basic: Dictionary = ClassDb.info(stats.class_id)["attack"]
+	if basic["type"] == "shot":
+		_shoot_attack(aim, finisher, basic)
+		return
 
 	_slash.play(aim, finisher)
 	_attack_animation_left = ATTACK_ANIMATION_SECONDS
@@ -272,7 +292,7 @@ func _skill_spin(skill: Dictionary) -> void:
 	_slash.play_spin()
 	Burst.spawn(self, Vector2(0, -24), Color(0.6, 0.95, 1.0), 30, 240.0)
 	_sfx("skill")
-	var base_damage: int = _skill_damage(skill)
+	var base_damage: int = skill_damage(skill)
 	var hits: Array[Dictionary] = []
 	for enemy in _alive_enemies():
 		if enemy.global_position.distance_to(global_position) <= float(skill["radius"]):
@@ -294,16 +314,46 @@ func _skill_strike(skill: Dictionary) -> void:
 	_sfx("skill")
 	var hits: Array[Dictionary] = []
 	if target != null:
-		hits.append(_strike(target, _skill_damage(skill), 2.5))
+		hits.append(_strike(target, skill_damage(skill), 2.5))
 		_shake_camera()
 	_after_strikes(hits, false)
 
 
-## War Cry: more damage for a while.
+## Mage and archer: the basic attack is a shot (a bolt or an arrow) instead of
+## a swing. The third shot of a combo hits harder, like the warrior's finisher.
+func _shoot_attack(aim_direction: Vector2, finisher: bool, basic: Dictionary) -> void:
+	_attack_animation_left = ATTACK_ANIMATION_SECONDS
+	_sprite.stop()
+	_sprite.play("attack_" + facing)
+	var damage: int = stats.attack_damage()
+	if finisher:
+		damage = roundi(damage * float(CombatRules.settings["combo_finisher_multiplier"]))
+	var rgb: Array = basic["color"]
+	Spells.shoot(
+		self,
+		aim_direction,
+		{
+			"kind": basic["kind"],
+			"speed": float(basic["speed"]),
+			"reach": attack_range + 60.0,
+			"damage": damage,
+			"radius": float(basic["radius"]),
+			"color": Color(rgb[0], rgb[1], rgb[2]),
+			"knockback": 1.6 if finisher else 0.6,
+		}
+	)
+	_sfx("swing")
+
+
+## War Cry (more damage) and Eagle Eye (more crits) for a while.
 func _skill_buff(skill: Dictionary) -> void:
-	_damage_bonus = float(skill["damage_bonus"])
-	_damage_bonus_left = float(skill["seconds"])
-	FloatingText.spawn(self, "WAR CRY!", Color(1.0, 0.45, 0.35), 130.0, 30)
+	if skill.has("damage_bonus"):
+		_damage_bonus = float(skill["damage_bonus"])
+		_damage_bonus_left = float(skill["seconds"])
+	if skill.has("crit_bonus"):
+		_crit_bonus = float(skill["crit_bonus"])
+		_crit_bonus_left = float(skill["seconds"])
+	FloatingText.spawn(self, skill["name"].to_upper() + "!", Color(1.0, 0.45, 0.35), 130.0, 30)
 	_sfx("levelup")
 
 
@@ -313,7 +363,7 @@ func _skill_slam(skill: Dictionary) -> void:
 	Burst.spawn(self, Vector2(0, -6), Color(0.72, 0.56, 0.38), 34, 200.0)
 	_shake_camera()
 	_sfx("skill")
-	var base_damage: int = _skill_damage(skill)
+	var base_damage: int = skill_damage(skill)
 	var hits: Array[Dictionary] = []
 	for enemy in _alive_enemies():
 		if enemy.global_position.distance_to(global_position) <= float(skill["radius"]):
@@ -324,7 +374,7 @@ func _skill_slam(skill: Dictionary) -> void:
 	_after_strikes(hits, false)
 
 
-func _skill_damage(skill: Dictionary) -> int:
+func skill_damage(skill: Dictionary) -> int:
 	var multiplier: float = float(skill["damage_multiplier"]) * (1.0 + stats.skill_damage_bonus())
 	return roundi(stats.attack_damage() * multiplier)
 
@@ -334,7 +384,10 @@ func _skill_damage(skill: Dictionary) -> int:
 func _strike(enemy: Node2D, base_damage: int, knockback: float = 1.0) -> Dictionary:
 	var boosted: int = roundi(base_damage * (1.0 + _damage_bonus))
 	var hit: Dictionary = CombatRules.resolve_hit(
-		boosted, stats.crit_chance(), int(enemy.get("defense")), float(enemy.get("evasion"))
+		boosted,
+		stats.crit_chance() + _crit_bonus,
+		int(enemy.get("defense")),
+		float(enemy.get("evasion"))
 	)
 	if hit["miss"]:
 		FloatingText.spawn(enemy, "MISS", MISS_COLOR, 80.0, 22)
@@ -380,6 +433,91 @@ func cooldown_left(action: String) -> float:
 ## True while War Cry (or another damage boost) is on.
 func has_damage_bonus() -> bool:
 	return _damage_bonus > 0.0
+
+
+# --- for spells.gd: the mage's and the archer's skills, and every hero shot
+
+
+## Turns to the nearest enemy within max_distance (or keeps the facing), plays
+## the attack animation, and returns the direction to cast or shoot in.
+func aim(max_distance: float) -> Vector2:
+	var direction: Vector2 = FACING_VECTORS[facing]
+	var target: Node2D = _nearest_enemy(max_distance)
+	if target != null and target.global_position.distance_to(global_position) > 1.0:
+		direction = global_position.direction_to(target.global_position)
+		facing = _facing_for(direction)
+	_attack_animation_left = ATTACK_ANIMATION_SECONDS
+	_sprite.stop()
+	_sprite.play("attack_" + facing)
+	return direction
+
+
+## Where a spell lands: on the nearest enemy within max_distance, or a little
+## ahead of the hero.
+func target_point(max_distance: float) -> Vector2:
+	var target: Node2D = _nearest_enemy(max_distance)
+	if target != null:
+		return target.global_position
+	return global_position + FACING_VECTORS[facing] * 140.0
+
+
+## Alive enemies within radius of a point.
+func enemies_near(point: Vector2, radius: float) -> Array[Node2D]:
+	var result: Array[Node2D] = []
+	for enemy in _alive_enemies():
+		if enemy.global_position.distance_to(point) <= radius:
+			result.append(enemy)
+	return result
+
+
+## One hit on each enemy (status: {"effect", "seconds", "value"} on the ones
+## hit), then the hit sound and hit stop. Returns the hits.
+func hit_all(
+	enemies: Array, damage: int, knockback: float = 1.0, status: Dictionary = {}, sound := false
+) -> Array[Dictionary]:
+	var hits: Array[Dictionary] = []
+	for enemy in enemies:
+		if not is_instance_valid(enemy) or enemy.get("is_dead"):
+			continue
+		var hit: Dictionary = _strike(enemy, damage, knockback)
+		hits.append(hit)
+		if not hit["miss"] and not status.is_empty() and not enemy.get("is_dead"):
+			var value: float = float(status.get("value", 0.0))
+			enemy.call("apply_status", status["effect"], float(status["seconds"]), value)
+	_after_strikes(hits, sound)
+	return hits
+
+
+## A shot (hero_shot.gd) reached an enemy: one hit, or a burst all round it.
+func shot_hit(shot: Node2D, enemy: Node2D) -> void:
+	var blast: float = float(shot.get("blast_radius"))
+	var targets: Array = [enemy]
+	if blast > 0.0:
+		targets = enemies_near(enemy.global_position, blast)
+		Burst.spawn(get_parent(), enemy.position + Vector2(0, -20), Color(1.0, 0.55, 0.2), 26, 220.0)
+	hit_all(targets, int(shot.get("damage")), float(shot.get("knockback")), {}, true)
+
+
+## Mana Shield: cut is the part of each hit's damage taken away (0..1).
+func set_guard(cut: float, seconds: float) -> void:
+	_guard = clampf(cut, 0.0, 0.9)
+	_guard_left = seconds
+
+
+func effect_ring() -> void:
+	_slash.play_spin()
+
+
+func effect_swing(direction: Vector2) -> void:
+	_slash.play(direction, true)
+
+
+func shake() -> void:
+	_shake_camera()
+
+
+func play_sound(sound: String) -> void:
+	_sfx(sound)
 
 
 func _alive_enemies() -> Array[Node2D]:
@@ -462,19 +600,19 @@ func _respawn() -> void:
 	_progress_changed()
 
 
-## Reads speed, ranges, stamina, skill and regeneration from character.json.
+## Reads speed, ranges, stamina, dash and regeneration from character.json,
+## with the class's own numbers (classes.json) where it has them.
 func _load_tuning() -> void:
-	var rules: Dictionary = PlayerStats.rules
-	_dash = rules["dash"]
-	move_speed = float(rules["move_speed"])
-	attack_range = float(rules["attack_range"])
-	attack_cooldown = float(rules["attack_cooldown"])
-	max_stamina = float(rules["max_stamina"])
-	_stamina_regen = float(rules["stamina_regen_per_second"])
-	_regen_delay = float(rules["regen_delay_seconds"])
-	_regen_per_second = float(rules["regen_hp_per_second"])
-	_respawn_seconds = float(rules["respawn_seconds"])
-	_hit_invincible_seconds = float(rules["hit_invincible_seconds"])
+	_dash = stats.rule("dash")
+	move_speed = float(stats.rule("move_speed"))
+	attack_range = float(stats.rule("attack_range"))
+	attack_cooldown = float(stats.rule("attack_cooldown"))
+	max_stamina = float(stats.rule("max_stamina"))
+	_stamina_regen = float(stats.rule("stamina_regen_per_second"))
+	_regen_delay = float(stats.rule("regen_delay_seconds"))
+	_regen_per_second = float(stats.rule("regen_hp_per_second"))
+	_respawn_seconds = float(stats.rule("respawn_seconds"))
+	_hit_invincible_seconds = float(stats.rule("hit_invincible_seconds"))
 
 
 ## Auto potion: below the chosen part of max HP, drink a red potion (with a
@@ -494,7 +632,9 @@ func _explain_lock(skill_id: String) -> void:
 	var skill_name: String = skills_data()[skill_id]["name"]
 	if lock == "BOOK":
 		_say("Learn %s from its book first." % skill_name, WARNING_COLOR)
-	elif lock != "":
+	elif lock == "JOB":
+		_say("%s opens with the job advancement." % skill_name, WARNING_COLOR)
+	elif lock.begins_with("Lv"):
 		_say("%s opens at level %s." % [skill_name, lock.trim_prefix("Lv")], WARNING_COLOR)
 
 

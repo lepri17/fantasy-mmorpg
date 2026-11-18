@@ -358,7 +358,7 @@ func _die() -> void:
 		_player.call("gain_xp", xp_reward)
 	_drop("gold", randi_range(gold_min, gold_max))
 	for drop in drops:
-		if randf() < float(drop["chance"]):
+		if _for_player(drop["item"]) and randf() < float(drop["chance"]):
 			_drop("item", 1, drop["item"])
 	_maybe_drop_gear()
 	if not boss.is_empty():
@@ -507,8 +507,20 @@ func _wait(seconds: float) -> void:
 
 
 ## Gear drops now and then; elites drop it more often and roll better rarity.
+## Loot is for the player's class: gear it cannot wear and other classes'
+## skill books do not drop.
+func _for_player(item_id: String) -> bool:
+	if _player == null:
+		return true
+	var class_id: String = _player.get("stats").class_id
+	var item: Dictionary = ItemDb.items.get(item_id, {})
+	if item.has("teaches"):
+		return GameData.table("skills")[item["teaches"]].get("class", "warrior") == class_id
+	return ItemDb.usable_by(item_id, class_id)
+
+
 func _maybe_drop_gear() -> void:
-	var pool: Array = gear_drops.get("items", [])
+	var pool: Array = gear_drops.get("items", []).filter(_for_player)
 	var chance: float = float(gear_drops.get("chance", 0.0))
 	var rolls: int = int(boss.get("rarity_rolls", 1))
 	if is_elite:

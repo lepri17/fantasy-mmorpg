@@ -1,8 +1,8 @@
 extends Control
-## The warrior's status panel on the HUD: level, HP, stamina, XP, potions, gold.
+## The hero's status panel on the HUD: level and class, HP, stamina (mana for
+## the mage), XP, potions, gold.
 ## It only draws what it is told; the HUD script feeds it.
 
-const CHARACTER_NAME := "Warrior"
 const TEXT_SIZE := 18
 const HP_TOP := 28.0
 const HP_HEIGHT := 24.0
@@ -10,6 +10,8 @@ const STAMINA_HEIGHT := 12.0
 const XP_HEIGHT := 15.0
 const GAP := 6.0
 
+var _class_name: String = "Warrior"
+var _resource_color: Color = Color(0.95, 0.75, 0.2)
 var _hp: int = 1
 var _max_hp: int = 1
 var _stamina: float = 1.0
@@ -25,6 +27,14 @@ func set_hp(current: int, maximum: int) -> void:
 	_hp = current
 	_max_hp = maximum
 	queue_redraw()
+
+
+## The class shown after the level, and the colour of the second bar.
+func set_identity(class_text: String, resource_color: Color) -> void:
+	if class_text != _class_name or resource_color != _resource_color:
+		_class_name = class_text
+		_resource_color = resource_color
+		queue_redraw()
 
 
 func set_stamina(current: float, maximum: float) -> void:
@@ -46,7 +56,7 @@ func _draw() -> void:
 	var font: Font = ThemeDB.fallback_font
 	var left: int = HORIZONTAL_ALIGNMENT_LEFT
 	var right: int = HORIZONTAL_ALIGNMENT_RIGHT
-	var title: String = "Lv.%d %s" % [_level, CHARACTER_NAME]
+	var title: String = "Lv.%d %s" % [_level, _class_name]
 	var purse: String = "Potions %d   Gold %d" % [_potions, _gold]
 	draw_string(font, Vector2(2, 20), title, left, -1, TEXT_SIZE + 2, Color.WHITE)
 	draw_string(font, Vector2(0, 20), purse, right, size.x, TEXT_SIZE - 2, Color(1, 0.9, 0.5))
@@ -57,7 +67,7 @@ func _draw() -> void:
 	draw_string(font, Vector2(10, HP_TOP + 18.0), hp_text, left, -1, TEXT_SIZE - 2, Color.WHITE)
 
 	var stamina_rect := Rect2(0.0, hp_rect.end.y + GAP, size.x, STAMINA_HEIGHT)
-	_draw_bar(stamina_rect, _stamina / maxf(_max_stamina, 1.0), Color(0.95, 0.75, 0.2))
+	_draw_bar(stamina_rect, _stamina / maxf(_max_stamina, 1.0), _resource_color)
 
 	var xp_rect := Rect2(0.0, stamina_rect.end.y + GAP, size.x, XP_HEIGHT)
 	var xp_ratio: float = float(_xp) / float(maxi(_xp_to_next, 1))

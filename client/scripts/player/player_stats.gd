@@ -8,6 +8,7 @@ const GameData := preload("res://scripts/data/game_data.gd")
 const AchievementRecord := preload("res://scripts/player/achievement_record.gd")
 const QuestLog := preload("res://scripts/player/quest_log.gd")
 const DungeonLog := preload("res://scripts/player/dungeon_log.gd")
+const ClassDb := preload("res://scripts/player/class_db.gd")
 
 ## Version of what to_dict() writes. 1 = level, xp, gold, potions.
 ## 2 = adds the bag and the gear; potions live in the bag.
@@ -17,7 +18,7 @@ const DungeonLog := preload("res://scripts/player/dungeon_log.gd")
 ## 6 = adds the storage in town.
 ## 7 = adds quests.
 ## 8 = adds dungeon entries per day.
-const SAVE_VERSION := 8
+const SAVE_VERSION := 9
 const POTION_ID := "red_potion"
 
 ## The numbers from res://data/character.json: health and damage without gear
@@ -30,6 +31,11 @@ static var storage_size: int = int(rules["storage_size"])
 ## STR, AGI, VIT, ENE: what one point in each adds ("attack", "max_hp", ...).
 static var stat_rules: Dictionary = rules["stats"]
 
+## The class (classes.json) and whether it made its job advancement (version 9).
+var class_id: String = ClassDb.DEFAULT
+var advanced: bool = false
+## The name the player gave the character on the character screen.
+var hero_name: String = ""
 var level: int = 1
 var xp: int = 0
 var gold: int = 0
@@ -71,10 +77,15 @@ static func auto_potion_choices() -> Array:
 	return rules["auto_potion_choices"].map(func(value): return int(value))
 
 
+## A number or setting from character.json, or the class's own value for it.
+func rule(key: String) -> Variant:
+	return ClassDb.rule(class_id, key)
+
+
 func max_hp() -> int:
-	var per_level: int = int(rules["hp_per_level"])
+	var per_level: int = int(rule("hp_per_level"))
 	return (
-		int(rules["base_max_hp"])
+		int(rule("base_max_hp"))
 		+ per_level * (level - 1)
 		+ gear_bonus("max_hp")
 		+ int(extra_bonus("max_hp"))
@@ -82,9 +93,9 @@ func max_hp() -> int:
 
 
 func attack_damage() -> int:
-	var per_level: int = int(rules["damage_per_level"])
+	var per_level: int = int(rule("damage_per_level"))
 	return (
-		int(rules["base_damage"])
+		int(rule("base_damage"))
 		+ per_level * (level - 1)
 		+ gear_bonus("attack")
 		+ int(extra_bonus("attack"))
@@ -93,13 +104,13 @@ func attack_damage() -> int:
 
 ## Damage taken from each hit goes down by this much (never below 1).
 func defense() -> int:
-	return int(rules.get("defense", 0)) + gear_bonus("defense") + int(extra_bonus("defense"))
+	return int(rule("defense")) + gear_bonus("defense") + int(extra_bonus("defense"))
 
 
 ## Chance (0..1) that a hit is critical.
 func crit_chance() -> float:
 	return (
-		float(rules.get("crit_chance", 0.0))
+		float(rule("crit_chance"))
 		+ gear_total("crit_chance")
 		+ extra_bonus("crit_chance")
 	)
@@ -107,11 +118,11 @@ func crit_chance() -> float:
 
 ## Chance (0..1) that a monster's hit misses.
 func evasion() -> float:
-	return float(rules.get("evasion", 0.0)) + gear_total("evasion") + extra_bonus("evasion")
+	return float(rule("evasion")) + gear_total("evasion") + extra_bonus("evasion")
 
 
 func max_stamina() -> float:
-	return float(rules["max_stamina"]) + gear_total("max_stamina") + extra_bonus("max_stamina")
+	return float(rule("max_stamina")) + gear_total("max_stamina") + extra_bonus("max_stamina")
 
 
 ## Extra skill damage as a fraction (0.1 = +10%).
@@ -119,12 +130,16 @@ func skill_damage_bonus() -> float:
 	return gear_total("skill_damage") + extra_bonus("skill_damage")
 
 
-## What the stat points and the title add to one number ("attack", "max_hp",
-## "defense", "crit_chance", "evasion", "max_stamina", "skill_damage").
+## What the stat points, the title and the job advancement add to one number
+## ("attack", "max_hp", "defense", "crit_chance", "evasion", "max_stamina",
+## "skill_damage"). What a stat point gives depends on the class.
 func extra_bonus(stat: String) -> float:
 	var total: float = 0.0
 	for stat_id in stat_points:
-		total += float(stat_points[stat_id]) * float(stat_rules[stat_id].get(stat, 0.0))
+		var gives: float = float(ClassDb.stat_rule(class_id, stat_id).get(stat, 0.0))
+		total += float(stat_points[stat_id]) * gives
+	if advanced:
+		total += float(ClassDb.info(class_id)["advanced"].get("bonus", {}).get(stat, 0.0))
 	return total + record.title_bonus(stat)
 
 
@@ -287,7 +302,7 @@ func equip(index: int) -> bool:
 		return false
 	var stack: Dictionary = bag[index]
 	var slot: String = ItemDb.items[stack["id"]].get("slot", "")
-	if slot == "":
+	if slot == "" or not ItemDb.usable_by(stack["id"], class_id):
 		return false
 	var worn: Dictionary = equipment.get(slot, {})
 	equipment[slot] = stack
@@ -405,6 +420,9 @@ func add_xp(amount: int) -> int:
 func to_dict() -> Dictionary:
 	return {
 		"version": SAVE_VERSION,
+		"class": class_id,
+		"advanced": advanced,
+		"name": hero_name,
 		"level": level,
 		"xp": xp,
 		"gold": gold,
@@ -419,12 +437,19 @@ func to_dict() -> Dictionary:
 
 
 func from_dict(data: Dictionary) -> void:
+	# Before version 9 every character was a warrior.
+	class_id = str(data.get("class", ClassDb.DEFAULT))
+	if not ClassDb.exists(class_id):
+		class_id = ClassDb.DEFAULT
+	advanced = data.get("advanced", false) == true
+	hero_name = str(data.get("name", "")).left(16)
 	level = maxi(1, int(data.get("level", 1)))
 	xp = maxi(0, int(data.get("xp", 0)))
 	gold = maxi(0, int(data.get("gold", 0)))
 	_load_progress(data)
-	if int(data.get("version", 1)) < 2:
+	if int(data.get("version", 1)) < 2 or not data.has("equipment"):
 		# Version 1 kept only a potion count, and the gear could not change yet.
+		# A new character from the character screen has no gear saved yet either.
 		_start_fresh()
 		potions = maxi(0, int(data.get("potions", potions)))
 		return
@@ -436,7 +461,11 @@ func from_dict(data: Dictionary) -> void:
 			# Before version 4 a worn piece was only its item id.
 			var saved = saved_gear[slot]
 			var worn: Dictionary = ItemDb.clean_stack(saved if saved is Dictionary else {"id": saved})
-			if not worn.is_empty() and ItemDb.items[worn["id"]].get("slot", "") == slot:
+			if (
+				not worn.is_empty()
+				and ItemDb.items[worn["id"]].get("slot", "") == slot
+				and ItemDb.usable_by(worn["id"], class_id)
+			):
 				equipment[slot] = worn
 	var saved_bag = data.get("bag", [])
 	if saved_bag is Array:
@@ -459,7 +488,11 @@ func _load_progress(data: Dictionary) -> void:
 	var saved_skills = data.get("learned_skills", [])
 	if saved_skills is Array:
 		for skill_id in saved_skills:
-			if skills.has(skill_id) and not learned_skills.has(skill_id):
+			if (
+				skills.has(skill_id)
+				and skills[skill_id].get("class", ClassDb.DEFAULT) == class_id
+				and not learned_skills.has(skill_id)
+			):
 				learned_skills.append(skill_id)
 	record.from_dict(data)
 	quests.from_dict(data)
@@ -477,13 +510,14 @@ func _load_progress(data: Dictionary) -> void:
 		auto_potion = 0
 
 
-## Starting gear and bag from the data.
+## The class's starting gear and bag from the data.
 func _start_fresh() -> void:
 	equipment = {}
-	for slot in rules["starting_gear"]:
-		equipment[slot] = ItemDb.gear(rules["starting_gear"][slot])
+	var starting_gear: Dictionary = rule("starting_gear")
+	for slot in starting_gear:
+		equipment[slot] = ItemDb.gear(starting_gear[slot])
 	bag = []
-	for stack in rules["starting_bag"]:
+	for stack in rule("starting_bag"):
 		add_item(stack["id"], int(stack["count"]))
 
 

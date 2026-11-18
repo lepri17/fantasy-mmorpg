@@ -17,7 +17,8 @@ const PlayerStats = preload("res://scripts/player/player_stats.gd")
 const SaveFile = preload("res://scripts/player/save_file.gd")
 const FloatingText = preload("res://scripts/ui/floating_text.gd")
 const ItemDb = preload("res://scripts/items/item_db.gd")
-const WarriorLook = preload("res://scripts/player/warrior_look.gd")
+const HeroLook = preload("res://scripts/player/hero_look.gd")
+const ClassDb = preload("res://scripts/player/class_db.gd")
 const HitSpark = preload("res://scripts/combat/hit_spark.gd")
 const TargetMarker = preload("res://scripts/combat/target_marker.gd")
 const StatusEffects = preload("res://scripts/combat/status_effects.gd")
@@ -78,7 +79,7 @@ var max_hp: int = 0
 var stamina: float = 100.0
 var max_stamina: float = 100.0
 var is_dead: bool = false
-## The sprite sheet built for the gear worn now (see warrior_look.gd).
+## The sprite sheet built for the class and the gear worn now (see hero_look.gd).
 var look_texture: Texture2D = null
 ## 1, 2 or 3: which swing of the combo comes next counts from here. The third is
 ## the finisher: stronger, with more knockback.
@@ -92,6 +93,12 @@ var _skill_cooldowns: Dictionary = {}
 var _hurt_animation_left: float = 0.0
 var _damage_bonus: float = 0.0
 var _damage_bonus_left: float = 0.0
+## Eagle Eye: extra crit chance, and how long it lasts.
+var _crit_bonus: float = 0.0
+var _crit_bonus_left: float = 0.0
+## Mana Shield: the part of each hit's damage that is cut, and how long it lasts.
+var _guard: float = 0.0
+var _guard_left: float = 0.0
 var _dash: Dictionary = {}
 var _dash_left: float = 0.0
 var _dash_ready_in: float = 0.0
@@ -252,6 +259,9 @@ func equip_from_bag(index: int) -> void:
 	if is_dead or index < 0 or index >= stats.bag.size():
 		return
 	var piece: Dictionary = stats.bag[index]
+	if not ItemDb.usable_by(piece["id"], stats.class_id):
+		_say("Only %s can use that." % _classes_text(piece["id"]), WARNING_COLOR)
+		return
 	if stats.equip(index):
 		_say("Equipped %s." % ItemDb.display_name(piece))
 		_gear_changed()
@@ -448,6 +458,24 @@ static func skills_data() -> Dictionary:
 	return GameData.table("skills")
 
 
+## The skills of this hero's class, in button order.
+func class_skills() -> Array:
+	return ClassDb.skills(stats.class_id)
+
+
+## "a Mage", "a Warrior or an Archer": who may wear an item.
+func _classes_text(item_id: String) -> String:
+	var names := PackedStringArray()
+	for class_id in ItemDb.items[item_id].get("classes", []):
+		names.append(_with_article(ClassDb.display_name(class_id)))
+	return " or ".join(names)
+
+
+## "a Mage", "an Archer".
+static func _with_article(word: String) -> String:
+	return ("an " if word.left(1) in ["A", "E", "I", "O", "U"] else "a ") + word
+
+
 ## Drinks one potion. Does nothing at full health or with no potions left.
 func use_potion() -> void:
 	if is_dead or stats.potions <= 0 or hp >= max_hp:
@@ -477,7 +505,7 @@ func _gear_changed() -> void:
 
 ## Rebuilds the sprite sheet for the gear worn now and points every frame at it.
 func _apply_look() -> void:
-	look_texture = WarriorLook.build(stats.equipment)
+	look_texture = HeroLook.build(stats.equipment, stats.class_id)
 	var frames: SpriteFrames = _sprite.sprite_frames
 	for animation in frames.get_animation_names():
 		for i in frames.get_frame_count(animation):
@@ -520,7 +548,11 @@ func _read_book(index: int, item: Dictionary) -> void:
 	var skill_id: String = item["teaches"]
 	var skill: Dictionary = skills_data()[skill_id]
 	var needed_level: int = int(skill["unlock_level"])
-	if stats.knows_skill(skill_id):
+	var skill_class: String = skill.get("class", ClassDb.DEFAULT)
+	if skill_class != stats.class_id:
+		var who: String = _with_article(ClassDb.display_name(skill_class))
+		_say("Only %s can learn %s." % [who, skill["name"]], WARNING_COLOR)
+	elif stats.knows_skill(skill_id):
 		_say("You already know %s." % skill["name"], WARNING_COLOR)
 	elif stats.level < needed_level:
 		_say("Reach level %d to learn %s." % [needed_level, skill["name"]], WARNING_COLOR)

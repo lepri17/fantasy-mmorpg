@@ -1,0 +1,157 @@
+{
+  "order": [
+    "warrior",
+    "mage",
+    "archer"
+  ],
+  "classes": {
+    "warrior": {
+      "name": "Warrior",
+      "text": "Sword and armour. Strong up close and hard to bring down.",
+      "parts": "res://assets/characters/warrior/warrior_parts",
+      "resource": "Stamina",
+      "resource_short": "STA",
+      "resource_color": [
+        0.95,
+        0.75,
+        0.2
+      ],
+      "attack": {
+        "type": "melee"
+      },
+      "rules": {},
+      "stats": {},
+      "advanced": {
+        "name": "Champion",
+        "color": [
+          1.0,
+          0.72,
+          0.3
+        ]
+      }
+    },
+    "mage": {
+      "name": "Mage",
+      "text": "Spells from afar. Fragile, but hits many enemies at once.",
+      "parts": "res://assets/characters/mage/mage_parts",
+      "resource": "Mana",
+      "resource_short": "MP",
+      "resource_color": [
+        0.55,
+        0.45,
+        1.0
+      ],
+      "attack": {
+        "type": "shot",
+        "kind": "bolt",
+        "speed": 460,
+        "radius": 8,
+        "color": [
+          0.78,
+          0.62,
+          1.0
+        ]
+      },
+      "rules": {
+        "base_max_hp": 50,
+        "hp_per_level": 15,
+        "base_damage": 5,
+        "damage_per_level": 3,
+        "attack_range": 300,
+        "attack_cooldown": 0.6,
+        "max_stamina": 120,
+        "stamina_regen_per_second": 10,
+        "evasion": 0.02,
+        "starting_gear": {
+          "head": "sage_hat",
+          "weapon": "oak_staff",
+          "armor": "violet_robe",
+          "boots": "leather_boots"
+        },
+        "dash": {
+          "stamina": 25,
+          "cooldown": 0.9,
+          "seconds": 0.12,
+          "speed_multiplier": 4.5
+        }
+      },
+      "stats": {
+        "strength": {
+          "text": "+1 Attack for every 4 points.",
+          "attack": 0.25
+        },
+        "energy": {
+          "text": "+1 Attack for every 2 points. +2 Max Mana and +1% spell damage for every point.",
+          "attack": 0.5,
+          "max_stamina": 2
+        }
+      },
+      "advanced": {
+        "name": "Sorcerer",
+        "color": [
+          0.62,
+          0.52,
+          1.0
+        ]
+      }
+    },
+    "archer": {
+      "name": "Archer",
+      "text": "Bow and quick feet. Strikes from far away, with many critical hits.",
+      "parts": "res://assets/characters/archer/archer_parts",
+      "resource": "Stamina",
+      "resource_short": "STA",
+      "resource_color": [
+        0.95,
+        0.75,
+        0.2
+      ],
+      "attack": {
+        "type": "shot",
+        "kind": "arrow",
+        "speed": 640,
+        "radius": 7,
+        "color": [
+          0.95,
+          0.9,
+          0.8
+        ]
+      },
+      "rules": {
+        "base_max_hp": 56,
+        "hp_per_level": 17,
+        "base_damage": 4,
+        "damage_per_level": 3,
+        "attack_range": 340,
+        "attack_cooldown": 0.5,
+        "crit_chance": 0.08,
+        "evasion": 0.05,
+        "starting_gear": {
+          "head": "green_hood",
+          "weapon": "short_bow",
+          "gloves": "leather_gloves",
+          "armor": "ranger_vest",
+          "boots": "leather_boots"
+        }
+      },
+      "stats": {
+        "strength": {
+          "text": "+1 Attack for every 4 points.",
+          "attack": 0.25
+        },
+        "agility": {
+          "text": "+1 Attack for every 3 points, +1 Defense for every 4. +0.2% Evasion and +0.1% Crit each.",
+          "attack": 0.34
+        }
+      },
+      "advanced": {
+        "name": "Ranger",
+        "color": [
+          0.45,
+          0.85,
+          1.0
+        ]
+      }
+    }
+  }
+}

@@ -15,6 +15,7 @@ const CombatRules := preload("res://scripts/combat/combat_rules.gd")
 const PlayerStats := preload("res://scripts/player/player_stats.gd")
 const AchievementRecord := preload("res://scripts/player/achievement_record.gd")
 const QuestLog := preload("res://scripts/player/quest_log.gd")
+const ClassDb := preload("res://scripts/player/class_db.gd")
 const QUEST_STATES := {"ready": "done, hand it in", "active": "", "available": "can start"}
 
 const POINTS_COLOR := Color(0.55, 1.0, 0.6)
@@ -29,6 +30,8 @@ var _points_label: Label
 var _stat_values: Dictionary = {}
 var _plus_buttons: Dictionary = {}
 var _numbers_label: Label
+## Stat id -> the label saying what a point gives (it depends on the class).
+var _stat_texts: Dictionary = {}
 var _reset_button: Button
 var _title_label: Label
 var _title_bonus_label: Label
@@ -68,7 +71,12 @@ func show_page(page_name: String) -> void:
 
 ## stats is a player_stats.gd object.
 func refresh(stats) -> void:
-	_level_label.text = "Lv %d Warrior" % stats.level
+	var class_text: String = ClassDb.display_name(stats.class_id, stats.advanced)
+	_level_label.text = "Lv %d %s" % [stats.level, class_text]
+	if stats.hero_name != "":
+		_level_label.text = "%s  Lv %d %s" % [stats.hero_name, stats.level, class_text]
+	for stat_id in _stat_texts:
+		_stat_texts[stat_id].text = ClassDb.stat_rule(stats.class_id, stat_id)["text"]
 	var free: int = stats.free_points()
 	_points_label.text = "POINTS %d" % free
 	_points_label.add_theme_color_override("font_color", POINTS_COLOR if free > 0 else DIM_TEXT)
@@ -77,11 +85,12 @@ func refresh(stats) -> void:
 		UiStyle.set_enabled(_plus_buttons[stat_id], free > 0)
 	var damage: Vector2i = CombatRules.damage_range(stats.attack_damage())
 	_numbers_label.text = (
-		"ATK %d~%d   HP %d   STA %d\nDEF %d   CRIT %d%%   EVA %d%%   SKILL +%d%%"
+		"ATK %d~%d   HP %d   %s %d\nDEF %d   CRIT %d%%   EVA %d%%   SKILL +%d%%"
 		% [
 			damage.x,
 			damage.y,
 			stats.max_hp(),
+			UiStyle.resource_short,
 			roundi(stats.max_stamina()),
 			stats.defense(),
 			roundi(stats.crit_chance() * 100.0),
@@ -235,6 +244,7 @@ func _stat_row(stat_id: String, rule: Dictionary) -> Control:
 	plus.pressed.connect(func() -> void: request.emit("add_stat_point", stat_id))
 	row.add_child(plus)
 	_stat_values[stat_id] = value
+	_stat_texts[stat_id] = text
 	_plus_buttons[stat_id] = plus
 	return row
 

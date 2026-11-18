@@ -101,6 +101,68 @@ def check_items(items_data: dict) -> dict:
     return items
 
 
+def check_classes(classes: dict, character: dict, items: dict, skills: dict) -> None:
+    """classes.json: each class's art, attack, numbers over character.json, stats,
+    starting gear (its own) and skills (one per button)."""
+    where = "classes.json"
+    table = classes.get("classes", {})
+    if not isinstance(table, dict) or not table:
+        error(f"{where}: 'classes' must be a non-empty object")
+        return
+    if classes.get("order") != list(table):
+        error(f"{where}: 'order' must list every class once, in the same order")
+    for class_id, info in table.items():
+        place = f"{where}: '{class_id}'"
+        for key in ("name", "text", "resource", "resource_short"):
+            if not isinstance(info.get(key), str) or not info[key]:
+                error(f"{place}: needs a '{key}'")
+        for ext in (".png", ".gd"):
+            if not res_exists(str(info.get("parts", "")) + ext):
+                error(f"{place}: parts '{info.get('parts')}{ext}' does not exist")
+        color = info.get("resource_color")
+        if not (isinstance(color, list) and len(color) == 3 and all(is_number(c) for c in color)):
+            error(f"{place}: 'resource_color' must be three numbers")
+        attack = info.get("attack", {})
+        if attack.get("type") == "shot":
+            if attack.get("kind") not in ("bolt", "arrow"):
+                error(f"{place}: a shot attack's kind must be 'bolt' or 'arrow'")
+            for key in ("speed", "radius"):
+                need_number(place + " attack", attack, key, 1)
+        elif attack.get("type") != "melee":
+            error(f"{place}: attack type must be 'melee' or 'shot'")
+        rules = info.get("rules", {})
+        for key in rules:
+            if key not in character:
+                error(f"{place}: rule '{key}' is not in character.json")
+        for slot, item_id in rules.get("starting_gear", {}).items():
+            item = items.get(item_id)
+            if item is None or item.get("slot") != slot:
+                error(f"{place}: starting gear '{item_id}' is not worn in '{slot}'")
+            elif class_id not in item.get("classes", [class_id]):
+                error(f"{place}: starting gear '{item_id}' is not for this class")
+        for stat_id, rule in info.get("stats", {}).items():
+            if stat_id not in character.get("stats", {}):
+                error(f"{place}: stat '{stat_id}' is not in character.json")
+            check_bonus(f"{place}: stat '{stat_id}'",
+                        {k: v for k, v in rule.items() if k not in ("short", "text")})
+        actions = sorted(s.get("action") for s in skills.values() if s.get("class") == class_id)
+        if actions != sorted(BASIC_ACTIONS + [JOB_ACTION]):
+            error(f"{place}: needs exactly one skill for each of "
+                  f"{BASIC_ACTIONS + [JOB_ACTION]}, has {actions}")
+        advanced = info.get("advanced", {})
+        if not isinstance(advanced.get("name"), str) or len(advanced.get("color", [])) != 3:
+            error(f"{place}: 'advanced' needs a 'name' and a 'color'")
+    for skill_id, skill in skills.items():
+        if skill.get("class") not in table:
+            error(f"skills.json: '{skill_id}' class '{skill.get('class')}' is not a class")
+    for item_id, item in items.items():
+        for class_id in item.get("classes", []):
+            if class_id not in table:
+                error(f"items.json: '{item_id}' names unknown class '{class_id}'")
+        if "classes" in item and item.get("slot", "") == "":
+            error(f"items.json: '{item_id}' is not gear, so it cannot be for some classes only")
+
+
 def check_character(character: dict, items: dict, gear_slots: list) -> None:
     where = "character.json"
     for key in ("base_max_hp", "base_damage", "xp_per_level", "move_speed", "attack_range",
@@ -183,10 +245,22 @@ def check_monsters(monsters: dict, items: dict) -> None:
 SKILL_TYPES = {
     "spin": ("radius", "damage_multiplier"),
     "strike": ("range", "damage_multiplier"),
-    "buff": ("seconds", "damage_bonus"),
+    "buff": ("seconds",),
     "slam": ("radius", "damage_multiplier", "stun_seconds"),
+    "bolt": ("range", "speed", "damage_multiplier", "blast_radius"),
+    "nova": ("radius", "damage_multiplier", "slow_seconds", "slow"),
+    "shield": ("seconds", "damage_cut"),
+    "meteor": ("range", "radius", "delay", "damage_multiplier", "stun_seconds"),
+    "fan": ("arrows", "spread_degrees", "range", "speed", "damage_multiplier"),
+    "pierce": ("range", "speed", "damage_multiplier"),
+    "rain": ("range", "radius", "waves", "every", "damage_multiplier"),
+    "cleave": ("radius", "arc_degrees", "damage_multiplier"),
+    "chain": ("range", "jump_range", "jumps", "damage_multiplier"),
 }
-SKILL_ACTIONS = {"skill", "skill_2", "skill_3", "skill_4"}
+SKILL_ACTIONS = {"skill", "skill_2", "skill_3", "skill_4", "skill_5"}
+# A class's five skill buttons: four basic ones, and one after the job advancement.
+BASIC_ACTIONS = ["skill", "skill_2", "skill_3", "skill_4"]
+JOB_ACTION = "skill_5"
 
 
 def check_skills(skills: dict) -> None:
@@ -199,9 +273,15 @@ def check_skills(skills: dict) -> None:
         action = skill.get("action")
         if action not in SKILL_ACTIONS:
             error(f"{where}: action '{action}' is not one of {sorted(SKILL_ACTIONS)}")
-        elif action in used_actions:
-            error(f"{where}: action '{action}' is used by two skills")
-        used_actions.add(action)
+        elif (skill.get("class"), action) in used_actions:
+            error(f"{where}: action '{action}' is used by two {skill.get('class')} skills")
+        used_actions.add((skill.get("class"), action))
+        if (action == JOB_ACTION) != bool(skill.get("job", False)):
+            error(f"{where}: only job skills (\"job\": true) go on '{JOB_ACTION}'")
+        if skill.get("type") == "buff" and not any(
+            k in skill for k in ("damage_bonus", "crit_bonus")
+        ):
+            error(f"{where}: a buff needs 'damage_bonus' or 'crit_bonus'")
         for key in ("stamina", "cooldown"):
             need_number(where, skill, key)
         need_number(where, skill, "unlock_level", 1)
@@ -554,7 +634,14 @@ def check_art(items: dict) -> None:
     except ImportError as exc:
         print(f"note: art not checked ({exc})")
         return
-    for part, needed in generate_assets.PART_REQUIRES.items():
+    requires = {}  # part -> items it needs, in any class
+    for hero, info in generate_assets.HEROES.items():
+        for item_id in info["gear"]:
+            if item_id not in items:
+                error(f"generate_assets.py: {hero} gear '{item_id}' is not an item")
+        for part, needed in generate_assets.requires_for(hero).items():
+            requires.setdefault(part, set()).update(needed)
+    for part, needed in requires.items():
         for item_id in needed:
             if item_id not in items:
                 error(f"generate_assets.py: part '{part}' needs unknown item '{item_id}'")
@@ -564,7 +651,7 @@ def check_art(items: dict) -> None:
             error(f"generate_assets.py: '{item_id}' is drawn like '{base}', "
                   "but items.json does not give it that look")
         for part in parts:
-            if base not in generate_assets.PART_REQUIRES.get(part, []):
+            if base not in requires.get(part, set()):
                 error(f"generate_assets.py: '{item_id}' recolours '{part}', not a part of '{base}'")
     for item_id, item in items.items():
         if "look" in item and item_id not in variants:
@@ -578,6 +665,7 @@ def main() -> int:
     check_character(load("character"), items, items_data.get("gear_slots", []))
     check_monsters(load("monsters"), items)
     check_skills(load("skills"))
+    check_classes(load("classes"), load("character"), items, load("skills"))
     dash = load("character").get("dash", {})
     for key in ("stamina", "cooldown", "seconds", "speed_multiplier"):
         need_number("character.json dash", dash, key, 0.01)

@@ -1,0 +1,14 @@
+[remap]
+
+importer="image"
+type="Image"
+uid="uid://banqkqg7ayot5"
+path="res://.godot/imported/archer_parts.png-326529d26e6c7a36dfc10c5192e6104a.image"
+
+[deps]
+
+source_file="res://assets/characters/archer/archer_parts.png"
+dest_files=["res://.godot/imported/archer_parts.png-326529d26e6c7a36dfc10c5192e6104a.image"]
+
+[params]
+

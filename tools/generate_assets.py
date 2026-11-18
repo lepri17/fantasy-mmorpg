@@ -101,6 +101,8 @@ class Pose:
     sword: tuple | None = None  # attack frames: (hand, tip, layer) - see sword_layer()
     trail: tuple | None = None  # attack frames: (tip in the previous frame, tip now)
     hurt: bool = False  # squeezed eyes and an open mouth
+    pull: float = 0.0  # bow frames: how far the string is drawn back (0..1)
+    off_hand: tuple | None = None  # bow frames: where the hand that draws the string is
 
 
 def idle_poses() -> list[Pose]:
@@ -156,20 +158,106 @@ def hurt_pose(direction: str) -> Pose:
     return Pose(bob=-0.4, lean=lean, arm=0.6, sway=1.0, hurt=True)
 
 
+# Bow shot for each drawn direction. Per frame: (hand on the bow, a point the arrow
+# aims at, layer, body bob, upper-body lean, trail?, string drawn 0..1, the hand
+# on the string). The arrow itself flies as a projectile in the game.
+BOW_ATTACKS = {
+    "down": [
+        ((40, 67), (40, 87), "front", -0.4, (0.0, -0.4), False, 0.4, (50, 63)),
+        ((46, 68), (46, 88), "front", -0.2, (0.0, -0.8), False, 1.0, (52, 60)),
+        ((46, 70), (46, 90), "front", 0.6, (0.0, 0.6), False, 0.0, (58, 61)),
+        ((45, 70), (45, 90), "front", 0.4, (0.0, 0.4), False, 0.0, (60, 65)),
+        ((36, 70), (18, 72), "back", 0.2, (0.0, 0.2), False, 0.0, None),
+    ],
+    "up": [
+        ((60, 54), (60, 34), "body", -0.4, (0.0, -0.4), False, 0.4, (52, 60)),
+        ((58, 50), (58, 30), "body", -0.2, (0.0, -0.8), False, 1.0, (54, 62)),
+        ((58, 50), (58, 30), "body", 0.6, (0.0, -0.2), False, 0.0, (44, 60)),
+        ((60, 54), (60, 34), "body", 0.4, (0.0, 0.2), False, 0.0, (42, 64)),
+        ((64, 68), (82, 70), "back", 0.2, (0.0, 0.2), False, 0.0, None),
+    ],
+    "left": [
+        ((30, 62), (10, 62), "front", -0.4, (0.5, 0.0), False, 0.4, (40, 60)),
+        ((25, 60), (5, 60), "front", -0.2, (1.0, 0.0), False, 1.0, (40, 59)),
+        ((25, 60), (5, 60), "front", 0.6, (-0.8, 0.4), False, 0.0, (46, 58)),
+        ((28, 62), (8, 62), "front", 0.4, (-0.4, 0.4), False, 0.0, (44, 62)),
+        ((34, 68), (20, 80), "front", 0.2, (0.0, 0.2), False, 0.0, None),
+    ],
+}
+
+
 def attack_poses(direction: str) -> list[Pose]:
     view = "left" if direction == "right" else direction
     poses, previous_tip = [], None
-    for hand, tip, layer, bob, lean, trail in ATTACKS[view]:
+    for entry in HERO["attacks"][view]:
+        hand, tip, layer, bob, lean, trail = entry[:6]
+        pull, off_hand = entry[6:] if len(entry) > 6 else (0.0, None)
         poses.append(
             Pose(
                 bob=bob,
                 lean=lean,
                 sword=(hand, tip, layer),
                 trail=(previous_tip, tip) if trail and previous_tip else None,
+                pull=pull,
+                off_hand=off_hand,
             )
         )
         previous_tip = tip
     return poses
+
+
+# ---------------------------------------------------------------- heroes
+# The three classes share the chibi body and the idle, walk and hurt frames.
+# Each has its own weapon (drawn in the sword_* parts), head gear, armour, hair
+# and reach; the archer also has its own attack frames (BOW_ATTACKS).
+
+WOOD = (156, 104, 62, 255)
+WOOD_DARK = (116, 74, 44, 255)
+ORB = (110, 214, 255, 255)
+ORB_GLOW = (150, 226, 255, 110)
+ROBE = (128, 88, 204, 255)
+ROBE_DARK = (94, 60, 160, 255)
+ROBE_LIGHT = (176, 144, 238, 255)
+HOOD = (74, 150, 88, 255)
+HOOD_DARK = (50, 110, 64, 255)
+VEST = (156, 104, 64, 255)
+VEST_DARK = (120, 78, 48, 255)
+STRING = (244, 240, 226, 255)
+FLETCH = (236, 96, 86, 255)
+
+HEROES = {
+    "warrior": {
+        "weapon": "sword",
+        "gear": ["red_headband", "training_sword", "leather_gloves", "red_cape", "blue_plate",
+                 "leather_boots"],
+        "attacks": ATTACKS,
+        "reach": {"down": (-13, -27), "up": (13, -27), "side": (-26, -16)},
+        "hair": ((238, 126, 62, 255), (204, 92, 44, 255), (255, 172, 100, 255)),
+        "tuft": True,
+        "trail": ((255, 255, 255, 150), (200, 236, 255, 220)),
+    },
+    "mage": {
+        "weapon": "staff",
+        "gear": ["sage_hat", "oak_staff", "leather_gloves", "red_cape", "violet_robe",
+                 "leather_boots"],
+        "attacks": ATTACKS,
+        "reach": {"down": (-5, -30), "up": (5, -30), "side": (-9, -29)},
+        "hair": ((150, 192, 242, 255), (108, 146, 210, 255), (208, 230, 255, 255)),
+        "tuft": False,
+        "trail": ((205, 160, 255, 150), (236, 214, 255, 220)),
+    },
+    "archer": {
+        "weapon": "bow",
+        "gear": ["green_hood", "short_bow", "leather_gloves", "red_cape", "ranger_vest",
+                 "leather_boots"],
+        "attacks": BOW_ATTACKS,
+        "reach": {"down": (-20, 3), "up": (20, 3), "side": (-14, 14)},
+        "hair": ((134, 84, 58, 255), (98, 60, 42, 255), (184, 126, 90, 255)),
+        "tuft": False,
+        "trail": ((255, 255, 255, 150), (200, 236, 255, 220)),
+    },
+}
+HERO = HEROES["warrior"]  # the class being drawn now (build_hero_parts switches it)
 
 
 class Canvas:
@@ -286,6 +374,61 @@ def draw_sword(c: Canvas, hand, tip) -> None:
     c.ellipse(*at(4.8), 1.3, 1.3, GEM, outline=False)
 
 
+def draw_staff(c: Canvas, hand, tip) -> None:
+    """Mage's staff: a long wooden shaft, a ring at the top holding a glowing orb."""
+    hx, hy = hand
+    length = math.hypot(tip[0] - hx, tip[1] - hy)
+    ux, uy = (tip[0] - hx) / length, (tip[1] - hy) / length
+    nx, ny = -uy, ux
+
+    def at(along, across=0.0):
+        return (hx + ux * along + nx * across, hy + uy * along + ny * across)
+
+    top = length + 1.0
+    c.polygon([at(-13, -1.6), at(top - 4, -1.6), at(top - 4, 1.6), at(-13, 1.6)], WOOD)
+    c.line([at(-9, -1.6), at(-7.5, 1.6)], fill=WOOD_DARK, width=0.9)
+    c.ellipse(*at(-13.5), 1.9, 1.9, WOOD_DARK)  # foot of the staff
+    glow = c.layer()
+    glow.ellipse(*at(top), 7.5, 7.5, ORB_GLOW, outline=False)
+    c.blend(glow)
+    c.ellipse(*at(top), 5.0, 5.0, WOOD)  # ring
+    for side in (-1, 1):  # two little prongs
+        c.polygon([at(top - 3, side * 3.5), at(top + 1, side * 7), at(top, side * 3.0)], WOOD)
+    c.ellipse(*at(top), 3.4, 3.4, ORB)
+    c.ellipse(*at(top + 1.2, -1.2), 1.1, 1.1, WHITE, outline=False)
+
+
+def draw_bow(c: Canvas, hand, aim, pull: float = 0.0) -> None:
+    """Archer's bow held at the hand, its back towards the aim. Drawn back (pull > 0),
+    the string bends to the other hand and an arrow lies on it."""
+    hx, hy = hand
+    length = math.hypot(aim[0] - hx, aim[1] - hy) or 1.0
+    ux, uy = (aim[0] - hx) / length, (aim[1] - hy) / length  # towards the target
+    nx, ny = -uy, ux  # along the bow
+
+    def at(forward, along):
+        return (hx + ux * forward + nx * along, hy + uy * forward + ny * along)
+
+    half = 17.0
+    limb = [at(5.0 * (1 - (t / half) ** 2) - 1.5, t) for t in
+            [half * (i / 8 - 1) for i in range(17)]]
+    string_mid = at(-1.5 - pull * 11.0, 0)
+    c.line([limb[0], string_mid, limb[-1]], fill=STRING, width=0.8)
+    if pull > 0:
+        tail, head = string_mid, at(9.0, 0)
+        c.line([tail, head], fill=WOOD_DARK, width=1.1)
+        c.polygon([at(12.5, 0), at(8.0, -2.4), at(8.0, 2.4)], STEEL)
+        c.polygon([tail, at(-1.5 - pull * 11.0 + 4.5, -2.6), at(-1.5 - pull * 11.0 + 3.0, 0)],
+                  FLETCH, outline=False)
+        c.polygon([tail, at(-1.5 - pull * 11.0 + 4.5, 2.6), at(-1.5 - pull * 11.0 + 3.0, 0)],
+                  FLETCH, outline=False)
+    c.line(limb, fill=OUTLINE, width=3.8)
+    c.line(limb, fill=WOOD, width=2.3)
+    for end in (limb[0], limb[-1]):
+        c.ellipse(end[0], end[1], 1.5, 1.5, GOLD)
+    c.polygon([at(3.0, -3.2), at(5.0, -3.2), at(5.0, 3.2), at(3.0, 3.2)], GRIP)  # grip
+
+
 def draw_trail(c: Canvas, start, end, center, width=6.0) -> None:
     """Slash trail: a see-through crescent along the tip's path, widest at the sword."""
     mid = lerp(start, end, 0.5)
@@ -303,9 +446,10 @@ def draw_trail(c: Canvas, start, end, center, width=6.0) -> None:
         inward = math.hypot(ix, iy) or 1.0
         outer.append((x, y))
         inner.append((x + ix / inward * width * t, y + iy / inward * width * t))
+    fill, edge = HERO["trail"]
     layer = c.layer()
-    layer.polygon(outer + inner[::-1], TRAIL, outline=False)
-    layer.line(outer, fill=TRAIL_EDGE, width=1.0)
+    layer.polygon(outer + inner[::-1], fill, outline=False)
+    layer.line(outer, fill=edge, width=1.0)
     c.blend(layer)
 
 
@@ -327,7 +471,12 @@ def sword_layer(c: Canvas, pose: Pose, sword, center, layer: str) -> None:
     c.use(f"sword_{layer}")
     if pose.trail:
         draw_trail(c, *pose.trail, center)
-    draw_sword(c, hand, tip)
+    if HERO["weapon"] == "staff":
+        draw_staff(c, hand, tip)
+    elif HERO["weapon"] == "bow":
+        draw_bow(c, hand, tip, pose.pull)
+    else:
+        draw_sword(c, hand, tip)
     if layer != "back":
         c.use(f"grip_hand_{layer}")
         c.ellipse(hand[0], hand[1], 3.0, 3.0, SKIN)
@@ -343,23 +492,24 @@ def sword_layer(c: Canvas, pose: Pose, sword, center, layer: str) -> None:
 
 PART_ORDER = {
     "down": [
-        "shadow", "cape", "sword_back", "legs", "boots", "torso", "armor", "arms",
-        "armor_arms", "bracers", "hands", "gloves", "pauldrons", "scarf", "sword_body",
-        "grip_hand_body", "grip_glove_body", "tails", "head", "headband", "sword_front",
-        "grip_hand_front", "grip_glove_front",
+        "shadow", "cape", "quiver", "sword_back", "legs", "boots", "torso", "armor", "robe",
+        "vest", "arms", "armor_arms", "robe_arms", "bracers", "hands", "gloves", "pauldrons",
+        "scarf", "sword_body", "grip_hand_body", "grip_glove_body", "tails", "head", "headband",
+        "hood", "hat", "sword_front", "grip_hand_front", "grip_glove_front",
     ],
     "up": [
-        "shadow", "sword_back", "legs", "boots", "torso", "armor", "arms", "armor_arms",
-        "bracers", "hands", "gloves", "cape", "pauldrons", "sword_body", "grip_hand_body",
-        "grip_glove_body", "head", "headband", "sword_front", "grip_hand_front",
-        "grip_glove_front",
+        "shadow", "sword_back", "legs", "boots", "torso", "armor", "robe", "vest", "arms",
+        "armor_arms", "robe_arms", "bracers", "hands", "gloves", "cape", "quiver", "pauldrons",
+        "sword_body", "grip_hand_body", "grip_glove_body", "head", "headband", "hood", "hat",
+        "sword_front", "grip_hand_front", "grip_glove_front",
     ],
     "side": [
-        "shadow", "cape", "arm_far", "armor_arm_far", "bracer_far", "hand_far", "glove_far",
-        "sword_back", "legs_far", "boots_far", "legs_near", "boots_near", "torso", "armor",
-        "arms", "armor_arms", "bracers", "hands", "gloves", "pauldrons", "scarf",
-        "sword_body", "grip_hand_body", "grip_glove_body", "tails", "head", "headband",
-        "sword_front", "grip_hand_front", "grip_glove_front",
+        "shadow", "cape", "quiver", "arm_far", "armor_arm_far", "robe_arm_far", "bracer_far",
+        "hand_far", "glove_far", "sword_back", "legs_far", "boots_far", "legs_near",
+        "boots_near", "torso", "armor", "robe", "vest", "arms", "armor_arms", "robe_arms",
+        "bracers", "hands", "gloves", "pauldrons", "scarf", "sword_body", "grip_hand_body",
+        "grip_glove_body", "tails", "head", "headband", "hood", "hat", "sword_front",
+        "grip_hand_front", "grip_glove_front",
     ],
 }
 
@@ -387,8 +537,24 @@ PART_REQUIRES = {
     "glove_far": ["leather_gloves"],
     "tails": ["red_headband"],
     "headband": ["red_headband"],
+    "hat": ["sage_hat"],
+    "robe": ["violet_robe"],
+    "robe_arms": ["violet_robe"],
+    "robe_arm_far": ["violet_robe"],
+    "hood": ["green_hood"],
+    "vest": ["ranger_vest"],
+    "quiver": ["short_bow"],
 }
-ALL_GEAR = {item for items in PART_REQUIRES.values() for item in items}
+ALL_GEAR = set(HEROES["warrior"]["gear"])
+
+
+def requires_for(hero: str) -> dict:
+    """PART_REQUIRES for one class: the sword_* parts hold that class's weapon."""
+    weapon = HEROES[hero]["gear"][1]
+    return {
+        part: [weapon if item == "training_sword" else item for item in items]
+        for part, items in PART_REQUIRES.items()
+    }
 
 # Gear drawn like another piece but in other colours: item id -> (the item it
 # looks like, its inventory icon, the parts to recolour, the recolour rules).
@@ -415,6 +581,20 @@ LOOK_VARIANTS = {
         "training_sword", "sword", ["sword_back", "sword_body", "sword_front"],
         [("steel", (255, 110, 110), 0.45), ("hue", 30, 350)],
     ),
+    "champion_cape": ("red_cape", "cape", ["cape", "scarf"], [("hue", 355, 285)]),
+    "ember_staff": (
+        "oak_staff", "staff", ["sword_back", "sword_body", "sword_front"], [("hue", 197, 18)]
+    ),
+    "midnight_robe": (
+        "violet_robe", "robe", ["robe", "robe_arms", "robe_arm_far"], [("hue", 261, 222)]
+    ),
+    "starlit_hat": ("sage_hat", "hat", ["hat"], [("hue", 261, 212)]),
+    "crimson_bow": (
+        "short_bow", "bow", ["sword_back", "sword_body", "sword_front", "quiver"],
+        [("hue", 26, 352)],
+    ),
+    "shadow_vest": ("ranger_vest", "vest", ["vest"], [("hue", 26, 225)]),
+    "azure_hood": ("green_hood", "hood", ["hood"], [("hue", 131, 205)]),
 }
 
 
@@ -523,10 +703,13 @@ def build_jelly(out_size: int = 32, shadow: bool = True) -> Image.Image:
     return c.finish(out_size)
 
 
-def add_look_variants(frames) -> None:
-    """Adds the recoloured parts of every LOOK_VARIANTS item to every frame."""
+def add_look_variants(frames, hero: str = "warrior") -> None:
+    """Adds the recoloured parts of the LOOK_VARIANTS items the class can wear."""
+    gear = set(HEROES[hero]["gear"])
     for parts in frames.values():
-        for variant, (_, _, variant_parts, rules) in LOOK_VARIANTS.items():
+        for variant, (base, _, variant_parts, rules) in LOOK_VARIANTS.items():
+            if base not in gear:
+                continue
             for part in variant_parts:
                 if part in parts:
                     parts[f"{part}@{variant}"] = recolor(parts[part], rules)
@@ -573,6 +756,10 @@ def draw_arm(c: Canvas, shoulder, hand, far: bool = False) -> None:
     c.capsule(shoulder, hand, 3.4, TUNIC)
     c.use("armor_arm_far" if far else "armor_arms")
     c.capsule(shoulder, hand, 3.8, ARMOR_DARK)
+    c.use("robe_arm_far" if far else "robe_arms")
+    cuff = lerp(shoulder, hand, 0.78)
+    c.capsule(shoulder, cuff, 4.3, ROBE)
+    c.ellipse(cuff[0], cuff[1], 4.4, 3.8, ROBE_LIGHT)
     c.use("bracer_far" if far else "bracers")
     c.capsule(lerp(shoulder, hand, 0.55), lerp(shoulder, hand, 0.85), 4.0, STEEL_DARK)
     c.use("hand_far" if far else "hands")
@@ -632,6 +819,84 @@ def draw_torso_side(c: Canvas, cx, oy) -> None:
     plate = [(cx - 9.5, bottom - 2), (cx + 4, bottom - 2), (cx + 4.5, bottom + 3.8),
              (cx - 8.5, bottom + 3.4)]
     c.polygon(plate, ARMOR)
+
+
+def draw_robe_front(c: Canvas, cx, oy, back=False) -> None:
+    """The mage's robe: from the shoulders down past the knees, with a gold sash."""
+    top, bottom, hem = 54 + oy, 71 + oy, 81 + oy
+    c.use("robe")
+    c.polygon([(cx - 12.5, top + 1), (cx + 12.5, top + 1), (cx + 16, hem), (cx - 16, hem)], ROBE)
+    c.polygon([(cx - 15.3, hem - 3.6), (cx + 15.3, hem - 3.6), (cx + 15.6, hem - 0.8),
+               (cx - 15.6, hem - 0.8)], ROBE_DARK, outline=False)
+    c.line([(cx - 15.2, hem - 3.6), (cx + 15.2, hem - 3.6)], fill=GOLD, width=1.1)
+    if back:
+        c.line([(cx, top + 4), (cx, hem - 4)], fill=ROBE_DARK, width=1.2)
+    else:
+        c.polygon([(cx - 5, top + 1), (cx + 5, top + 1), (cx, top + 9)], TUNIC)
+        c.line([(cx, top + 9), (cx, hem - 4)], fill=ROBE_DARK, width=1.2)
+        c.ellipse(cx - 6.5, top + 6, 3.4, 2.0, ROBE_LIGHT, outline=False)
+    c.rect(cx - 13.4, bottom - 6, cx + 13.4, bottom - 3, GOLD, radius=1)  # sash
+    if not back:
+        c.ellipse(cx, bottom - 4.5, 2.2, 2.2, ORB)
+
+
+def draw_robe_side(c: Canvas, cx, oy, wind) -> None:
+    top, bottom, hem = 54 + oy, 71 + oy, 81 + oy
+    c.use("robe")
+    flare = 3.5 + wind * 3
+    c.polygon([(cx - 9, top + 1), (cx + 9.5, top + 1), (cx + 10 + flare, hem), (cx - 12, hem)],
+              ROBE)
+    c.polygon([(cx - 11.6, hem - 3.6), (cx + 9.5 + flare, hem - 3.6), (cx + 9.8 + flare, hem - 0.8),
+               (cx - 11.8, hem - 0.8)], ROBE_DARK, outline=False)
+    c.line([(cx - 11.5, hem - 3.6), (cx + 9.4 + flare, hem - 3.6)], fill=GOLD, width=1.1)
+    c.ellipse(cx - 4, top + 5.5, 3.0, 2.0, ROBE_LIGHT, outline=False)
+    c.rect(cx - 9.8, bottom - 6, cx + 10.2, bottom - 3, GOLD, radius=1)  # sash
+
+
+def draw_vest_front(c: Canvas, cx, oy, back=False) -> None:
+    """The archer's leather vest with a belt; in front the quiver strap crosses it."""
+    top, bottom = 54 + oy, 71 + oy
+    c.use("vest")
+    c.rect(cx - 12.6, top + 0.5, cx + 12.6, bottom + 1, VEST, radius=6)
+    if back:
+        c.line([(cx - 10, top + 4), (cx + 10, bottom - 7)], fill=VEST_DARK, width=2.4)
+    else:
+        c.polygon([(cx - 5, top + 0.5), (cx + 5, top + 0.5), (cx, top + 8)], TUNIC)
+        c.line([(cx - 11, top + 3), (cx + 10, bottom - 5)], fill=VEST_DARK, width=2.6)
+        c.ellipse(cx - 6, top + 6, 3.2, 1.8, (196, 144, 98, 255), outline=False)
+    c.rect(cx - 13, bottom - 6, cx + 13, bottom - 2.6, GRIP, radius=1)  # belt
+    if not back:
+        c.rect(cx - 2.5, bottom - 6.6, cx + 2.5, bottom - 2, GOLD, radius=0.8)
+
+
+def draw_vest_side(c: Canvas, cx, oy) -> None:
+    top, bottom = 54 + oy, 71 + oy
+    c.use("vest")
+    c.rect(cx - 9.4, top + 0.5, cx + 9.8, bottom + 1, VEST, radius=5)
+    c.line([(cx - 8, top + 3), (cx + 8, bottom - 5)], fill=VEST_DARK, width=2.4)
+    c.rect(cx - 9.8, bottom - 6, cx + 10.2, bottom - 2.6, GRIP, radius=1)  # belt
+
+
+def draw_quiver(c: Canvas, cx, oy, view: str) -> None:
+    """Quiver on the archer's back. From the front only the arrow ends show."""
+    c.use("quiver")
+    if view == "down":
+        for i, x in enumerate((cx + 9.5, cx + 13, cx + 16.5)):
+            tip = (x + 1.5, 44 + oy - i)
+            c.line([(x, 52 + oy), tip], fill=WOOD_DARK, width=1.0)
+            c.polygon([tip, (tip[0] - 2.2, tip[1] + 4), (tip[0] + 2.2, tip[1] + 4)], FLETCH)
+        return
+    if view == "up":
+        box = [(cx + 3, 49 + oy), (cx + 11, 51 + oy), (cx + 3, 76 + oy), (cx - 5, 74 + oy)]
+        top = [(cx + 4.5, 49 + oy), (cx + 7.5, 48 + oy), (cx + 10.5, 50 + oy)]
+    else:
+        box = [(cx + 7, 50 + oy), (cx + 13.5, 51 + oy), (cx + 12.5, 73 + oy), (cx + 6, 72 + oy)]
+        top = [(cx + 8, 50 + oy), (cx + 10.5, 49 + oy), (cx + 13, 50.5 + oy)]
+    for x, y in top:
+        c.line([(x, y), (x + 1, y - 7)], fill=WOOD_DARK, width=1.0)
+        c.polygon([(x + 1, y - 9), (x - 1.2, y - 5), (x + 3.2, y - 5)], FLETCH)
+    c.polygon(box, VEST)
+    c.line([box[0], box[1]], fill=GOLD, width=1.2)
 
 
 def draw_boot_front(c: Canvas, x, foot_y) -> None:
@@ -716,7 +981,9 @@ def draw_eye(c: Canvas, ex, ey, rx=3.3) -> None:
 
 
 def draw_tuft(c: Canvas, cx, cy, sway) -> None:
-    c.polygon([(cx - 3, cy - 18), (cx + 7 + sway * 1.5, cy - 29), (cx + 5, cy - 17)], HAIR)
+    if HERO["tuft"]:
+        c.polygon([(cx - 3, cy - 18), (cx + 7 + sway * 1.5, cy - 29), (cx + 5, cy - 17)],
+                  HERO["hair"][0])
 
 
 def draw_tails(c: Canvas, root, angle, length, sway) -> None:
@@ -765,12 +1032,15 @@ def draw_head_front(c: Canvas, cx, cy, sway, hurt: bool = False) -> None:
         c.line(arc_points(cx, cy + 13.5, 2.4, 1.8, 20, 160, 8), width=1.2)
     fringe = [(cx + 22, cy), (cx + 18, cy + 7), (cx + 12, cy + 1), (cx + 6, cy + 8), (cx, cy + 1),
               (cx - 6, cy + 8), (cx - 12, cy + 1), (cx - 18, cy + 7), (cx - 22, cy)]
-    c.polygon(arc_points(cx, cy, 23, 21.5, 180, 360) + fringe, HAIR)
-    c.line(arc_points(cx, cy - 4, 16, 13, 215, 260, 8), fill=HAIR_LIGHT, width=2.2)
+    hair, _, hair_light = HERO["hair"]
+    c.polygon(arc_points(cx, cy, 23, 21.5, 180, 360) + fringe, hair)
+    c.line(arc_points(cx, cy - 4, 16, 13, 215, 260, 8), fill=hair_light, width=2.2)
     c.use("headband")
     draw_band(c, cx, cy, 21.8)
     c.rect(cx - 4.2, cy - 4.4, cx + 4.2, cy + 1.4, GOLD, radius=1.2)  # forehead plate
     c.ellipse(cx, cy - 1.5, 1.5, 1.5, GEM, outline=False)
+    draw_hat(c, cx, cy, sway, "down")
+    draw_hood(c, cx, cy, sway, "down")
 
 
 def draw_head_back(c: Canvas, cx, cy, sway) -> None:
@@ -779,13 +1049,16 @@ def draw_head_back(c: Canvas, cx, cy, sway) -> None:
     spikes = [(cx + 21, cy + 6), (cx + 16, cy + 19), (cx + 10, cy + 15), (cx + 5, cy + 23),
               (cx, cy + 17), (cx - 5, cy + 23), (cx - 10, cy + 15), (cx - 16, cy + 19),
               (cx - 21, cy + 6)]
-    c.polygon(arc_points(cx, cy, 23, 21.5, 165, 375) + spikes, HAIR)
-    c.line(arc_points(cx, cy + 2, 14, 10, 30, 150, 10), fill=HAIR_DARK, width=1.4)
-    c.line(arc_points(cx, cy - 4, 16, 13, 215, 260, 8), fill=HAIR_LIGHT, width=2.2)
+    hair, hair_dark, hair_light = HERO["hair"]
+    c.polygon(arc_points(cx, cy, 23, 21.5, 165, 375) + spikes, hair)
+    c.line(arc_points(cx, cy + 2, 14, 10, 30, 150, 10), fill=hair_dark, width=1.4)
+    c.line(arc_points(cx, cy - 4, 16, 13, 215, 260, 8), fill=hair_light, width=2.2)
     c.use("headband")
     draw_band(c, cx, cy, 21.8)
     draw_tails(c, (cx, cy - 0.5), 90, 15, sway)
     c.ellipse(cx, cy - 1.3, 2.8, 2.3, CAPE)  # knot
+    draw_hat(c, cx, cy, sway, "up")
+    draw_hood(c, cx, cy, sway, "up")
 
 
 def draw_head_side(c: Canvas, cx, cy, sway, wind, hurt: bool = False) -> None:
@@ -802,12 +1075,68 @@ def draw_head_side(c: Canvas, cx, cy, sway, wind, hurt: bool = False) -> None:
     c.line(arc_points(cx - 15, cy + 13.5, 1.6, 1.4, 20, 160, 6), width=1.2)
     inner = [(cx + 9, cy + 15), (cx + 3, cy + 9), (cx + 1, cy + 1), (cx - 5, cy + 8),
              (cx - 10, cy), (cx - 16, cy + 6)]
-    c.polygon(arc_points(cx, cy, 22, 21.5, 188, 425) + inner, HAIR)
-    c.line(arc_points(cx + 1, cy - 4, 16, 13, 220, 265, 8), fill=HAIR_LIGHT, width=2.2)
+    hair, _, hair_light = HERO["hair"]
+    c.polygon(arc_points(cx, cy, 22, 21.5, 188, 425) + inner, hair)
+    c.line(arc_points(cx + 1, cy - 4, 16, 13, 220, 265, 8), fill=hair_light, width=2.2)
     c.use("headband")
     draw_band(c, cx, cy, 20.8)
     c.rect(cx - 21.8, cy - 8.6, cx - 18.4, cy - 3, GOLD, radius=1)  # edge of the forehead plate
     c.ellipse(cx + 19.3, cy - 6, 2.8, 2.3, CAPE)  # knot
+    draw_hat(c, cx, cy, sway, "side")
+    draw_hood(c, cx, cy, sway, "side")
+
+
+def draw_hat(c: Canvas, cx, cy, sway, view: str) -> None:
+    """The mage's pointed hat: a wide brim and a cone whose tip flops over."""
+    c.use("hat")
+    lean = {"down": 1, "up": -1, "side": 1}[view]
+    bx = cx + (2 if view == "side" else 0)
+    c.ellipse(bx, cy - 7, 25 if view == "side" else 27, 6.0, ROBE_DARK)  # brim
+    tip = (bx + lean * 17 + sway * 1.5, cy - 30)
+    cone = [(bx - 13, cy - 9), (bx + 13, cy - 9), (bx + lean * 8, cy - 22), tip,
+            (bx + lean * 1, cy - 27)]
+    if lean < 0:
+        cone = [(bx - 13, cy - 9), (bx + 13, cy - 9), (bx - lean * 1, cy - 27), tip,
+                (bx + lean * 8, cy - 22)]
+    c.polygon(cone, ROBE)
+    c.polygon([(bx - 13, cy - 9), (bx + 13, cy - 9), (bx + 11.4, cy - 13.2),
+               (bx - 11.4, cy - 13.2)], GOLD)  # band
+    if view == "down":
+        star = [(cx - 3 + 3.2 * math.cos(math.radians(a)) * (1 if i % 2 == 0 else 0.45),
+                 cy - 19 + 3.2 * math.sin(math.radians(a)) * (1 if i % 2 == 0 else 0.45))
+                for i, a in enumerate(range(-90, 270, 36))]
+        c.polygon(star, GOLD, outline=False)
+    c.ellipse(tip[0], tip[1], 2.0, 2.0, GOLD)
+
+
+def draw_hood(c: Canvas, cx, cy, sway, view: str) -> None:
+    """The archer's hood with a short mantle over the shoulders."""
+    c.use("hood")
+    if view == "down":
+        outer = arc_points(cx, cy + 1, 25.5, 24, 145, 395, 24)
+        inner = arc_points(cx, cy + 2.5, 20.5, 18.5, 395, 145, 24)
+        c.polygon(outer + inner, HOOD)
+        c.line(arc_points(cx, cy + 2.5, 20.5, 18.5, 200, 340, 16), fill=HOOD_DARK, width=1.6)
+        c.polygon([(cx + 10, cy - 20), (cx + 24 + sway, cy - 25), (cx + 19, cy - 12)], HOOD)
+        mantle = [(cx - 15, cy + 16), (cx + 15, cy + 16), (cx + 19, cy + 24), (cx, cy + 27),
+                  (cx - 19, cy + 24)]
+        c.polygon(mantle, HOOD)
+        c.ellipse(cx, cy + 18.5, 2.2, 2.2, GOLD)  # clasp
+    elif view == "up":
+        c.polygon([(cx - 10, cy - 20), (cx - 24 - sway, cy - 25), (cx - 19, cy - 12)], HOOD)
+        c.ellipse(cx, cy + 1, 25, 24, HOOD)
+        c.line([(cx - 6, cy - 16), (cx - 3, cy + 14)], fill=HOOD_DARK, width=1.3)
+        c.line([(cx + 7, cy - 15), (cx + 4, cy + 14)], fill=HOOD_DARK, width=1.3)
+        c.polygon([(cx - 19, cy + 15), (cx + 19, cy + 15), (cx + 20, cy + 24), (cx, cy + 28),
+                   (cx - 20, cy + 24)], HOOD)
+    else:
+        outer = arc_points(cx + 1, cy + 1, 24.5, 24, 235, 470, 24)
+        inner = [(cx - 2, cy + 18), (cx - 6, cy + 8), (cx - 9, cy - 4), (cx - 13, cy - 18)]
+        c.polygon(outer + inner, HOOD)
+        c.line(inner, fill=HOOD_DARK, width=1.5)
+        c.polygon([(cx + 14, cy - 18), (cx + 28 + sway, cy - 20), (cx + 22, cy - 8)], HOOD)
+        c.polygon([(cx - 8, cy + 16), (cx + 14, cy + 16), (cx + 17, cy + 24), (cx - 9, cy + 24)],
+                  HOOD)
 
 
 # ---------------------------------------------------------------- whole frames
@@ -816,15 +1145,18 @@ def draw_head_side(c: Canvas, cx, cy, sway, wind, hurt: bool = False) -> None:
 def draw_down(c: PartCanvas, pose: Pose) -> None:
     ox, oy = pose.lean[0], pose.bob + pose.lean[1]
     cx, center = 48 + ox, (48 + ox, 62 + oy)
-    sword = sword_for(pose, (cx - 17, 70 + oy + pose.arm * 1.2), (-13, -27))
+    sword = sword_for(pose, (cx - 17, 70 + oy + pose.arm * 1.2), HERO["reach"]["down"])
     c.use("shadow")
     draw_shadow(c)
     draw_cape_front(c, cx, oy, pose.sway)
+    draw_quiver(c, cx, oy, "down")
     sword_layer(c, pose, sword, center, "back")
     draw_legs_front(c, 48 + ox * 0.3, oy, pose.legs, toward_camera=True)
     draw_torso_front(c, cx, oy)
+    draw_robe_front(c, cx, oy)
+    draw_vest_front(c, cx, oy)
     draw_arm(c, (cx - 14, 58 + oy), sword[0])
-    draw_arm(c, (cx + 14, 58 + oy), (cx + 17, 70 + oy - pose.arm * 2.2))
+    draw_arm(c, (cx + 14, 58 + oy), pose.off_hand or (cx + 17, 70 + oy - pose.arm * 2.2))
     draw_pauldron(c, cx - 15, 57.5 + oy)
     draw_pauldron(c, cx + 15, 57.5 + oy)
     draw_scarf(c, cx - 10, cx + 10, oy)
@@ -836,15 +1168,18 @@ def draw_down(c: PartCanvas, pose: Pose) -> None:
 def draw_up(c: PartCanvas, pose: Pose) -> None:
     ox, oy = pose.lean[0], pose.bob + pose.lean[1]
     cx, center = 48 + ox, (48 + ox, 62 + oy)
-    sword = sword_for(pose, (cx + 17, 70 + oy + pose.arm * 1.2), (13, -27))
+    sword = sword_for(pose, (cx + 17, 70 + oy + pose.arm * 1.2), HERO["reach"]["up"])
     c.use("shadow")
     draw_shadow(c)
     sword_layer(c, pose, sword, center, "back")
     draw_legs_front(c, 48 + ox * 0.3, oy, pose.legs, toward_camera=False)
     draw_torso_front(c, cx, oy, back=True)
+    draw_robe_front(c, cx, oy, back=True)
+    draw_vest_front(c, cx, oy, back=True)
     draw_arm(c, (cx + 14, 58 + oy), sword[0])
-    draw_arm(c, (cx - 14, 58 + oy), (cx - 17, 70 + oy - pose.arm * 2.2))
+    draw_arm(c, (cx - 14, 58 + oy), pose.off_hand or (cx - 17, 70 + oy - pose.arm * 2.2))
     draw_cape_back(c, cx, oy, pose.sway)
+    draw_quiver(c, cx, oy, "up")
     draw_pauldron(c, cx - 15, 57.5 + oy)
     draw_pauldron(c, cx + 15, 57.5 + oy)
     sword_layer(c, pose, sword, center, "body")
@@ -856,17 +1191,21 @@ def draw_side(c: PartCanvas, pose: Pose) -> None:
     """Facing left. The "right" frames are these, mirrored."""
     ox, oy = pose.lean[0], pose.bob + pose.lean[1]
     cx, center = 47 + ox, (47 + ox, 62 + oy)
-    sword = sword_for(pose, (cx - 6 - pose.arm * 3.5, 70 + oy), (-26, -16))
+    sword = sword_for(pose, (cx - 6 - pose.arm * 3.5, 70 + oy), HERO["reach"]["side"])
     (near_forward, near_lift), (far_forward, far_lift) = pose.legs
     c.use("shadow")
     draw_shadow(c)
     draw_cape_side(c, cx, oy, pose.sway, pose.wind)
-    draw_arm(c, (cx + 4, 58 + oy), (cx + 6 + pose.arm * 3.5, 69 + oy), far=True)
+    draw_quiver(c, cx, oy, "side")
+    far_hand = pose.off_hand or (cx + 6 + pose.arm * 3.5, 69 + oy)
+    draw_arm(c, (cx + 4, 58 + oy), far_hand, far=True)
     sword_layer(c, pose, sword, center, "back")
     base = 48 + ox * 0.3
     draw_leg_side(c, base, oy, far_forward, far_lift, far=True)
     draw_leg_side(c, base, oy, near_forward, near_lift, far=False)
     draw_torso_side(c, cx, oy)
+    draw_robe_side(c, cx, oy, pose.wind)
+    draw_vest_side(c, cx, oy)
     draw_arm(c, (cx + 1, 58 + oy), sword[0])
     draw_pauldron(c, cx + 1, 57.5 + oy)
     draw_scarf(c, cx - 8, cx + 9, oy)
@@ -901,12 +1240,22 @@ def compose(parts: dict[str, Image.Image], view: str, worn: set[str]) -> Image.I
     return frame
 
 
-def build_warrior_parts() -> dict[tuple[int, int], dict[str, Image.Image]]:
-    """Every frame of the sheet as parts, keyed by (row, column)."""
+def build_hero_parts(hero: str = "warrior") -> dict[tuple[int, int], dict[str, Image.Image]]:
+    """Every frame of one class's sheet as parts, keyed by (row, column). Only the
+    parts of gear that class can wear are kept."""
+    global HERO
+    HERO = HEROES[hero]
+    requires = requires_for(hero)
+    gear = set(HERO["gear"])
     frames = {}
     for row, direction in enumerate(DIRECTIONS):
         for col, pose in enumerate(warrior_poses(direction)):
-            frames[(row, col)] = draw_frame_parts(direction, pose)
+            parts = draw_frame_parts(direction, pose)
+            frames[(row, col)] = {
+                part: image for part, image in parts.items()
+                if set(requires.get(part, [])) <= gear
+            }
+    HERO = HEROES["warrior"]
     return frames
 
 
@@ -956,13 +1305,13 @@ def _gd_list(values) -> str:
     return "[" + ", ".join(f'"{v}"' for v in values) + "]"
 
 
-def build_parts_script(pieces) -> str:
-    """Text of client/assets/characters/warrior/warrior_parts.gd (generated data)."""
+def build_parts_script(pieces, hero: str = "warrior") -> str:
+    """Text of client/assets/characters/<hero>/<hero>_parts.gd (generated data)."""
     lines = [
         "# gdlint: disable=max-file-lines",
         "extends RefCounted",
         "## Generated by tools/generate_assets.py - do not edit by hand.",
-        "## Where each part of the warrior is in warrior_parts.png, the order the parts",
+        f"## Where each part of the {hero} is in {hero}_parts.png, the order the parts",
         "## are laid over each other in each direction, and the gear each part needs.",
         "",
         f"const CELL := {CELL}",
@@ -979,7 +1328,7 @@ def build_parts_script(pieces) -> str:
         lines.append("\t],")
     lines += ["}", "", "## Part -> item ids it needs. Parts not listed are the plain body.", ""]
     lines.append("const REQUIRES := {")
-    for part, items in PART_REQUIRES.items():
+    for part, items in requires_for(hero).items():
         lines.append(f'\t"{part}": {_gd_list(items)},')
     lines += [
         "}",
@@ -1230,6 +1579,34 @@ def icon_cape(c: Canvas) -> None:
     c.ellipse(24, 10, 2.8, 2.8, GOLD)  # clasp
 
 
+def icon_staff(c: Canvas) -> None:
+    draw_staff(c, (18, 33), (33, 12))
+
+
+def icon_hat(c: Canvas) -> None:  # on a 64 canvas: the brim is wide
+    draw_hat(c, 31, 46, 0.0, "down")
+
+
+def icon_robe(c: Canvas) -> None:
+    for side in (-1, 1):
+        c.capsule((24 + side * 12, 16), (24 + side * 17, 30), 4.3, ROBE)
+        c.ellipse(24 + side * 17, 30, 4.4, 3.8, ROBE_LIGHT)
+    draw_robe_front(c, 24, -41)
+
+
+def icon_bow(c: Canvas) -> None:
+    draw_bow(c, (24, 24), (42, 24), 0.6)
+
+
+def icon_hood(c: Canvas) -> None:  # on a 64 canvas
+    c.ellipse(32, 33, 20, 18, HOOD_DARK)
+    draw_hood(c, 32, 30, 0.0, "down")
+
+
+def icon_vest(c: Canvas) -> None:
+    draw_vest_front(c, 24, -37)
+
+
 def icon_bag(c: Canvas) -> None:
     c.polygon([(18, 13), (15, 6), (21, 9), (24, 5), (27, 9), (33, 6), (30, 13)], BOOT_LIGHT)
     c.polygon([(18, 22), (30, 22), (29, 12), (19, 12)], BOOT)  # neck
@@ -1242,16 +1619,22 @@ def icon_bag(c: Canvas) -> None:
 def build_item_icons() -> dict[str, Image.Image]:
     """Icons for the inventory and the HUD bag button, by file name."""
     icons = {}
-    for name, paint in (
-        ("sword", icon_sword),
-        ("headband", icon_headband),
-        ("armor", icon_armor),
-        ("gloves", icon_gloves),
-        ("boots", icon_boots),
-        ("cape", icon_cape),
-        ("bag", icon_bag),
+    for name, paint, size in (
+        ("sword", icon_sword, 48),
+        ("headband", icon_headband, 48),
+        ("armor", icon_armor, 48),
+        ("gloves", icon_gloves, 48),
+        ("boots", icon_boots, 48),
+        ("cape", icon_cape, 48),
+        ("bag", icon_bag, 48),
+        ("staff", icon_staff, 48),
+        ("hat", icon_hat, 64),
+        ("robe", icon_robe, 48),
+        ("bow", icon_bow, 48),
+        ("hood", icon_hood, 64),
+        ("vest", icon_vest, 48),
     ):
-        c = Canvas(48)
+        c = Canvas(size)
         paint(c)
         icons[name] = c.finish(ICON)
     icons["potion"] = build_potion(ICON, shadow=False)
@@ -1597,7 +1980,7 @@ def main() -> None:
     warrior_dir.mkdir(parents=True, exist_ok=True)
     environment_dir.mkdir(parents=True, exist_ok=True)
 
-    frames = build_warrior_parts()
+    frames = build_hero_parts("warrior")
     sheet = build_warrior_sheet(frames)
     sheet.save(warrior_dir / "warrior.png")
     npc_dir = ASSETS / "characters" / "npcs"
@@ -1608,6 +1991,16 @@ def main() -> None:
     atlas, pieces = pack_warrior_parts(frames)
     atlas.save(warrior_dir / "warrior_parts.png")
     (warrior_dir / "warrior_parts.gd").write_text(build_parts_script(pieces), encoding="utf-8")
+    for hero in ("mage", "archer"):
+        hero_dir = ASSETS / "characters" / hero
+        hero_dir.mkdir(parents=True, exist_ok=True)
+        hero_frames = build_hero_parts(hero)
+        add_look_variants(hero_frames, hero)
+        atlas, pieces = pack_warrior_parts(hero_frames)
+        atlas.save(hero_dir / f"{hero}_parts.png")
+        (hero_dir / f"{hero}_parts.gd").write_text(
+            build_parts_script(pieces, hero), encoding="utf-8"
+        )
     build_icon(sheet).save(ROOT / "client" / "icon.png")
     (warrior_dir / "warrior_frames.tres").write_text(
         build_sprite_frames("res://assets/characters/warrior/warrior.png"), encoding="utf-8"

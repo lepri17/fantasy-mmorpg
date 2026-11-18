@@ -1,0 +1,14 @@
+[remap]
+
+importer="image"
+type="Image"
+uid="uid://b0ovmea7u8fci"
+path="res://.godot/imported/mage_parts.png-bd0bee63bfa5ff0eada1180261f220db.image"
+
+[deps]
+
+source_file="res://assets/characters/mage/mage_parts.png"
+dest_files=["res://.godot/imported/mage_parts.png-bd0bee63bfa5ff0eada1180261f220db.image"]
+
+[params]
+

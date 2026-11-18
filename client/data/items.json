@@ -95,7 +95,10 @@
       "icon": "res://assets/items/icons/headband.png",
       "text": "Cloth band with a small gold plate.",
       "defense": 1,
-      "price": 60
+      "price": 60,
+      "classes": [
+        "warrior"
+      ]
     },
     "training_sword": {
       "name": "Training Sword",
@@ -103,7 +106,10 @@
       "attack": 4,
       "icon": "res://assets/items/icons/sword.png",
       "text": "Plain steel. Every warrior starts with one.",
-      "price": 120
+      "price": 120,
+      "classes": [
+        "warrior"
+      ]
     },
     "leather_gloves": {
       "name": "Leather Gloves",
@@ -129,7 +135,10 @@
       "icon": "res://assets/items/icons/armor.png",
       "text": "Light plates over padded cloth.",
       "defense": 3,
-      "price": 200
+      "price": 200,
+      "classes": [
+        "warrior"
+      ]
     },
     "leather_boots": {
       "name": "Leather Boots",
@@ -207,7 +216,10 @@
       "defense": 1,
       "icon": "res://assets/items/icons/verdant_headband.png",
       "text": "Woven from forest thread.",
-      "price": 400
+      "price": 400,
+      "classes": [
+        "warrior"
+      ]
     },
     "verdant_cape": {
       "name": "Verdant Cape",
@@ -251,7 +263,10 @@
       "defense": 5,
       "icon": "res://assets/items/icons/crimson_plate.png",
       "text": "Heavy red plate, hard to dent.",
-      "price": 900
+      "price": 900,
+      "classes": [
+        "warrior"
+      ]
     },
     "crimson_sword": {
       "name": "Crimson Sword",
@@ -261,7 +276,10 @@
       "attack": 8,
       "icon": "res://assets/items/icons/crimson_sword.png",
       "text": "A red-steel blade.",
-      "price": 900
+      "price": 900,
+      "classes": [
+        "warrior"
+      ]
     },
     "slime_jelly": {
       "name": "Slime Jelly",
@@ -270,6 +288,195 @@
       "world_icon": "res://assets/items/jelly.png",
       "text": "Wobbly and sticky. Some people collect it.",
       "price": 30
+    },
+    "oak_staff": {
+      "name": "Oak Staff",
+      "slot": "weapon",
+      "classes": [
+        "mage"
+      ],
+      "attack": 4,
+      "skill_damage": 0.05,
+      "icon": "res://assets/items/icons/staff.png",
+      "text": "Carved oak with a sky-blue crystal.",
+      "price": 120
+    },
+    "ember_staff": {
+      "name": "Ember Staff",
+      "slot": "weapon",
+      "classes": [
+        "mage"
+      ],
+      "look": "oak_staff",
+      "attack": 7,
+      "skill_damage": 0.1,
+      "icon": "res://assets/items/icons/ember_staff.png",
+      "text": "The crystal burns without heat.",
+      "price": 850
+    },
+    "sage_hat": {
+      "name": "Sage Hat",
+      "slot": "head",
+      "classes": [
+        "mage"
+      ],
+      "max_hp": 3,
+      "max_stamina": 10,
+      "icon": "res://assets/items/icons/hat.png",
+      "text": "Pointed, patched and full of ideas.",
+      "price": 60
+    },
+    "starlit_hat": {
+      "name": "Starlit Hat",
+      "slot": "head",
+      "classes": [
+        "mage"
+      ],
+      "look": "sage_hat",
+      "max_hp": 12,
+      "max_stamina": 25,
+      "skill_damage": 0.05,
+      "icon": "res://assets/items/icons/starlit_hat.png",
+      "text": "Given to a Sorcerer. The star never dims.",
+      "price": 1500
+    },
+    "violet_robe": {
+      "name": "Violet Robe",
+      "slot": "armor",
+      "classes": [
+        "mage"
+      ],
+      "max_hp": 12,
+      "defense": 1,
+      "max_stamina": 10,
+      "icon": "res://assets/items/icons/robe.png",
+      "text": "Soft cloth with a gold sash.",
+      "price": 200
+    },
+    "midnight_robe": {
+      "name": "Midnight Robe",
+      "slot": "armor",
+      "classes": [
+        "mage"
+      ],
+      "look": "violet_robe",
+      "max_hp": 25,
+      "defense": 3,
+      "max_stamina": 20,
+      "icon": "res://assets/items/icons/midnight_robe.png",
+      "text": "Deep blue, like the sky after sunset.",
+      "price": 900
+    },
+    "short_bow": {
+      "name": "Short Bow",
+      "slot": "weapon",
+      "classes": [
+        "archer"
+      ],
+      "attack": 4,
+      "crit_chance": 0.02,
+      "icon": "res://assets/items/icons/bow.png",
+      "text": "Light and quick to draw.",
+      "price": 120
+    },
+    "crimson_bow": {
+      "name": "Crimson Bow",
+      "slot": "weapon",
+      "classes": [
+        "archer"
+      ],
+      "look": "short_bow",
+      "attack": 7,
+      "crit_chance": 0.04,
+      "icon": "res://assets/items/icons/crimson_bow.png",
+      "text": "Red wood that sings when drawn.",
+      "price": 850
+    },
+    "green_hood": {
+      "name": "Green Hood",
+      "slot": "head",
+      "classes": [
+        "archer"
+      ],
+      "max_hp": 4,
+      "evasion": 0.01,
+      "icon": "res://assets/items/icons/hood.png",
+      "text": "Keeps the rain off and the eyes sharp.",
+      "price": 60
+    },
+    "azure_hood": {
+      "name": "Azure Hood",
+      "slot": "head",
+      "classes": [
+        "archer"
+      ],
+      "look": "green_hood",
+      "max_hp": 12,
+      "evasion": 0.02,
+      "crit_chance": 0.03,
+      "icon": "res://assets/items/icons/azure_hood.png",
+      "text": "Given to a Ranger.",
+      "price": 1500
+    },
+    "ranger_vest": {
+      "name": "Ranger Vest",
+      "slot": "armor",
+      "classes": [
+        "archer"
+      ],
+      "max_hp": 15,
+      "defense": 2,
+      "evasion": 0.01,
+      "icon": "res://assets/items/icons/vest.png",
+      "text": "Soft leather with a quiver strap.",
+      "price": 200
+    },
+    "shadow_vest": {
+      "name": "Shadow Vest",
+      "slot": "armor",
+      "classes": [
+        "archer"
+      ],
+      "look": "ranger_vest",
+      "max_hp": 28,
+      "defense": 3,
+      "evasion": 0.03,
+      "icon": "res://assets/items/icons/shadow_vest.png",
+      "text": "Dyed dark for night hunts.",
+      "price": 900
+    },
+    "champion_cape": {
+      "name": "Champion Cape",
+      "slot": "cape",
+      "classes": [
+        "warrior"
+      ],
+      "look": "red_cape",
+      "max_hp": 30,
+      "attack": 3,
+      "icon": "res://assets/items/icons/champion_cape.png",
+      "text": "Given to a Champion.",
+      "price": 1500
+    },
+    "book_meteor": {
+      "name": "Book: Meteor",
+      "slot": "",
+      "usable": true,
+      "teaches": "meteor",
+      "icon": "res://assets/items/icons/book.png",
+      "world_icon": "res://assets/items/book.png",
+      "text": "Teaches Meteor. Needs level 5.",
+      "price": 800
+    },
+    "book_arrow_rain": {
+      "name": "Book: Arrow Rain",
+      "slot": "",
+      "usable": true,
+      "teaches": "arrow_rain",
+      "icon": "res://assets/items/icons/book.png",
+      "world_icon": "res://assets/items/book.png",
+      "text": "Teaches Arrow Rain. Needs level 5.",
+      "price": 800
     }
   },
   "upgrades": {

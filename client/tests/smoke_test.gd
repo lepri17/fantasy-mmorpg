@@ -14,9 +14,10 @@ const CombatRules = preload("res://scripts/combat/combat_rules.gd")
 const SlimeScript = preload("res://scripts/enemies/slime.gd")
 const AchievementRecord = preload("res://scripts/player/achievement_record.gd")
 const ItemDb = preload("res://scripts/items/item_db.gd")
-const WarriorLook = preload("res://scripts/player/warrior_look.gd")
+const HeroLook = preload("res://scripts/player/hero_look.gd")
 const GameScript = preload("res://scripts/game.gd")
 const SmokeWorld = preload("res://tests/smoke_world.gd")
+const SmokeClasses = preload("res://tests/smoke_classes.gd")
 
 var _failures: int = 0
 
@@ -460,7 +461,7 @@ func _run() -> void:
 	var hp_plain: int = dresser.max_hp()
 	var attack_plain: int = dresser.attack_damage()
 	var defense_plain: int = dresser.defense()
-	var look_plain: PackedByteArray = WarriorLook.build(dresser.equipment).get_image().get_data()
+	var look_plain: PackedByteArray = HeroLook.build(dresser.equipment).get_image().get_data()
 	dresser.equipment["head"] = ItemDb.gear("verdant_headband")
 	dresser.equipment["cape"] = ItemDb.gear("verdant_cape")
 	_check(
@@ -479,7 +480,7 @@ func _run() -> void:
 		dresser.attack_damage() == attack_plain + 12 and dresser.defense() == defense_plain + 4,
 		"the Crimson pair adds +4 attack and +2 defense on top of its own"
 	)
-	var look_sets: PackedByteArray = WarriorLook.build(dresser.equipment).get_image().get_data()
+	var look_sets: PackedByteArray = HeroLook.build(dresser.equipment).get_image().get_data()
 	_check(
 		look_sets.size() == look_plain.size() and look_sets != look_plain,
 		"the sets are drawn in their own colours"
@@ -733,6 +734,7 @@ func _run() -> void:
 	_check(player.stats.record.earned.has("back_again"), "getting back up earns Back Again")
 
 	await SmokeWorld.new().run(self, main, player, hud)
+	await SmokeClasses.new().run(self, main, player, hud)
 
 	_remove_test_save()
 	root.remove_child(main)

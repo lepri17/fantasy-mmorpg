@@ -24,17 +24,28 @@ const SHORT_NAMES := {
 }
 const PERCENT_BONUSES := ["crit_chance", "evasion", "skill_damage"]
 
+## The second bar's name for the class played ("Stamina", or "Mana" for the mage).
+static var resource_name: String = "Stamina"
+static var resource_short: String = "STA"
+
+
+## "Max Mana" / "MP" for the mage's max_stamina; other bonuses by their names.
+static func stat_name(stat: String, short: bool = false) -> String:
+	if stat == "max_stamina":
+		return resource_short if short else "Max " + resource_name
+	return (SHORT_NAMES if short else BONUS_NAMES).get(stat, stat)
+
 
 ## "+1 Attack, +2% Crit" ("+1 ATK, +2% CRIT" when short), or "No bonus".
 static func bonus_text(bonus: Dictionary, short: bool = false) -> String:
 	var parts := PackedStringArray()
 	for stat in bonus:
 		var value: float = float(bonus[stat])
-		var stat_name: String = (SHORT_NAMES if short else BONUS_NAMES).get(stat, stat)
+		var name_text: String = stat_name(stat, short)
 		if stat in PERCENT_BONUSES:
-			parts.append("+%s%% %s" % [number(value * 100.0), stat_name])
+			parts.append("+%s%% %s" % [number(value * 100.0), name_text])
 		else:
-			parts.append("+%s %s" % [number(value), stat_name])
+			parts.append("+%s %s" % [number(value), name_text])
 	return "No bonus" if parts.is_empty() else ", ".join(parts)
 
 

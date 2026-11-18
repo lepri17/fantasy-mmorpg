@@ -52,7 +52,13 @@
         "verdant_headband",
         "verdant_cape",
         "verdant_gloves",
-        "verdant_boots"
+        "verdant_boots",
+        "oak_staff",
+        "sage_hat",
+        "violet_robe",
+        "short_bow",
+        "green_hood",
+        "ranger_vest"
       ]
     }
   },
@@ -95,6 +101,14 @@
       {
         "item": "slime_jelly",
         "chance": 0.5
+      },
+      {
+        "item": "book_meteor",
+        "chance": 0.05
+      },
+      {
+        "item": "book_arrow_rain",
+        "chance": 0.05
       }
     ],
     "tint": [
@@ -131,7 +145,17 @@
         "verdant_gloves",
         "verdant_boots",
         "crimson_plate",
-        "crimson_sword"
+        "crimson_sword",
+        "oak_staff",
+        "sage_hat",
+        "violet_robe",
+        "short_bow",
+        "green_hood",
+        "ranger_vest",
+        "ember_staff",
+        "midnight_robe",
+        "crimson_bow",
+        "shadow_vest"
       ]
     }
   },
@@ -193,7 +217,17 @@
         "verdant_gloves",
         "verdant_boots",
         "crimson_plate",
-        "crimson_sword"
+        "crimson_sword",
+        "oak_staff",
+        "sage_hat",
+        "violet_robe",
+        "short_bow",
+        "green_hood",
+        "ranger_vest",
+        "ember_staff",
+        "midnight_robe",
+        "crimson_bow",
+        "shadow_vest"
       ]
     }
   },
@@ -228,6 +262,14 @@
       {
         "item": "rebirth_scroll",
         "chance": 0.3
+      },
+      {
+        "item": "book_meteor",
+        "chance": 0.5
+      },
+      {
+        "item": "book_arrow_rain",
+        "chance": 0.5
       }
     ],
     "defense": 4,
@@ -270,7 +312,17 @@
         "verdant_gloves",
         "verdant_boots",
         "crimson_plate",
-        "crimson_sword"
+        "crimson_sword",
+        "oak_staff",
+        "sage_hat",
+        "violet_robe",
+        "short_bow",
+        "green_hood",
+        "ranger_vest",
+        "ember_staff",
+        "midnight_robe",
+        "crimson_bow",
+        "shadow_vest"
       ]
     }
   },

@@ -87,9 +87,32 @@ func _initialize() -> void:
 	main.update_sky()
 	await _frames(60)
 	await _shot("15_rain")
+	GameScript.sky_seconds = 300.0
+	main.update_sky()
+	for class_id in ["mage", "archer"]:
+		_become(player, hud, class_id)
+		player.facing = "right"
+		player.call("_attack")
+		await _frames(5)
+		await _shot("16_" + class_id)
+	hud.toggle_inventory()
+	await _shot("17_archer_bag")
+	hud.toggle_inventory()
 	GameScript.sky_seconds = -1.0
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	quit()
+
+
+## The hero as a new character of another class (as in smoke_classes.gd).
+func _become(player: Node, hud: Node, class_id: String) -> void:
+	var data: Dictionary = player.stats.to_dict()
+	data["class"] = class_id
+	data.erase("equipment")
+	player.stats.from_dict(data)
+	player.call("_load_tuning")
+	player.call("_apply_look")
+	player.call("_limits_changed")
+	hud.call("_refresh_progress")
 
 
 func _shot(file_name: String) -> void:
