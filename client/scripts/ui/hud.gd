@@ -24,6 +24,9 @@ const QuestLog := preload("res://scripts/player/quest_log.gd")
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
 const PlayerStats := preload("res://scripts/player/player_stats.gd")
 const DEATH_RED := Color(1.0, 0.45, 0.5)
+const BOSS_BAR_WIDTH := 520.0
+## The boss bar shows while a boss is this close to the warrior.
+const BOSS_VIEW := 1000.0
 ## The round touch buttons on the right (ATK, SPIN, POT) are in this group.
 const ACTION_BUTTONS_GROUP := "action_buttons"
 ## Player methods the inventory may ask for.
@@ -47,6 +50,9 @@ var _shop
 var _storage
 var _talk_button: Button
 var _tracker: Label
+var _boss_bar: Control
+var _boss_name: Label
+var _boss_fill: ColorRect
 ## The townsperson close enough to talk to, or null.
 var _nearby_npc: Node = null
 var _death_screen: Control
@@ -68,6 +74,7 @@ func _ready() -> void:
 	_build_banner()
 	_build_death_screen()
 	_build_town_windows()
+	_build_boss_bar()
 	_style_round_button(_bag_button)
 	_style_round_button(_stats_button)
 	_stats_button.add_theme_font_size_override("font_size", 18)
@@ -102,6 +109,7 @@ func _physics_process(_delta: float) -> void:
 		talk()
 	if _player != null:
 		_update_action_buttons()
+		_update_boss_bar()
 
 
 func toggle_inventory() -> void:
@@ -363,6 +371,46 @@ static func _place(control: Control, preset: int, rect: Rect2) -> void:
 	control.offset_top = rect.position.y
 	control.offset_right = rect.end.x
 	control.offset_bottom = rect.end.y
+
+
+## C9: a wide health bar at the top while a boss is near.
+func _update_boss_bar() -> void:
+	var shown: Node2D = null
+	for boss in get_tree().get_nodes_in_group("bosses"):
+		var near: bool = boss.global_position.distance_to(_player.global_position) < BOSS_VIEW
+		if not boss.get("is_dead") and near:
+			shown = boss
+	_boss_bar.visible = shown != null
+	if shown != null:
+		var max_hp: int = maxi(1, int(shown.get("max_hp")))
+		var hp: int = int(shown.get("hp"))
+		_boss_name.text = "%s   %d / %d" % [shown.get("display_name"), hp, max_hp]
+		_boss_fill.size.x = (BOSS_BAR_WIDTH - 4.0) * clampf(float(hp) / max_hp, 0.0, 1.0)
+
+
+func _build_boss_bar() -> void:
+	_boss_bar = Control.new()
+	_boss_bar.name = "BossBar"
+	_boss_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place(_boss_bar, Control.PRESET_CENTER_TOP, Rect2(-BOSS_BAR_WIDTH / 2.0, 72, BOSS_BAR_WIDTH, 46))
+	_boss_name = UiStyle.label("", 18, Color(1.0, 0.85, 0.5))
+	_boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_name.size = Vector2(BOSS_BAR_WIDTH, 22)
+	_boss_name.add_theme_color_override("font_outline_color", Color(0.12, 0.06, 0.1))
+	_boss_name.add_theme_constant_override("outline_size", 6)
+	_boss_bar.add_child(_boss_name)
+	var back := ColorRect.new()
+	back.color = Color(0.12, 0.05, 0.08, 0.85)
+	back.position = Vector2(0, 24)
+	back.size = Vector2(BOSS_BAR_WIDTH, 20)
+	_boss_bar.add_child(back)
+	_boss_fill = ColorRect.new()
+	_boss_fill.color = Color(0.86, 0.22, 0.26)
+	_boss_fill.position = Vector2(2, 26)
+	_boss_fill.size = Vector2(BOSS_BAR_WIDTH - 4.0, 16)
+	_boss_bar.add_child(_boss_fill)
+	_boss_bar.hide()
+	add_child(_boss_bar)
 
 
 func _build_banner() -> void:

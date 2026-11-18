@@ -105,5 +105,15 @@
     "bonus": {
       "skill_damage": 0.05
     }
+  },
+  "king_slayer": {
+    "name": "King Slayer",
+    "text": "Defeat the Slime King.",
+    "counter": "kills:slime_king",
+    "goal": 1,
+    "title": "King Slayer",
+    "bonus": {
+      "attack": 3
+    }
   }
 }

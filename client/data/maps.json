@@ -250,7 +250,19 @@
           "spawn": "west"
         }
       ],
-      "teleport_price": 0
+      "teleport_price": 0,
+      "invasion": {
+        "monster": "golden_slime",
+        "count": 6,
+        "every_minutes": 30,
+        "lasts_minutes": 5,
+        "area": [
+          600,
+          400,
+          2100,
+          1250
+        ]
+      }
     },
     "forest": {
       "name": "Mossy Woods",
@@ -561,6 +573,14 @@
           "pos": [
             2300,
             420
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "slime_king",
+          "pos": [
+            2250,
+            1050
           ]
         }
       ],

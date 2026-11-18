@@ -15,6 +15,8 @@ const SlimeScript = preload("res://scripts/enemies/slime.gd")
 const AchievementRecord = preload("res://scripts/player/achievement_record.gd")
 const ItemDb = preload("res://scripts/items/item_db.gd")
 const WarriorLook = preload("res://scripts/player/warrior_look.gd")
+const GameScript = preload("res://scripts/game.gd")
+const SmokeWorld = preload("res://tests/smoke_world.gd")
 
 var _failures: int = 0
 
@@ -28,6 +30,7 @@ func _run() -> void:
 	_remove_test_save()
 	SlimeScript.elite_chance_override = 0.0  # random elites would change the numbers below
 	seed(20261118)  # the same drops on every run
+	GameScript.invasions_enabled = false  # the clock must not start one mid-test
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await _frames(5)
@@ -729,219 +732,12 @@ func _run() -> void:
 	_check(player.global_position.distance_to(Vector2(1280, 768)) < 5.0, "respawns at the start")
 	_check(player.stats.record.earned.has("back_again"), "getting back up earns Back Again")
 
-	# --- maps: a portal to town, the forest, the death screen (last: the meadow is left)
-	_check(
-		main.map.map_id == "field" and player.stats.map_id == "field", "the game starts in the meadow"
-	)
-	var town_portal = null
-	for portal in get_nodes_in_group("portals"):
-		if portal.get("to_map") == "town":
-			town_portal = portal
-	_check(town_portal != null, "the meadow has a portal to town")
-	if town_portal != null:
-		player.global_position = town_portal.global_position
-		await _frames(6)
-	_check(main.map.map_id == "town", "walking into the portal goes to town")
-	_check(get_nodes_in_group("enemies").is_empty(), "there are no monsters in town")
-	_check(
-		player.global_position.distance_to(main.map.spawn_point("east")) < 5.0,
-		"the warrior arrives by the town gate"
-	)
-	var town_ground = main.map.get_node("Ground")
-	_check(
-		town_ground is TileMapLayer and town_ground.get_used_cells().size() == 160,
-		"the town ground is a TileMapLayer built from the map rows"
-	)
-	_check(SaveFile.load_data().get("map", "") == "town", "the town is saved as the current map")
-	main.change_map("forest", "west")
-	await _frames(3)
-	_check(
-		(
-			main.map.map_id == "forest"
-			and get_nodes_in_group("enemies").filter(
-				func(enemy): return enemy.monster_id == "blue_slime"
-			).size() == 5
-		),
-		"the forest has its own blue slimes"
-	)
-	player.take_damage(99999)
-	await _frames(2)
-	var death_screen = hud.get_node("DeathScreen")
-	_check(death_screen.visible, "falling shows the death screen")
-	death_screen.find_child("TownButton", true, false).pressed.emit()
-	await _frames(4)
-	_check(
-		not player.is_dead and main.map.map_id == "town" and not death_screen.visible,
-		"RETURN TO TOWN gets the warrior up in town"
-	)
-	await _frames(200)
-	_check(
-		player.global_position.distance_to(main.map.spawn_point("default")) < 5.0,
-		"the old respawn timer does not move him afterwards"
-	)
-
-	# --- the townspeople: TALK, the shop, storage, the healer and the guide (W1, W9)
-	var townspeople: Array = get_nodes_in_group("npcs")
-	_check(townspeople.size() == 5, "five townspeople in Willow Town")
-	var mira = townspeople.filter(func(npc): return npc.npc_id == "merchant")[0]
-	player.global_position = mira.global_position + Vector2(70, 30)
-	await _frames(4)
-	var talk_button = hud.get_node("TalkButton")
-	_check(talk_button.visible, "standing near Mira shows TALK")
-	talk_button.pressed.emit()
-	var dialog = hud.get_node("NpcDialog")
-	_check(dialog.visible and "Mira" in dialog.get("_name_label").text, "TALK opens Mira's dialog")
-	dialog.option("Buy and sell").pressed.emit()
-	var shop = hud.get_node("Shop")
-	_check(shop.visible and not dialog.visible, "Buy and sell opens her shop")
-	player.stats.gold = 100
-	var potions_before_buying: int = player.stats.potions
-	shop.request.emit("buy_item", "red_potion")
-	_check(
-		player.stats.gold == 80 and player.stats.potions == potions_before_buying + 1,
-		"a potion costs 20 gold"
-	)
-	shop.request.emit("buy_item", "moon_stone")
-	_check(player.stats.gold == 80, "she does not sell what is not on her list")
-	while player.stats.bag.size() >= 14:
-		player.stats.bag.pop_back()
-	var jelly_before: int = player.stats.count_of("slime_jelly")
-	player.add_item("slime_jelly", 2)
-	shop.request.emit("sell_from_bag", _bag_index(player, "slime_jelly"))
-	_check(
-		player.stats.gold == 87 and player.stats.count_of("slime_jelly") == jelly_before + 1,
-		"selling a Slime Jelly gives 7 gold"
-	)
-	hud.call("_close_windows")
-	player.add_item("ember_stone", 3)
-	var stones: int = player.stats.count_of("ember_stone")
-	player.store_item(_bag_index(player, "ember_stone"))
-	_check(
-		player.stats.count_of("ember_stone") == 0 and player.stats.storage.size() == 1,
-		"storing moves the stones out of the bag"
-	)
-	var kept = PlayerStats.new()
-	kept.from_dict(player.stats.to_dict())
-	_check(kept.storage == player.stats.storage, "storage survives saving (version 6)")
-	player.take_stored(0)
-	_check(player.stats.count_of("ember_stone") == stones, "TAKE brings them all back")
-	player.hp = 10
-	player.heal_at_npc()
-	_check(player.hp == player.max_hp, "Sister Lune heals fully")
-	# --- quests (W4) and daily quests (W5)
-	var quest_book = PlayerStats.new()
-	quest_book.level = 2
-	var day: String = "2026-11-18"
-	_check(
-		quest_book.quests.state("blue_trouble", quest_book, day) == "locked",
-		"Blue Trouble waits for Slime Cleanup and level 3"
-	)
-	_check(quest_book.quests.start("slime_cleanup", quest_book, day), "Slime Cleanup can be taken")
-	for _i in 8:
-		quest_book.quests.on_kill("green_slime")
-	quest_book.quests.on_kill("blue_slime")
-	_check(
-		quest_book.quests.state("slime_cleanup", quest_book, day) == "ready",
-		"eight green slimes finish Slime Cleanup"
-	)
-	quest_book.quests.finish("slime_cleanup", day)
-	_check(quest_book.quests.state("slime_cleanup", quest_book, day) == "done", "a quest is done once")
-	quest_book.quests.start("daily_patrol", quest_book, day)
-	for _i in 15:
-		quest_book.quests.on_kill("blue_slime")
-	quest_book.quests.finish("daily_patrol", day)
-	_check(
-		(
-			quest_book.quests.state("daily_patrol", quest_book, day) == "done"
-			and quest_book.quests.state("daily_patrol", quest_book, "2026-11-19") == "available"
-		),
-		"a daily quest comes back the next day"
-	)
-	var saved_quests = PlayerStats.new()
-	saved_quests.from_dict(quest_book.to_dict())
-	_check(saved_quests.quests.done == quest_book.quests.done, "quests survive saving (version 7)")
-	while player.stats.bag.size() >= 13:
-		player.stats.bag.pop_back()
-	var rowan = townspeople.filter(func(npc): return npc.npc_id == "captain")[0]
-	var lune = townspeople.filter(func(npc): return npc.npc_id == "healer")[0]
-	player.global_position = rowan.global_position + Vector2(70, 30)
-	await _frames(4)
-	hud.talk()
-	_check(dialog.option("Quest: A Friendly Face") != null, "Captain Rowan offers a quest")
-	if dialog.option("Quest: A Friendly Face") != null:
-		dialog.option("Quest: A Friendly Face").pressed.emit()
-		dialog.option("Accept").pressed.emit()
-	_check(player.stats.quests.active.has("a_friendly_face"), "Accept takes the quest")
-	_check(
-		"A Friendly Face" in hud.get_node("QuestTracker").text, "the quest shows at the top right"
-	)
-	player.global_position = lune.global_position + Vector2(70, 30)
-	await _frames(4)
-	hud.talk()
-	hud.call("_close_windows")
-	player.global_position = rowan.global_position + Vector2(70, 30)
-	await _frames(4)
-	hud.talk()
-	var blue_before_reward: int = player.stats.count_of("blue_potion")
-	if dialog.option("Complete: A Friendly Face") != null:
-		dialog.option("Complete: A Friendly Face").pressed.emit()
-	_check(
-		(
-			player.stats.quests.done.has("a_friendly_face")
-			and player.stats.count_of("blue_potion") == blue_before_reward + 2
-		),
-		"after talking to Sister Lune, Rowan gives the reward"
-	)
-	hud.call("_close_windows")
-	player.accept_quest("sticky_business")
-	player.add_item("slime_jelly", 5)
-	var jelly_held: int = player.stats.count_of("slime_jelly")
-	player.turn_in_quest("sticky_business")
-	_check(
-		(
-			player.stats.count_of("slime_jelly") == jelly_held - 5
-			and player.stats.quests.done.has("sticky_business")
-		),
-		"Sticky Business takes 5 Slime Jelly for its reward"
-	)
-	hud.toggle_character()
-	var journal = hud.get_node("Character")
-	journal.show_page("quests")
-	_check(
-		journal.get("_quest_rows").get_child_count() > 0, "the QUESTS page lists quests to take"
-	)
-	hud.toggle_character()
-
-	player.stats.gold = 100
-	player.travel("forest")
-	await _frames(3)
-	_check(
-		main.map.map_id == "forest" and player.stats.gold == 60,
-		"Tessa sends the warrior to the forest for 40 gold"
-	)
-	var forest_enemies: Array = get_nodes_in_group("enemies")
-	var shrooms: Array = forest_enemies.filter(func(enemy): return enemy.monster_id == "spore_shroom")
-	_check(shrooms.size() == 3, "three Spore Shrooms grow in the forest")
-	if not shrooms.is_empty():
-		_freeze(forest_enemies, true)
-		shrooms[0].set_physics_process(true)
-		player.hp = player.max_hp
-		player.set("_invincible_left", 0.0)
-		player.global_position = shrooms[0].global_position + Vector2(-210, 0)
-		var hp_before_spores: int = player.hp
-		var saw_spore := false
-		for _i in 240:
-			await _frames(1)
-			saw_spore = saw_spore or not get_nodes_in_group("projectiles").is_empty()
-			if player.hp < hp_before_spores:
-				break
-		_check(saw_spore, "a Spore Shroom shoots spores")
-		_check(player.hp < hp_before_spores, "a spore hits the warrior (hp %d)" % player.hp)
+	await SmokeWorld.new().run(self, main, player, hud)
 
 	_remove_test_save()
 	root.remove_child(main)
 	main.free()  # free the game before quitting, so nothing is left in use at exit
-	await _frames(10)  # and let the sounds that were still playing let go
+	await _frames(60)  # and let sounds, tweens and timers that were still running let go
 	print("SMOKE TEST: %s" % ("PASSED" if _failures == 0 else "%d FAILED" % _failures))
 	quit(1 if _failures > 0 else 0)
 

@@ -16,6 +16,9 @@ const MISS_COLOR := Color(0.8, 0.85, 0.95)
 const PICKUP_SCENE := preload("res://scenes/items/pickup.tscn")
 const ItemDb := preload("res://scripts/items/item_db.gd")
 const Projectile := preload("res://scripts/combat/projectile.gd")
+const CROWN := preload("res://assets/monsters/slime/crown.png")
+const SLIME_SCENE_PATH := "res://scenes/enemies/slime.tscn"
+const BAR_HEIGHT := 56.0
 ## How often the path to a moving target is worked out again.
 const PATH_REFRESH_SECONDS := 0.25
 
@@ -56,6 +59,12 @@ var drops: Array = []
 var gear_drops: Dictionary = {}
 ## Shoots from afar instead of biting, or {}: {"keep_distance", "projectile_speed", "on_hit"}.
 var ranged: Dictionary = {}
+## C9: a boss, or {}: {"enrage_at", "enrage_speed", "rarity_rolls", "summon": {...}}.
+var boss: Dictionary = {}
+## How big it is drawn and how wide its body is (monsters.json "scale").
+var size_scale: float = 1.0
+## False for monsters that should not come back: a boss's summons, invaders.
+var respawns: bool = true
 ## Status put on the warrior by a landed hit, or {}: {"status", "chance", "seconds", "value"}.
 var on_hit: Dictionary = {}
 ## A telegraphed slam instead of every Nth attack, or {}:
@@ -86,6 +95,10 @@ var _casting_left: float = 0.0
 var _glow: Tween = null
 var _agent: NavigationAgent2D = null
 var _path_refresh: float = 0.0
+var _enraged: bool = false
+var _summon_left: float = 0.0
+var _minions: Array = []
+var _crown: Sprite2D = null
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
 @onready var _collision: CollisionShape2D = $Collision
@@ -100,6 +113,7 @@ func _ready() -> void:
 	_agent.radius = 16.0
 	add_child(_agent)
 	_load_monster_data()
+	_apply_size()
 	_roll_elite()
 	hp = max_hp
 	_spawn_position = global_position
@@ -118,6 +132,8 @@ func _physics_process(delta: float) -> void:
 	_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
 	statuses.update(delta)
 	_casting_left = maxf(0.0, _casting_left - delta)
+	if _enraged:
+		_summon_tick(delta)
 	var stunned: bool = statuses.is_active("stun")
 	_sprite.speed_scale = 0.0 if stunned else 1.0
 
@@ -166,6 +182,8 @@ func take_damage(
 	if hp == 0:
 		_die()
 		return
+	if not boss.is_empty() and not _enraged and hp <= max_hp * float(boss.get("enrage_at", 0.5)):
+		_enrage()
 	_sprite.modulate = Color(1.0, 0.35, 0.35)
 	create_tween().tween_property(_sprite, "modulate", tint, 0.2)
 
@@ -301,7 +319,7 @@ func _start_slam() -> void:
 	circle.z_index = -1
 	circle.position = position
 	get_parent().add_child(circle)
-	await get_tree().create_timer(warning).timeout
+	await _wait(warning)
 	if is_dead or not is_inside_tree():
 		return
 	var target: Node2D = _chase_target()
@@ -342,7 +360,13 @@ func _die() -> void:
 		if randf() < float(drop["chance"]):
 			_drop("item", 1, drop["item"])
 	_maybe_drop_gear()
-	await get_tree().create_timer(respawn_seconds).timeout
+	if not boss.is_empty():
+		get_tree().call_group("hud", "show_banner", "%s is defeated!" % display_name, "")
+	if not respawns:
+		await _wait(1.0)
+		queue_free()
+		return
+	await _wait(respawn_seconds)
 	_respawn()
 
 
@@ -361,7 +385,7 @@ func make_elite() -> void:
 	gold_max = roundi(gold_max * float(elite["gold"]))
 	drops = drops + elite.get("extra_drops", [])
 	display_name = "Elite " + display_name
-	_sprite_scale = Vector2.ONE * float(elite["scale"])
+	_sprite_scale = Vector2.ONE * size_scale * float(elite["scale"])
 	if is_node_ready():
 		_sprite.scale = _sprite_scale
 		_hp_bar.set_label("Lv.%d %s" % [level, display_name])
@@ -372,6 +396,8 @@ func make_elite() -> void:
 
 
 func _roll_elite() -> void:
+	if not boss.is_empty():
+		return
 	var chance: float = elite_chance_override
 	if chance < 0.0:
 		chance = float(CombatRules.settings["elite"]["chance"])
@@ -381,7 +407,7 @@ func _roll_elite() -> void:
 
 func _clear_elite() -> void:
 	is_elite = false
-	_sprite_scale = Vector2.ONE
+	_sprite_scale = Vector2.ONE * size_scale
 	_sprite.scale = _sprite_scale
 	if _glow != null:
 		_glow.kill()
@@ -417,13 +443,72 @@ func _load_monster_data() -> void:
 	special = data.get("special", {})
 	var rgba: Array = data.get("tint", [1, 1, 1, 1])
 	tint = Color(rgba[0], rgba[1], rgba[2], rgba[3])
+	boss = data.get("boss", {})
+	size_scale = float(data.get("scale", 1.0))
+
+
+## Draws and sizes it by size_scale: sprite, body, health bar; a boss gets a crown.
+func _apply_size() -> void:
+	_sprite_scale = Vector2.ONE * size_scale
+	_sprite.scale = _sprite_scale
+	_hp_bar.position.y = -BAR_HEIGHT * size_scale
+	if size_scale != 1.0 and _collision.shape is CircleShape2D:
+		var body := _collision.shape.duplicate() as CircleShape2D
+		body.radius *= size_scale
+		_collision.shape = body
+	if not boss.is_empty():
+		add_to_group("bosses")
+		_crown = Sprite2D.new()
+		_crown.texture = CROWN
+		_crown.scale = Vector2.ONE * size_scale * 0.5
+		_crown.position = Vector2(0.0, -40.0 * size_scale)
+		add_child(_crown)
+
+
+## Below the boss's enrage line: faster, quicker to attack, and calling help.
+func _enrage() -> void:
+	_enraged = true
+	move_speed *= float(boss.get("enrage_speed", 1.3))
+	attack_cooldown *= 0.8
+	_summon_left = 0.0
+	FloatingText.spawn(self, "ENRAGED!", Color(1.0, 0.4, 0.3), 140.0, 34)
+
+
+func _summon_tick(delta: float) -> void:
+	var summon: Dictionary = boss.get("summon", {})
+	if summon.is_empty():
+		return
+	_summon_left -= delta
+	if _summon_left > 0.0:
+		return
+	_summon_left = float(summon.get("every", 12.0))
+	_minions = _minions.filter(func(minion) -> bool: return is_instance_valid(minion))
+	var room: int = int(summon.get("most", 4)) - _minions.size()
+	for i in mini(int(summon.get("count", 2)), room):
+		var minion: Node2D = load(SLIME_SCENE_PATH).instantiate()
+		minion.set("monster_id", summon["monster"])
+		minion.set("respawns", false)
+		minion.position = position + Vector2(randf_range(-90.0, 90.0), randf_range(-60.0, 60.0))
+		get_parent().add_child(minion)
+		_minions.append(minion)
+
+
+## Waits on a Timer that belongs to this monster, so leaving the map (which
+## frees it) ends the wait too. A SceneTree timer would outlive the monster.
+func _wait(seconds: float) -> void:
+	var timer := Timer.new()
+	timer.one_shot = true
+	add_child(timer)
+	timer.start(seconds)
+	await timer.timeout
+	timer.queue_free()
 
 
 ## Gear drops now and then; elites drop it more often and roll better rarity.
 func _maybe_drop_gear() -> void:
 	var pool: Array = gear_drops.get("items", [])
 	var chance: float = float(gear_drops.get("chance", 0.0))
-	var rolls: int = 1
+	var rolls: int = int(boss.get("rarity_rolls", 1))
 	if is_elite:
 		var elite: Dictionary = CombatRules.settings["elite"]
 		chance += float(elite.get("gear_chance", 0.0))
@@ -455,6 +540,7 @@ func _respawn() -> void:
 	_attack_count = 0
 	_casting_left = 0.0
 	_load_monster_data()
+	_enraged = false
 	_clear_elite()
 	_roll_elite()
 	hp = max_hp

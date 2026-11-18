@@ -1542,6 +1542,19 @@ def draw_shroom(cap_rx: float, cap_ry: float, stem: float, face: str, spores: in
     return c.finish()
 
 
+def build_crown(out_size: int = 64) -> Image.Image:
+    """The Slime King's crown: gold points with gems, worn on top of the slime."""
+    c = Canvas(32)
+    points = [(5, 22), (5, 10), (10.5, 16), (16, 7), (21.5, 16), (27, 10), (27, 22)]
+    c.polygon(points, GOLD)
+    c.rect(5, 19, 27, 24, (232, 176, 60, 255), radius=1)
+    for x, y, color in ((5, 10, GEM), (16, 7, (110, 200, 255, 255)), (27, 10, GEM)):
+        c.ellipse(x, y, 2.2, 2.2, color)
+    c.ellipse(16, 21.5, 2.2, 1.6, (110, 230, 140, 255))
+    c.ellipse(10, 14, 1.2, 1.8, (255, 236, 160, 255), outline=False)
+    return c.finish(out_size)
+
+
 def build_shroom_sheet() -> Image.Image:
     sheet = Image.new("RGBA", (SLIME_FRAME * len(SHROOM_POSES), SLIME_FRAME), (0, 0, 0, 0))
     for col, (_, rx, ry, stem, face, spores) in enumerate(SHROOM_POSES):
@@ -1622,6 +1635,7 @@ def main() -> None:
     slime_dir = ASSETS / "monsters" / "slime"
     slime_dir.mkdir(parents=True, exist_ok=True)
     build_slime_sheet().save(slime_dir / "slime.png")
+    build_crown().save(slime_dir / "crown.png")
     (slime_dir / "slime_frames.tres").write_text(
         build_slime_frames("res://assets/monsters/slime/slime.png"), encoding="utf-8"
     )

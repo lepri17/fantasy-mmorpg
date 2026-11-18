@@ -144,6 +144,20 @@ def check_monsters(monsters: dict, items: dict) -> None:
         need_number(where, monster, "evasion", 0.0, 1.0)
         if "frames" in monster and not res_exists(monster["frames"]):
             error(f"{where}: frames {monster['frames']} do not exist")
+        if "scale" in monster:
+            need_number(where, monster, "scale", 0.5, 4.0)
+        boss = monster.get("boss")
+        if boss is not None:
+            need_number(where + " boss", boss, "enrage_at", 0.05, 0.95)
+            need_number(where + " boss", boss, "enrage_speed", 1.0, 3.0)
+            need_number(where + " boss", boss, "rarity_rolls", 1, 5)
+            summon = boss.get("summon", {})
+            if summon:
+                if summon.get("monster") not in monsters or summon.get("monster") == monster_id:
+                    error(f"{where}: boss summons must be another monster")
+                need_number(where + " summon", summon, "count", 1, 10)
+                need_number(where + " summon", summon, "every", 1.0)
+                need_number(where + " summon", summon, "most", summon.get("count", 1), 20)
         ranged = monster.get("ranged")
         if ranged is not None:
             keep = need_number(where + " ranged", ranged, "keep_distance", 0)
@@ -468,6 +482,18 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                 return False
             return True
 
+        invasion = data.get("invasion")
+        if invasion is not None:
+            if invasion.get("monster") not in monsters:
+                error(f"{where}: invasion monster '{invasion.get('monster')}' is unknown")
+            need_number(where + " invasion", invasion, "count", 1, 30)
+            every = need_number(where + " invasion", invasion, "every_minutes", 2, 60)
+            need_number(where + " invasion", invasion, "lasts_minutes", 1, (every or 60) - 1)
+            area = invasion.get("area", [])
+            if not (len(area) == 4 and inside(area[:2], "invasion area corner")
+                    and inside(area[2:], "invasion area corner") and area[0] < area[2]
+                    and area[1] < area[3]):
+                error(f"{where}: invasion area must be [left, top, right, bottom] on the map")
         spawns = data.get("spawns", {})
         if "default" not in spawns:
             error(f"{where}: needs a 'default' spawn")
