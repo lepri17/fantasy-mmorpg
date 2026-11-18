@@ -46,6 +46,19 @@ func _run() -> void:
 		"blue slimes take their numbers from monsters.json"
 	)
 	var enemies: Array = get_nodes_in_group("enemies")
+	var meadow_navigation = main.map.get_node_or_null("Navigation")
+	_check(
+		meadow_navigation != null and meadow_navigation.navigation_polygon.get_polygon_count() > 0,
+		"the meadow has a navigation mesh"
+	)
+	if meadow_navigation != null:
+		var around_tree: PackedVector2Array = NavigationServer2D.map_get_path(
+			meadow_navigation.get_navigation_map(), Vector2(300, 220), Vector2(300, 380), true
+		)
+		_check(
+			around_tree.size() >= 3,
+			"a path past a tree goes around it (%d points)" % around_tree.size()
+		)
 	_check(enemies.size() == 6, "six slimes on the map (found %d)" % enemies.size())
 	for enemy in enemies:
 		enemy.evasion = 0.0  # no random misses in the checks below
@@ -743,7 +756,12 @@ func _run() -> void:
 	main.change_map("forest", "west")
 	await _frames(3)
 	_check(
-		main.map.map_id == "forest" and get_nodes_in_group("enemies").size() == 5,
+		(
+			main.map.map_id == "forest"
+			and get_nodes_in_group("enemies").filter(
+				func(enemy): return enemy.monster_id == "blue_slime"
+			).size() == 5
+		),
 		"the forest has its own blue slimes"
 	)
 	player.take_damage(99999)
@@ -901,6 +919,24 @@ func _run() -> void:
 		main.map.map_id == "forest" and player.stats.gold == 60,
 		"Tessa sends the warrior to the forest for 40 gold"
 	)
+	var forest_enemies: Array = get_nodes_in_group("enemies")
+	var shrooms: Array = forest_enemies.filter(func(enemy): return enemy.monster_id == "spore_shroom")
+	_check(shrooms.size() == 3, "three Spore Shrooms grow in the forest")
+	if not shrooms.is_empty():
+		_freeze(forest_enemies, true)
+		shrooms[0].set_physics_process(true)
+		player.hp = player.max_hp
+		player.set("_invincible_left", 0.0)
+		player.global_position = shrooms[0].global_position + Vector2(-210, 0)
+		var hp_before_spores: int = player.hp
+		var saw_spore := false
+		for _i in 240:
+			await _frames(1)
+			saw_spore = saw_spore or not get_nodes_in_group("projectiles").is_empty()
+			if player.hp < hp_before_spores:
+				break
+		_check(saw_spore, "a Spore Shroom shoots spores")
+		_check(player.hp < hp_before_spores, "a spore hits the warrior (hp %d)" % player.hp)
 
 	_remove_test_save()
 	root.remove_child(main)

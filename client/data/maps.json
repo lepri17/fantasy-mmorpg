@@ -538,6 +538,30 @@
           ],
           "to": "field",
           "spawn": "east"
+        },
+        {
+          "type": "monster",
+          "id": "spore_shroom",
+          "pos": [
+            1900,
+            700
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "spore_shroom",
+          "pos": [
+            1200,
+            1250
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "spore_shroom",
+          "pos": [
+            2300,
+            420
+          ]
         }
       ],
       "teleport_price": 40

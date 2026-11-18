@@ -15,6 +15,9 @@ const CRIT_COLOR := Color(1.0, 0.55, 0.2)
 const MISS_COLOR := Color(0.8, 0.85, 0.95)
 const PICKUP_SCENE := preload("res://scenes/items/pickup.tscn")
 const ItemDb := preload("res://scripts/items/item_db.gd")
+const Projectile := preload("res://scripts/combat/projectile.gd")
+## How often the path to a moving target is worked out again.
+const PATH_REFRESH_SECONDS := 0.25
 
 const KNOCKBACK_SPEED := 240.0
 const KNOCKBACK_DECAY := 1400.0
@@ -51,6 +54,8 @@ var gold_max: int = 5
 var drops: Array = []
 ## {"chance", "items"}: gear that can drop, with a random rarity.
 var gear_drops: Dictionary = {}
+## Shoots from afar instead of biting, or {}: {"keep_distance", "projectile_speed", "on_hit"}.
+var ranged: Dictionary = {}
 ## Status put on the warrior by a landed hit, or {}: {"status", "chance", "seconds", "value"}.
 var on_hit: Dictionary = {}
 ## A telegraphed slam instead of every Nth attack, or {}:
@@ -79,6 +84,8 @@ var _sprite_scale: Vector2 = Vector2.ONE
 var _attack_count: int = 0
 var _casting_left: float = 0.0
 var _glow: Tween = null
+var _agent: NavigationAgent2D = null
+var _path_refresh: float = 0.0
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
 @onready var _collision: CollisionShape2D = $Collision
@@ -87,6 +94,11 @@ var _glow: Tween = null
 
 func _ready() -> void:
 	add_to_group("enemies")
+	_agent = NavigationAgent2D.new()
+	_agent.path_desired_distance = 10.0
+	_agent.target_desired_distance = 8.0
+	_agent.radius = 16.0
+	add_child(_agent)
 	_load_monster_data()
 	_roll_elite()
 	hp = max_hp
@@ -116,10 +128,12 @@ func _physics_process(delta: float) -> void:
 	elif target == null:
 		movement = _wander(delta)
 	else:
-		var to_target: Vector2 = target.global_position - global_position
-		var distance: float = to_target.length()
-		if distance > attack_range:
-			movement = to_target / distance * move_speed * statuses.speed_factor()
+		var distance: float = global_position.distance_to(target.global_position)
+		if not ranged.is_empty():
+			movement = _ranged_movement(target, distance, delta)
+		elif distance > attack_range:
+			var speed: float = move_speed * statuses.speed_factor()
+			movement = _steer_to(target.global_position, delta) * speed
 		elif _attack_ready_in == 0.0:
 			_attack(target)
 
@@ -190,6 +204,44 @@ func _most_threatening() -> Node2D:
 			best = attacker
 			best_threat = int(_threat[attacker])
 	return best
+
+
+## Q1: the way to walk to reach a point, along the map's navigation path around
+## trees and rocks (game_map.gd bakes it), or straight there while there is none.
+func _steer_to(point: Vector2, delta: float) -> Vector2:
+	_path_refresh -= delta
+	if _path_refresh <= 0.0:
+		_path_refresh = PATH_REFRESH_SECONDS
+		_agent.target_position = point
+	var next: Vector2 = _agent.get_next_path_position()
+	if _agent.is_navigation_finished() or next.distance_to(global_position) < 1.0:
+		return global_position.direction_to(point)
+	return global_position.direction_to(next)
+
+
+## C7: a ranged monster keeps its distance. It comes closer when out of range,
+## backs off when the warrior gets too near, and shoots whenever it can.
+func _ranged_movement(target: Node2D, distance: float, delta: float) -> Vector2:
+	var speed: float = move_speed * statuses.speed_factor()
+	if distance <= attack_range and _attack_ready_in == 0.0:
+		_shoot(target)
+	if distance > attack_range:
+		return _steer_to(target.global_position, delta) * speed
+	if distance < float(ranged.get("keep_distance", 0.0)):
+		return target.global_position.direction_to(global_position) * speed
+	return Vector2.ZERO
+
+
+func _shoot(target: Node2D) -> void:
+	_attack_ready_in = attack_cooldown
+	_sprite.play("attack")
+	var shot: Area2D = Projectile.new()
+	shot.position = position
+	shot.direction = global_position.direction_to(target.global_position)
+	shot.speed = float(ranged.get("projectile_speed", 260.0))
+	shot.damage = attack_damage
+	shot.on_hit = ranged.get("on_hit", {})
+	get_parent().add_child(shot)
 
 
 ## Slow, aimless walking around the spawn point. Returns the velocity to use.
@@ -358,6 +410,9 @@ func _load_monster_data() -> void:
 	gold_max = int(data["gold"][1])
 	drops = data.get("drops", [])
 	gear_drops = data.get("gear_drops", {})
+	ranged = data.get("ranged", {})
+	if data.has("frames"):
+		_sprite.sprite_frames = load(data["frames"])
 	on_hit = data.get("on_hit", {})
 	special = data.get("special", {})
 	var rgba: Array = data.get("tint", [1, 1, 1, 1])

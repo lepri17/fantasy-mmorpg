@@ -1490,15 +1490,74 @@ def build_slime_sheet() -> Image.Image:
     return sheet
 
 
-def build_slime_frames(sheet_res_path: str) -> str:
-    """SpriteFrames text for the slime: idle (loops), attack and die."""
+SHROOM_CAP = (150, 92, 206, 255)
+SHROOM_SPOT = (226, 200, 252, 255)
+SHROOM_STEM = (246, 232, 206, 255)
+SPORE = (176, 232, 120, 255)
+# (animation, cap half-width, cap half-height, stem height, face, spores)
+SHROOM_POSES = [
+    ("idle", 21, 13, 18, "normal", 0),
+    ("idle", 22, 12, 17, "normal", 0),
+    ("attack", 25, 15, 19, "angry", 0),
+    ("attack", 19, 10, 16, "angry", 5),
+    ("die", 22, 12, 12, "dead", 0),
+    ("die", 24, 9, 7, "dead", 3),
+    ("die", 0, 0, 0, "none", 7),
+]
+
+
+def draw_shroom(cap_rx: float, cap_ry: float, stem: float, face: str, spores: int) -> Image.Image:
+    """One Spore Shroom frame: a spotted cap on a stem with a face; spores when it shoots."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 15, 4, SHADOW, outline=False)
+    rng = random.Random(spores * 7 + int(cap_rx))
+    if cap_rx == 0:  # only a cloud of spores is left
+        for _ in range(spores):
+            c.ellipse(cx + rng.uniform(-14, 14), feet - rng.uniform(2, 16), 2.4, 2.4, SPORE)
+        return c.finish()
+    top = feet - stem
+    c.rect(cx - 9, top - 2, cx + 9, feet, SHROOM_STEM, radius=5)
+    eye_y = top + stem * 0.55
+    for side in (-1, 1):
+        ex = cx + side * 4.5
+        if face == "dead":
+            c.line([(ex - 1.8, eye_y - 1.8), (ex + 1.8, eye_y + 1.8)], width=1.2)
+            c.line([(ex - 1.8, eye_y + 1.8), (ex + 1.8, eye_y - 1.8)], width=1.2)
+            continue
+        c.ellipse(ex, eye_y, 1.9, 2.5, EYE, outline=False)
+        c.ellipse(ex - 0.6, eye_y - 1.1, 0.8, 0.8, WHITE, outline=False)
+        if face == "angry":
+            c.line([(ex + side * 3, eye_y - 4.5), (ex - side * 1.5, eye_y - 3)], width=1.2)
+    if face == "normal":
+        c.line(arc_points(cx, eye_y + 3.5, 1.8, 1.2, 20, 160, 6), width=1.0)
+    elif face == "angry":
+        c.line(arc_points(cx, eye_y + 4.5, 1.8, 1.0, 200, 340, 6), width=1.0)
+    cap_y = top - cap_ry * 0.6
+    c.ellipse(cx, cap_y, cap_rx, cap_ry, SHROOM_CAP)
+    for dx, dy, r in ((-0.45, -0.3, 3.4), (0.35, -0.45, 2.6), (0.15, 0.2, 2.2), (-0.1, -0.7, 1.8)):
+        c.ellipse(cx + cap_rx * dx, cap_y + cap_ry * dy, r, r * 0.8, SHROOM_SPOT, outline=False)
+    for _ in range(spores):
+        c.ellipse(cx + rng.uniform(-18, 18), cap_y - cap_ry - rng.uniform(1, 9), 2.0, 2.0, SPORE)
+    return c.finish()
+
+
+def build_shroom_sheet() -> Image.Image:
+    sheet = Image.new("RGBA", (SLIME_FRAME * len(SHROOM_POSES), SLIME_FRAME), (0, 0, 0, 0))
+    for col, (_, rx, ry, stem, face, spores) in enumerate(SHROOM_POSES):
+        sheet.paste(draw_shroom(rx, ry, stem, face, spores), (col * SLIME_FRAME, 0))
+    return sheet
+
+
+def build_slime_frames(sheet_res_path: str, poses=SLIME_POSES) -> str:
+    """SpriteFrames text for a monster sheet: idle (loops), attack and die."""
     lines = [
-        f'[gd_resource type="SpriteFrames" load_steps={len(SLIME_POSES) + 2} format=3]',
+        f'[gd_resource type="SpriteFrames" load_steps={len(poses) + 2} format=3]',
         "",
         f'[ext_resource type="Texture2D" path="{sheet_res_path}" id="1_sheet"]',
         "",
     ]
-    for col in range(len(SLIME_POSES)):
+    for col in range(len(poses)):
         lines += [
             f'[sub_resource type="AtlasTexture" id="frame_{col}"]',
             'atlas = ExtResource("1_sheet")',
@@ -1507,7 +1566,7 @@ def build_slime_frames(sheet_res_path: str) -> str:
         ]
     blocks = []
     for name, fps, loop in SLIME_ANIMATIONS:
-        columns = [col for col, pose in enumerate(SLIME_POSES) if pose[0] == name]
+        columns = [col for col, pose in enumerate(poses) if pose[0] == name]
         frames = ", ".join(
             '{\n"duration": 1.0,\n"texture": SubResource("frame_%d")\n}' % col for col in columns
         )
@@ -1565,6 +1624,12 @@ def main() -> None:
     build_slime_sheet().save(slime_dir / "slime.png")
     (slime_dir / "slime_frames.tres").write_text(
         build_slime_frames("res://assets/monsters/slime/slime.png"), encoding="utf-8"
+    )
+    shroom_dir = ASSETS / "monsters" / "shroom"
+    shroom_dir.mkdir(parents=True, exist_ok=True)
+    build_shroom_sheet().save(shroom_dir / "shroom.png")
+    (shroom_dir / "shroom_frames.tres").write_text(
+        build_slime_frames("res://assets/monsters/shroom/shroom.png", SHROOM_POSES), encoding="utf-8"
     )
     print("Assets written to", ASSETS)
 

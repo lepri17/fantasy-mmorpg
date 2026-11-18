@@ -134,5 +134,67 @@
         "crimson_sword"
       ]
     }
+  },
+  "spore_shroom": {
+    "name": "Spore Shroom",
+    "level": 4,
+    "max_hp": 70,
+    "move_speed": 55,
+    "detect_radius": 340,
+    "attack_range": 260,
+    "attack_damage": 14,
+    "attack_cooldown": 2.0,
+    "respawn_seconds": 6,
+    "xp": 55,
+    "gold": [
+      4,
+      10
+    ],
+    "drops": [
+      {
+        "item": "blue_potion",
+        "chance": 0.2
+      },
+      {
+        "item": "ember_stone",
+        "chance": 0.06
+      }
+    ],
+    "defense": 1,
+    "evasion": 0.05,
+    "tint": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "frames": "res://assets/monsters/shroom/shroom_frames.tres",
+    "ranged": {
+      "keep_distance": 170,
+      "projectile_speed": 280,
+      "on_hit": {
+        "status": "poison",
+        "chance": 0.5,
+        "seconds": 3.0,
+        "value": 4.0
+      }
+    },
+    "gear_drops": {
+      "chance": 0.05,
+      "items": [
+        "red_headband",
+        "training_sword",
+        "leather_gloves",
+        "red_cape",
+        "blue_plate",
+        "leather_boots",
+        "verdant_headband",
+        "verdant_cape",
+        "verdant_gloves",
+        "verdant_boots",
+        "crimson_plate",
+        "crimson_sword"
+      ]
+    }
   }
 }

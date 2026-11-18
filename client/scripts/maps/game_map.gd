@@ -14,6 +14,8 @@ const SCENES := {
 	"portal": preload("res://scenes/maps/portal.tscn"),
 	"npc": preload("res://scenes/maps/npc.tscn"),
 }
+## Monsters keep this far from trees and rocks when they find their way.
+const NAV_AGENT_RADIUS := 18.0
 ## How far inside the map's edge the invisible walls stand: left, top, right, bottom.
 const EDGE_MARGINS := [24.0, 80.0, 24.0, 20.0]
 
@@ -33,6 +35,8 @@ func _ready() -> void:
 		_add_edges()
 	for thing in data.get("objects", []):
 		_add_object(thing)
+	if not is_safe():
+		call_deferred("_bake_navigation")
 
 
 ## The map's size in pixels.
@@ -76,6 +80,31 @@ func _add_object(thing: Dictionary) -> void:
 			node.set("to_map", thing["to"])
 			node.set("to_spawn", thing.get("spawn", "default"))
 	add_child(node)
+
+
+## Q1: a navigation mesh over the map that leaves out trees and rocks (the
+## "obstacles" group), so monsters walk around them instead of into them.
+func _bake_navigation() -> void:
+	var size: Vector2 = map_size()
+	var left: float = EDGE_MARGINS[0]
+	var top: float = EDGE_MARGINS[1]
+	var right: float = size.x - EDGE_MARGINS[2]
+	var bottom: float = size.y - EDGE_MARGINS[3]
+	var polygon := NavigationPolygon.new()
+	polygon.add_outline(
+		PackedVector2Array(
+			[Vector2(left, top), Vector2(right, top), Vector2(right, bottom), Vector2(left, bottom)]
+		)
+	)
+	polygon.agent_radius = NAV_AGENT_RADIUS
+	polygon.parsed_geometry_type = NavigationPolygon.PARSED_GEOMETRY_STATIC_COLLIDERS
+	polygon.source_geometry_mode = NavigationPolygon.SOURCE_GEOMETRY_GROUPS_WITH_CHILDREN
+	polygon.source_geometry_group_name = &"obstacles"
+	var region := NavigationRegion2D.new()
+	region.name = "Navigation"
+	region.navigation_polygon = polygon
+	add_child(region)
+	region.bake_navigation_polygon(false)
 
 
 ## Invisible walls just inside the edges, like the meadow's WorldBounds.

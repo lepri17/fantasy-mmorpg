@@ -142,6 +142,17 @@ def check_monsters(monsters: dict, items: dict) -> None:
             need_number(where, monster, key, 0.01 if key != "xp" else 0)
         need_number(where, monster, "defense")
         need_number(where, monster, "evasion", 0.0, 1.0)
+        if "frames" in monster and not res_exists(monster["frames"]):
+            error(f"{where}: frames {monster['frames']} do not exist")
+        ranged = monster.get("ranged")
+        if ranged is not None:
+            keep = need_number(where + " ranged", ranged, "keep_distance", 0)
+            need_number(where + " ranged", ranged, "projectile_speed", 50)
+            if keep is not None and keep >= monster.get("attack_range", 0):
+                error(f"{where}: ranged keep_distance must be less than attack_range")
+            hit = ranged.get("on_hit")
+            if hit is not None and hit.get("status") not in ("poison", "slow", "stun"):
+                error(f"{where}: ranged on_hit status must be poison, slow or stun")
         gold = monster.get("gold")
         if not (isinstance(gold, list) and len(gold) == 2 and all(map(is_number, gold))
                 and 0 <= gold[0] <= gold[1]):
