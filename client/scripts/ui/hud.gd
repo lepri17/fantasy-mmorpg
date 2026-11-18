@@ -21,6 +21,7 @@ const TOWN_ACTIONS := [
 	"turn_in_quest",
 ]
 const QuestLog := preload("res://scripts/player/quest_log.gd")
+const Minimap := preload("res://scripts/ui/minimap.gd")
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
 const PlayerStats := preload("res://scripts/player/player_stats.gd")
 const DEATH_RED := Color(1.0, 0.45, 0.5)
@@ -50,6 +51,7 @@ var _shop
 var _storage
 var _talk_button: Button
 var _tracker: Label
+var _minimap: Control
 var _boss_bar: Control
 var _boss_name: Label
 var _boss_fill: ColorRect
@@ -177,6 +179,7 @@ func _quest_rows(npc_id: String) -> Array:
 func _update_talk_button() -> void:
 	var any_open: bool = _windows().any(func(each: Control) -> bool: return each.visible)
 	_tracker.visible = not any_open
+	_minimap.visible = not any_open
 	_talk_button.visible = (
 		_nearby_npc != null
 		and is_instance_valid(_nearby_npc)
@@ -360,8 +363,12 @@ func _build_town_windows() -> void:
 	_tracker.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.12))
 	_tracker.add_theme_constant_override("outline_size", 5)
 	_tracker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_place(_tracker, Control.PRESET_TOP_RIGHT, Rect2(-460, 100, 444, 120))
+	_place(_tracker, Control.PRESET_TOP_RIGHT, Rect2(-460, 228, 444, 120))
 	add_child(_tracker)
+	_minimap = Minimap.new()
+	_minimap.name = "Minimap"
+	_place(_minimap, Control.PRESET_TOP_RIGHT, Rect2(-216, 100, 200, 120))
+	add_child(_minimap)
 
 
 ## Anchors a control to a corner or side, offset by rect (position and size).

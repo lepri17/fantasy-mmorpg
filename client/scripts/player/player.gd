@@ -8,6 +8,20 @@ extends "res://scripts/player/player_base.gd"
 ## use_potion), so the touch controls drive the same code as the keyboard.
 ## Skills come from res://data/skills.json; each names the action that uses it.
 
+const SkyClock = preload("res://scripts/world/sky.gd")
+## A tree hides the warrior when its trunk is this close below him (Q12).
+const TREE_COVER := Vector2(70, 150)
+const SILHOUETTE_SHADER := """shader_type canvas_item;
+uniform vec4 tint : source_color = vec4(0.45, 0.68, 1.0, 0.55);
+void fragment() {
+	COLOR = vec4(tint.rgb, texture(TEXTURE, UV).a * tint.a);
+}
+"""
+
+var _light: PointLight2D
+var _silhouette: AnimatedSprite2D
+var _silhouette_check: float = 0.0
+
 
 func _ready() -> void:
 	add_to_group("player")
@@ -26,9 +40,12 @@ func _ready() -> void:
 	_target_marker.hide()
 	get_parent().call_deferred("add_child", _target_marker)
 	_play("idle_" + facing)
+	_make_light()
+	_make_silhouette()
 
 
 func _physics_process(delta: float) -> void:
+	_update_silhouette(delta)
 	if is_dead:
 		return
 
@@ -118,6 +135,12 @@ func enter_map(map_id: String, point: Vector2, respawn_point: Vector2, limits: R
 	if stats.map_id != map_id:
 		stats.map_id = map_id
 		_progress_changed()
+
+
+## G3: a soft light around the warrior; game.gd turns it up when it is dark.
+func set_light(darkness: float) -> void:
+	_light.enabled = darkness > 0.05
+	_light.energy = darkness * 0.5
 
 
 ## Gets up at once (the death screen's button), instead of after the wait.
@@ -247,6 +270,7 @@ func _attack() -> void:
 ## Spin Slash: hits every enemy around the warrior.
 func _skill_spin(skill: Dictionary) -> void:
 	_slash.play_spin()
+	Burst.spawn(self, Vector2(0, -24), Color(0.6, 0.95, 1.0), 30, 240.0)
 	_sfx("skill")
 	var base_damage: int = _skill_damage(skill)
 	var hits: Array[Dictionary] = []
@@ -286,6 +310,7 @@ func _skill_buff(skill: Dictionary) -> void:
 ## Ground Slam: hits everything around and stuns it for a moment.
 func _skill_slam(skill: Dictionary) -> void:
 	_slash.play_spin()
+	Burst.spawn(self, Vector2(0, -6), Color(0.72, 0.56, 0.38), 34, 200.0)
 	_shake_camera()
 	_sfx("skill")
 	var base_damage: int = _skill_damage(skill)
@@ -523,6 +548,52 @@ func _shake_camera() -> void:
 	var shake: Tween = create_tween()
 	for offset in [Vector2(6, -4), Vector2(-5, 3), Vector2(3, 2), Vector2.ZERO]:
 		shake.tween_property(_camera, "offset", offset, 0.04)
+
+
+func _make_light() -> void:
+	_light = PointLight2D.new()
+	_light.texture = SkyClock.light_texture()
+	_light.texture_scale = 2.6
+	_light.color = Color(1.0, 0.86, 0.66)
+	_light.position = Vector2(0, -30)
+	_light.enabled = false
+	add_child(_light)
+
+
+## Q12: a see-through, single-colour copy of the warrior drawn over everything,
+## shown while he walks behind a tree.
+func _make_silhouette() -> void:
+	_silhouette = AnimatedSprite2D.new()
+	_silhouette.sprite_frames = _sprite.sprite_frames
+	_silhouette.scale = _sprite.scale
+	_silhouette.offset = _sprite.offset
+	_silhouette.z_index = 20
+	var shader := Shader.new()
+	shader.code = SILHOUETTE_SHADER
+	var flat := ShaderMaterial.new()
+	flat.shader = shader
+	_silhouette.material = flat
+	_silhouette.visible = false
+	add_child(_silhouette)
+
+
+func _update_silhouette(delta: float) -> void:
+	_silhouette_check -= delta
+	if _silhouette_check <= 0.0:
+		_silhouette_check = 0.1
+		_silhouette.visible = not is_dead and _behind_tree()
+	if _silhouette.visible:
+		_silhouette.animation = _sprite.animation
+		_silhouette.frame = _sprite.frame
+		_silhouette.flip_h = _sprite.flip_h
+
+
+func _behind_tree() -> bool:
+	for tree in get_tree().get_nodes_in_group("trees"):
+		var gap: Vector2 = tree.global_position - global_position
+		if gap.y > 0.0 and gap.y < TREE_COVER.y and absf(gap.x) < TREE_COVER.x:
+			return true
+	return false
 
 
 func _facing_for(direction: Vector2) -> String:

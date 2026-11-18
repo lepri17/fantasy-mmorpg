@@ -206,7 +206,8 @@
           ]
         }
       ],
-      "teleport_price": 0
+      "teleport_price": 0,
+      "music": "music_town"
     },
     "field": {
       "name": "Green Meadow",
@@ -262,7 +263,8 @@
           2100,
           1250
         ]
-      }
+      },
+      "music": "music_field"
     },
     "forest": {
       "name": "Mossy Woods",
@@ -597,7 +599,8 @@
           "spawn": "default"
         }
       ],
-      "teleport_price": 40
+      "teleport_price": 40,
+      "music": "music_forest"
     },
     "cellar": {
       "name": "Old Cellar",
@@ -658,6 +661,41 @@
           ],
           "to": "forest",
           "spawn": "east"
+        },
+        {
+          "type": "torch",
+          "pos": [
+            260,
+            150
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1024,
+            150
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1790,
+            150
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            260,
+            1180
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1790,
+            1180
+          ]
         }
       ],
       "dungeon": {
@@ -715,7 +753,9 @@
             640
           ]
         }
-      }
+      },
+      "music": "music_cellar",
+      "indoor": true
     }
   }
 }

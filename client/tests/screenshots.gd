@@ -7,6 +7,7 @@ extends SceneTree
 
 const SaveFile = preload("res://scripts/player/save_file.gd")
 const ItemDb = preload("res://scripts/items/item_db.gd")
+const GameScript = preload("res://scripts/game.gd")
 const SAVE_PATH := "user://screenshots_save.cfg"
 
 var _folder: String = "/tmp/shots"
@@ -19,6 +20,7 @@ func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute(_folder)
 	SaveFile.path = SAVE_PATH
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	GameScript.invasions_enabled = false
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await _frames(30)
@@ -75,6 +77,17 @@ func _initialize() -> void:
 	player.take_damage(99999)
 	await _frames(20)
 	await _shot("10_death")
+	main.change_map("field", "default")
+	await _frames(20)
+	player.revive()
+	GameScript.sky_seconds = 720.0
+	main.update_sky()
+	await _shot("14_night")
+	GameScript.sky_seconds = 1248.0
+	main.update_sky()
+	await _frames(60)
+	await _shot("15_rain")
+	GameScript.sky_seconds = -1.0
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	quit()
 

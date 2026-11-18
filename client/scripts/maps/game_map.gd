@@ -8,6 +8,7 @@ extends Node2D
 const GameData := preload("res://scripts/data/game_data.gd")
 const MapTiles := preload("res://scripts/maps/map_tiles.gd")
 const DungeonRun := preload("res://scripts/maps/dungeon_run.gd")
+const Torch := preload("res://scripts/world/torch.gd")
 const SCENES := {
 	"tree": preload("res://scenes/maps/tree.tscn"),
 	"rock": preload("res://scenes/maps/rock.tscn"),
@@ -75,7 +76,7 @@ func is_safe() -> bool:
 
 
 func _add_object(thing: Dictionary) -> void:
-	var node: Node2D = SCENES[thing["type"]].instantiate()
+	var node: Node2D = Torch.new() if thing["type"] == "torch" else SCENES[thing["type"]].instantiate()
 	node.position = Vector2(thing["pos"][0], thing["pos"][1])
 	match thing["type"]:
 		"monster":

@@ -16,6 +16,7 @@ const MISS_COLOR := Color(0.8, 0.85, 0.95)
 const PICKUP_SCENE := preload("res://scenes/items/pickup.tscn")
 const ItemDb := preload("res://scripts/items/item_db.gd")
 const Projectile := preload("res://scripts/combat/projectile.gd")
+const Burst := preload("res://scripts/combat/burst.gd")
 const CROWN := preload("res://assets/monsters/slime/crown.png")
 const SLIME_SCENE_PATH := "res://scenes/enemies/slime.tscn"
 const BAR_HEIGHT := 56.0
@@ -362,6 +363,7 @@ func _die() -> void:
 	_maybe_drop_gear()
 	if not boss.is_empty():
 		get_tree().call_group("hud", "show_banner", "%s is defeated!" % display_name, "")
+		Burst.spawn(get_parent(), position, Color(1.0, 0.86, 0.4), 60, 280.0)
 	if not respawns:
 		await _wait(1.0)
 		queue_free()

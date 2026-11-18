@@ -5,6 +5,10 @@ extends RefCounted
 ## the test itself (a SceneTree); its _check, _frames and helpers are used.
 
 const GameScript = preload("res://scripts/game.gd")
+const SkyClock = preload("res://scripts/world/sky.gd")
+const TorchScript = preload("res://scripts/world/torch.gd")
+const FloatingText = preload("res://scripts/ui/floating_text.gd")
+const PICKUP_SCENE = preload("res://scenes/items/pickup.tscn")
 const PlayerStats = preload("res://scripts/player/player_stats.gd")
 const SaveFile = preload("res://scripts/player/save_file.gd")
 
@@ -292,6 +296,13 @@ func run(test, main, player, hud) -> void:
 		),
 		"going into the Old Cellar uses one of today's entries"
 	)
+	var torches: int = main.map.get_children().filter(
+		func(node): return node.get_script() == TorchScript
+	).size()
+	t._check(
+		torches == 5 and main.get_node("Daylight").color == SkyClock.INDOOR,
+		"the cellar is dark and lit by five torches"
+	)
 	if run != null:
 		run.wave_delay = 0.05
 		var gold_before_run: int = player.stats.gold
@@ -323,3 +334,63 @@ func run(test, main, player, hud) -> void:
 	t._check(
 		runs_saved.dungeons.runs == player.stats.dungeons.runs, "entries survive saving (version 8)"
 	)
+
+	# --- day and night, rain, music, the minimap, loot magnet, pooling, the silhouette (6D)
+	t._check(
+		(
+			SkyClock.daylight(300.0) == SkyClock.DAY
+			and SkyClock.daylight(720.0).is_equal_approx(SkyClock.NIGHT)
+			and is_equal_approx(SkyClock.darkness(SkyClock.NIGHT), 1.0)
+		),
+		"a 16-minute day: light at the start, night three quarters in"
+	)
+	t._check(
+		SkyClock.raining(1248.0) and not SkyClock.raining(300.0), "rain comes in some cycles only"
+	)
+	GameScript.sky_seconds = 720.0
+	main.update_sky()
+	t._check(
+		main.get_node("Daylight").color.is_equal_approx(SkyClock.NIGHT) and player.get("_light").enabled,
+		"at night the world is darker and the warrior carries a light"
+	)
+	GameScript.sky_seconds = 300.0
+	main.update_sky()
+	t._check(not player.get("_light").enabled, "by day the light is off")
+	var music = main.get_node("Music")
+	t._check(
+		music.stream != null and music.stream.resource_path.ends_with("music_town.wav"),
+		"the town plays its own music"
+	)
+	var dots: Array = hud.get_node("Minimap").markers()
+	t._check(
+		dots.any(func(dot): return dot[1] == Color(1, 1, 1)) and dots.size() > 5,
+		"the minimap shows the warrior, townspeople and portals (%d dots)" % dots.size()
+	)
+	var gold_before_magnet: int = player.stats.gold
+	var coins: Node2D = PICKUP_SCENE.instantiate()
+	coins.set("kind", "gold")
+	coins.set("amount", 5)
+	coins.position = player.position + Vector2(70, 0)
+	main.map.add_child(coins)
+	await t._frames(40)
+	t._check(player.stats.gold == gold_before_magnet + 5, "loot close by drifts to the warrior")
+	FloatingText.spawn(player, "pool", Color.WHITE)
+	await t._frames(60)
+	var pool: Node = main.get_node("TextPool")
+	var waiting: int = pool.get_child_count()
+	FloatingText.spawn(player, "again", Color.WHITE)
+	t._check(
+		waiting > 0 and pool.get_child_count() == waiting - 1,
+		"floating numbers reuse finished labels"
+	)
+	var town_tree: Node2D = t.get_nodes_in_group("trees").filter(
+		func(tree): return tree.global_position.y > 600
+	)[0]
+	player.global_position = town_tree.global_position + Vector2(0, -60)
+	await t._frames(12)
+	t._check(player.get("_silhouette").visible, "behind a tree the warrior shows as a silhouette")
+	player.global_position = main.map.spawn_point("default")
+	await t._frames(12)
+	t._check(not player.get("_silhouette").visible, "in the open the silhouette is gone")
+	player.gain_xp(player.stats.xp_to_next())
+	t._check(not t.get_nodes_in_group("bursts").is_empty(), "a level up sprays particles")

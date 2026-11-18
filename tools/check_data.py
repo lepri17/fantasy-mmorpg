@@ -380,7 +380,7 @@ def check_upgrades(items_data: dict) -> None:
         check_bonus(f"{where} per_plus '{slot}'", bonus)
 
 
-OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc"}
+OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc", "torch"}
 SERVICES = {"shop", "heal", "storage", "teleport", "quests"}
 
 
@@ -457,6 +457,10 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
         if not isinstance(data.get("name"), str):
             error(f"{where}: needs a 'name'")
         need_number(where, data, "teleport_price", 0)
+        if "music" in data and not res_exists(f"res://assets/audio/{data['music']}.wav"):
+            error(f"{where}: music '{data['music']}' has no file in assets/audio")
+        if not isinstance(data.get("indoor", False), bool):
+            error(f"{where}: 'indoor' must be true or false")
         if "ground" in data:
             rows = data["ground"]
             if not rows or any(len(row) != len(rows[0]) for row in rows):

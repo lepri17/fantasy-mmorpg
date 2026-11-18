@@ -5,6 +5,9 @@ extends Area2D
 
 const ItemDb := preload("res://scripts/items/item_db.gd")
 const COIN_TEXTURE := preload("res://assets/items/coin.png")
+## Q7: loot this close to the warrior drifts to him, at this speed.
+const MAGNET_RADIUS := 90.0
+const MAGNET_SPEED := 280.0
 ## Loot blinks for this long before it disappears.
 const BLINK_SECONDS := 5.0
 ## Inventory icons are 64 px; on the ground they are shown at about half size.
@@ -15,6 +18,9 @@ var item_id: String = ""
 var amount: int = 1
 ## For gear: the whole entry (rarity, upgrades, options) that goes into the bag.
 var stack: Dictionary = {}
+## Drifts to a warrior close by (Q7). Off for what the warrior drops himself,
+## so a thrown-away item does not come straight back.
+var magnetic: bool = true
 ## Seconds before it disappears.
 var lifetime: float = 30.0
 ## Seconds before it can be picked up, so a dropped item is not picked straight
@@ -63,6 +69,13 @@ func _process(delta: float) -> void:
 		return
 	var left: float = lifetime - _age
 	visible = left > BLINK_SECONDS or int(left * 8.0) % 2 == 0
+	if magnetic and _age >= pickup_delay:
+		var player: Node2D = get_tree().get_first_node_in_group("player") as Node2D
+		if player != null and not player.get("is_dead"):
+			if global_position.distance_to(player.global_position) < MAGNET_RADIUS:
+				global_position = global_position.move_toward(
+					player.global_position, MAGNET_SPEED * delta
+				)
 	if _waiting_for_delay and _age >= pickup_delay:
 		# Someone may already be standing on it; body_entered will not fire again.
 		_waiting_for_delay = false

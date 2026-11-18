@@ -8,13 +8,25 @@ const GameData := preload("res://scripts/data/game_data.gd")
 const MAP_SCENE := preload("res://scenes/maps/map.tscn")
 const SLIME_SCENE := preload("res://scenes/enemies/slime.tscn")
 const INVADERS := "invaders"
+const SkyClock := preload("res://scripts/world/sky.gd")
+const FloatingText := preload("res://scripts/ui/floating_text.gd")
+const MUSIC_DB := -14.0
+## Rain makes the day a little greyer.
+const RAIN_DIM := Color(0.86, 0.88, 0.94)
 
 ## Off in the smoke test, so the clock cannot start an invasion mid-test.
 static var invasions_enabled: bool = true
+## Seconds since midnight to use for the sky instead of the clock (tests,
+## screenshots), or below 0 for the clock.
+static var sky_seconds: float = -1.0
 
 ## The map node shown now (game_map.gd).
 var map = null
 var _invasion_check: float = 0.0
+var _sky_check: float = 0.0
+var _daylight: CanvasModulate
+var _rain: CPUParticles2D
+var _music: AudioStreamPlayer
 ## The invasion window already used ("YYYY-MM-DD HH:MM"), so it comes once.
 var _invaded_window: String = ""
 
@@ -25,6 +37,11 @@ var _invaded_window: String = ""
 
 func _ready() -> void:
 	add_to_group("game")
+	_build_sky()
+	var pool := Node.new()
+	pool.name = "TextPool"
+	pool.add_to_group(FloatingText.POOL_GROUP)
+	add_child(pool)
 	map = _world.get_node("Map")
 	var saved: String = _player.stats.map_id
 	if saved != "" and saved != map.map_id and _maps().has(saved):
@@ -34,6 +51,10 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_sky_check -= delta
+	if _sky_check <= 0.0:
+		_sky_check = 0.5
+		update_sky()
 	_invasion_check -= delta
 	if not invasions_enabled or _invasion_check > 0.0:
 		return
@@ -117,6 +138,70 @@ func _swap_map(map_id: String, spawn: String) -> void:
 	_arrive(map.spawn_point(spawn))
 
 
+## W8 / G3: tints the world with the time of day (or the dark of a cellar),
+## lights the warrior when it is dark, and lets it rain now and then.
+func update_sky() -> void:
+	var seconds: float = sky_seconds
+	if seconds < 0.0:
+		var now: Dictionary = Time.get_time_dict_from_system()
+		seconds = now["hour"] * 3600.0 + now["minute"] * 60.0 + now["second"]
+	var indoor: bool = _maps()[map.map_id].get("indoor", false)
+	var raining: bool = not indoor and SkyClock.raining(seconds)
+	var light: Color = SkyClock.INDOOR if indoor else SkyClock.daylight(seconds)
+	_daylight.color = light * RAIN_DIM if raining else light
+	_player.call("set_light", SkyClock.darkness(_daylight.color))
+	_rain.emitting = raining
+
+
+## G4: the map's music, looping. Changing maps fades the new track in.
+func _play_music(track: String) -> void:
+	if track == "":
+		_music.stop()
+		return
+	var path: String = "res://assets/audio/%s.wav" % track
+	if _music.playing and _music.stream != null and _music.stream.resource_path == path:
+		return
+	_music.stream = load(path)
+	_music.volume_db = -40.0
+	_music.play()
+	create_tween().tween_property(_music, "volume_db", MUSIC_DB, 0.8)
+
+
+func _build_sky() -> void:
+	_daylight = CanvasModulate.new()
+	_daylight.name = "Daylight"
+	add_child(_daylight)
+	_rain = CPUParticles2D.new()
+	_rain.name = "Rain"
+	_rain.amount = 160
+	_rain.lifetime = 1.0
+	_rain.local_coords = false
+	_rain.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	_rain.emission_rect_extents = Vector2(760, 20)
+	_rain.position = Vector2(0, -460)
+	_rain.direction = Vector2(-0.2, 1)
+	_rain.spread = 2.0
+	_rain.initial_velocity_min = 700.0
+	_rain.initial_velocity_max = 820.0
+	_rain.gravity = Vector2.ZERO
+	var streak := Image.create(2, 16, false, Image.FORMAT_RGBA8)
+	streak.fill(Color(1, 1, 1, 1))
+	_rain.texture = ImageTexture.create_from_image(streak)
+	_rain.particle_flag_align_y = true
+	_rain.scale_amount_min = 0.8
+	_rain.scale_amount_max = 1.2
+	_rain.color = Color(0.75, 0.85, 1.0, 0.5)
+	_rain.emitting = false
+	_player.add_child(_rain)
+	_music = AudioStreamPlayer.new()
+	_music.name = "Music"
+	_music.volume_db = MUSIC_DB
+	_music.finished.connect(_music.play)
+	add_child(_music)
+
+
 func _arrive(point: Vector2) -> void:
 	_player.call("enter_map", map.map_id, point, map.spawn_point("default"), map.bounds())
+	_play_music(_maps()[map.map_id].get("music", ""))
+	update_sky()
 	_hud.call("show_banner", map.display_name(), _maps()[map.map_id].get("levels", ""))

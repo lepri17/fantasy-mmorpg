@@ -59,6 +59,7 @@ const STATUS_COLOR := Color(0.75, 0.9, 1.0)
 const ACHIEVEMENT_COLOR := Color(1.0, 0.72, 0.95)
 const QUEST_COLOR := Color(0.6, 0.9, 1.0)
 const QuestLog = preload("res://scripts/player/quest_log.gd")
+const Burst = preload("res://scripts/combat/burst.gd")
 
 ## Walking speed in pixels per second.
 @export var move_speed: float = 220.0
@@ -128,6 +129,7 @@ func gain_xp(amount: int) -> void:
 		FloatingText.spawn(self, "LEVEL UP!", LEVEL_COLOR, 120.0, 32)
 		_sfx("levelup")
 		_say("Level up! You are now level %d." % stats.level, LEVEL_COLOR)
+		Burst.spawn(self, Vector2(0, -40), LEVEL_COLOR, 40, 220.0)
 		_say("%d stat points to spend: open STATS (C)." % stats.free_points(), LEVEL_COLOR)
 		_announce(stats.record.check(stats.level))
 	_progress_changed()
@@ -151,6 +153,7 @@ func add_item(item_id: String, count: int = 1) -> bool:
 		return false
 	var text: String = _item_name(item_id) + (" x%d" % count if count > 1 else "")
 	FloatingText.spawn(self, "+" + text, Color(1.0, 0.6, 0.65), 100.0, 22)
+	Burst.spawn(self, Vector2(0, -20), Color(1.0, 0.9, 0.7), 10, 90.0)
 	_sfx("coin")
 	_say("Picked up %s." % text)
 	_progress_changed()
@@ -592,6 +595,7 @@ func _drop_on_ground(stack: Dictionary) -> void:
 		pickup.set("stack", stack)
 	pickup.set("lifetime", DROPPED_ITEM_SECONDS)
 	pickup.set("pickup_delay", 1.0)
+	pickup.set("magnetic", false)
 	pickup.position = position + FACING_VECTORS[facing] * DROP_DISTANCE
 	var current_map: Node = get_tree().get_first_node_in_group("maps")
 	(current_map if current_map != null else get_parent()).call_deferred("add_child", pickup)
