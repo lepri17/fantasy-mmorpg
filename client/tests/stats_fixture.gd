@@ -52,7 +52,14 @@ func _initialize() -> void:
 				Leveling.kill_xp(37, pair[0], pair[1]),
 			]
 		)
-	var out := {"heroes": heroes, "xp_for_level": curve, "gap": gaps, "bag": _bag(), "loot": _loot()}
+	var out := {
+		"heroes": heroes,
+		"xp_for_level": curve,
+		"gap": gaps,
+		"bag": _bag(),
+		"loot": _loot(),
+		"upgrades": _upgrades(),
+	}
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	var path: String = args[0] if not args.is_empty() else "user://stats.json"
 	var file := FileAccess.open(path, FileAccess.WRITE)
@@ -147,3 +154,20 @@ func _loot() -> Dictionary:
 				var span: Vector2 = ItemDb.option_range(stat, item_id, rarity)
 				ranges.append([item_id, rarity, stat, span.x, span.y])
 	return {"pools": pools, "ranges": ranges}
+
+
+## M5 upgrades: the next + of pieces of different levels, pluses and misses,
+## and what the pluses add.
+func _upgrades() -> Array:
+	var rows: Array = []
+	for item_id in ["training_sword", "crimson_plate", "elderwood_blade", "elderwood_band"]:
+		for plus in [0, 3, 9, 14, 15]:
+			for misses in [0, 2]:
+				var stack: Dictionary = ItemDb.gear(item_id, "common", plus)
+				if misses > 0:
+					stack["misses"] = misses
+				var row := {"stack": stack, "step": ItemDb.upgrade_step(stack)}
+				for stat in ["attack", "max_hp", "defense"]:
+					row[stat] = ItemDb.stat_of(stack, stat)
+				rows.append(row)
+	return rows

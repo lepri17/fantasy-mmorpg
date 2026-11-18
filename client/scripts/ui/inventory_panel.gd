@@ -10,6 +10,8 @@ extends PanelContainer
 
 signal close_requested
 signal item_action(method: String, argument: Variant)
+## UPGRADE was pressed: the HUD opens the upgrade window for this piece (M5).
+signal upgrade_requested(place: String, key: Variant)
 
 const ItemDb := preload("res://scripts/items/item_db.gd")
 const CombatRules := preload("res://scripts/combat/combat_rules.gd")
@@ -220,32 +222,19 @@ func _set_text(item: Dictionary) -> String:
 	)
 
 
-## "Next +4: Ember Stone, 100% (have 2)"
+## "Next +4: 240 gold, 85%"
 func _upgrade_text(stack: Dictionary) -> String:
 	var step: Dictionary = ItemDb.upgrade_step(stack)
 	if step.is_empty():
 		return "Fully upgraded."
-	var stones: int = _stats.count_of(step["stone"]) if _stats != null else 0
 	return (
-		"Next +%d: %s, %d%% (have %d)"
-		% [
-			int(stack.get("plus", 0)) + 1,
-			ItemDb.items[step["stone"]]["name"],
-			roundi(float(step["chance"]) * 100.0),
-			stones,
-		]
+		"Next +%d: %d gold, %d%%"
+		% [int(step["plus"]), int(step["cost"]), roundi(float(step["chance"]) * 100.0)]
 	)
 
 
 static func _amount(stat: String, value: float) -> String:
-	var sign_text: String = "+" if value >= 0.0 else "-"
-	if stat in ItemDb.PERCENT_STATS:
-		var percent: float = absf(value) * 100.0
-		var shown: String = (
-			str(roundi(percent)) if is_equal_approx(percent, roundf(percent)) else "%.1f" % percent
-		)
-		return "%s%s%%" % [sign_text, shown]
-	return "%s%d" % [sign_text, roundi(absf(value))]
+	return UiStyle.amount(stat, value)
 
 
 ## [button text, player method] for the selected item. Text "" = no such button.
@@ -267,8 +256,7 @@ func _on_primary_pressed() -> void:
 
 func _on_upgrade_pressed() -> void:
 	if _selected != null and _selected.item_id != "":
-		var method: String = "upgrade_equipped" if _selected.place == "gear" else "upgrade_bag_item"
-		item_action.emit(method, _selected.key)
+		upgrade_requested.emit(_selected.place, _selected.key)
 
 
 func _on_drop_pressed() -> void:

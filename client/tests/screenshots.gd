@@ -282,6 +282,13 @@ func _boss_loot(player, hud) -> void:
 			index = i
 	inventory.call("_on_slot_tapped", inventory.bag_slots[index])
 	await _shot("34_elderwood_bag")
+	# M5: the upgrade window beside the bag, for the blade at +5 after one miss.
+	player.stats.bag[index]["plus"] = 5
+	player.stats.bag[index]["misses"] = 1
+	inventory.refresh(player.stats, null)
+	inventory.call("_on_slot_tapped", inventory.bag_slots[index])
+	inventory.call("_on_upgrade_pressed")
+	await _shot("35_upgrade")
 	hud.toggle_inventory()
 	player.stats.bag.remove_at(index)
 	player.stats.equipment = saved_gear

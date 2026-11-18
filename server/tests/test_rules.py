@@ -59,7 +59,8 @@ def test_bag_equip_and_save_round_trip():
     hero = Stats("warrior")
     hero.add_stack(items.gear("training_sword", "rare", 3, {"attack": 2}))
     assert hero.equip(1) and hero.equipment["weapon"]["plus"] == 3
-    assert hero.attack_damage() == 10 + 2 + 3 * 2
+    per_plus = items.upgrades()["per_plus"]["weapon"]["attack"] * items.upgrade_growth("training_sword")
+    assert hero.attack_damage() == roundi(10 + 2 + 3 * per_plus)
     copy = Stats()
     copy.from_dict(hero.to_dict())
     assert copy.to_dict() == hero.to_dict()
@@ -140,6 +141,21 @@ def test_same_numbers_as_godot():
         mine = items.option_range(stat, item_id, rarity)
         assert math.isclose(mine[0], low, abs_tol=1e-6) and math.isclose(mine[1], high, abs_tol=1e-6), (
             item_id, rarity, stat, mine, (low, high))
+    for row in fixture["upgrades"]:  # M5: cost, chance and stone of the next +, and what a + adds
+        stack = row["stack"]
+        mine = items.upgrade_step(stack)
+        assert set(mine) == set(row["step"]), stack
+        for key, value in row["step"].items():
+            assert mine[key] == value if isinstance(value, str) else math.isclose(mine[key], value, abs_tol=1e-9), (
+                stack, key)
+        for stat in ("attack", "max_hp", "defense"):
+            assert math.isclose(items.stat_of(stack, stat), row[stat], abs_tol=1e-9), (stack, stat)
+    hero = Stats("warrior")
+    hero.gold = 100000
+    piece = items.gear("crimson_plate", "common", 9)
+    assert hero.upgrade(piece, 0.99) == "same" and piece["misses"] == 1 and piece["plus"] == 9
+    assert items.clean_stack(piece) == piece  # misses are kept in a save
+    assert hero.upgrade(piece, 0.0) == "up" and "misses" not in piece and piece["plus"] == 10
     for hero_level, monster_level, factor, xp in fixture["gap"]:
         hero_level, monster_level = int(hero_level), int(monster_level)
         assert math.isclose(level_gap_factor(hero_level, monster_level), factor, abs_tol=1e-9)

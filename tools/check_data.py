@@ -536,22 +536,33 @@ def check_sets(items_data: dict) -> None:
 
 
 def check_upgrades(items_data: dict) -> None:
-    """+1..+15 upgrades: the steps, their stones and what each level adds."""
+    """M5 upgrades for gold: the cost, the chance of each +, the bonus a miss
+    adds, the stones that add more, and what each + adds."""
     upgrades = items_data.get("upgrades", {})
     where = "items.json upgrades"
     max_plus = need_number(where, upgrades, "max_plus", 1, 99)
     items = items_data.get("items", {})
+    gold = upgrades.get("gold", {})
+    need_number(where + " gold", gold, "base", 1, 100000)
+    need_number(where + " gold", gold, "growth", 1.0, 3.0)
+    need_number(where + " gold", gold, "per_item_level", 0.0, 5.0)
+    chances = upgrades.get("chances")
+    if not (isinstance(chances, list) and len(chances) == max_plus
+            and all(is_number(c) and 0.01 <= c <= 1.0 for c in chances)):
+        error(f"{where}: 'chances' must list {max_plus} chances from 0.01 to 1, one for each +")
+    elif any(later > earlier for earlier, later in zip(chances, chances[1:])):
+        error(f"{where}: 'chances' must not grow with the +")
+    need_number(where, upgrades, "miss_bonus", 0.0, 1.0)
+    need_number(where, upgrades, "stone_bonus", 0.0, 1.0)
+    need_number(where, upgrades, "per_plus_growth", 0.0, 1.0)
     last = 0
-    for step in upgrades.get("steps", []):
-        up_to = need_number(where, step, "up_to", last + 1, max_plus)
+    for rule in upgrades.get("stones", []):
+        up_to = need_number(where + " stones", rule, "up_to", last + 1, max_plus)
         last = up_to if up_to is not None else last
-        if not items.get(step.get("stone"), {}).get("upgrade_stone"):
-            error(f"{where}: stone '{step.get('stone')}' is not an item with \"upgrade_stone\"")
-        need_number(where, step, "chance", 0.01, 1.0)
-        if step.get("on_fail", "stay") not in ("stay", "down"):
-            error(f"{where}: on_fail must be 'stay' or 'down'")
+        if not items.get(rule.get("stone"), {}).get("upgrade_stone"):
+            error(f"{where}: stone '{rule.get('stone')}' is not an item with \"upgrade_stone\"")
     if max_plus is not None and last != max_plus:
-        error(f"{where}: the last step must reach max_plus ({max_plus})")
+        error(f"{where}: the last stone rule must reach max_plus ({max_plus})")
     for slot, bonus in upgrades.get("per_plus", {}).items():
         if slot not in items_data.get("gear_slots", []):
             error(f"{where}: per_plus slot '{slot}' is not a gear slot")

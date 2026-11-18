@@ -133,3 +133,15 @@ static func frame_style() -> StyleBoxFlat:
 	box.set_corner_radius_all(14)
 	box.set_content_margin_all(14)
 	return box
+
+
+## "+3" for whole numbers, "+2.5%" for fractions (PERCENT_BONUSES).
+static func amount(stat: String, value: float) -> String:
+	var sign_text: String = "+" if value >= 0.0 else "-"
+	if stat in PERCENT_BONUSES:
+		var percent: float = absf(value) * 100.0
+		var shown: String = (
+			str(roundi(percent)) if is_equal_approx(percent, roundf(percent)) else "%.1f" % percent
+		)
+		return "%s%s%%" % [sign_text, shown]
+	return "%s%d" % [sign_text, roundi(absf(value))]

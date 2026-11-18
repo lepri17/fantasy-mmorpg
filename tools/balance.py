@@ -316,26 +316,87 @@ def gear_section() -> str:
         f"## ציוד (נגד {monster['name']})", "",
         "\"הכי טוב\": בכל משבצת, הפריט הרגיל (Common) שהגיבור יכול ללבוש ברמה הזאת ונותן הכי הרבה "
         "DPS כפול שניות חיים. כולל ציוד שדרוג המקצוע ברמה 10 וציוד העץ הקדום (רק משלל) ברמה 12. "
-        "\"+6\": אותו ציוד משודרג לכל +6 (אבני Ember, בלי סיכון). "
+        "\"+6\": אותו ציוד משודרג לכל +6 (בזהב). "
         "נקודות הסטטים כולן בסטט הראשי.", "",
         md_table(["מקצוע", "רמה", "ציוד", "התקפה", "HP", "הגנה", "DPS", "DPS מול ההתחלה", "שנ' בחיים", "פריטים"],
                  rows), "",
     ])
 
 
+def expected_tries(chance: float, bonus: float) -> float:
+    """Average tries for one +, when each miss adds `bonus` to the next try."""
+    tries, all_missed, misses = 0.0, 1.0, 0
+    while all_missed > 1e-9:
+        tries += all_missed  # this try happens when every one before it missed
+        all_missed *= 1.0 - min(1.0, chance + misses * bonus)
+        misses += 1
+    return tries
+
+
+def hunt_per_hour(level: int) -> tuple:
+    """(monster, kills an hour, its loot a kill) for a warrior of this level,
+    hunting the monster of the pace table; elites take longer to kill."""
+    monsters = table("monsters")
+    elite = combat.settings()["elite"]
+    stats = hero("warrior", level)
+    monster = monsters[best_hunt(stats)[0]]
+    elite_hp = 1.0 + float(elite["chance"]) * (float(elite["hp"]) - 1.0)
+    seconds = monster["max_hp"] * elite_hp / basic_dps(stats, monster) + BETWEEN_FIGHTS
+    return monster, 3600 / seconds, loot_per_kill(monster)
+
+
 def upgrade_section() -> str:
     upgrades = item_db.upgrades()
-    rows = []
-    for plus in range(int(upgrades.get("max_plus", 0))):
-        step = item_db.upgrade_step({"id": "training_sword", "plus": plus})
-        chance = float(step["chance"])
-        rows.append([f"+{plus} -> +{plus + 1}", item_db.items()[step["stone"]]["name"], f"{chance * 100:.0f}%",
-                     f"{1 / chance:.1f}", "יורד רמה" if step.get("on_fail") == "down" else "נשאר"])
+    bonus = float(upgrades["miss_bonus"])
+    sample = {}  # a piece of each level
+    for item_id in item_db.items():
+        if item_db.is_gear(item_id):
+            sample.setdefault(item_db.required_level(item_id), item_id)
+    levels = (1, 6, 12)
+    rows, total, reached = [], dict.fromkeys(levels, 0.0), {}
+    for plus in range(int(upgrades["max_plus"])):
+        chance = float(item_db.upgrade_step({"id": sample[1], "plus": plus})["chance"])
+        tries = expected_tries(chance, bonus)
+        cells = [f"+{plus} -> +{plus + 1}", f"{chance * 100:.0f}%", f"{tries:.2f}"]
+        for level in levels:
+            cost = item_db.upgrade_cost({"id": sample[level], "plus": plus})
+            total[level] += cost * tries
+            reached[(level, plus + 1)] = total[level]
+            cells.append(f"{cost} ({total[level]:,.0f})")
+        rows.append(cells)
+    hour_rows = []
+    for level in (6, 12):
+        _monster, kills, loot = hunt_per_hour(level)
+        per_hour = loot["gold"] * kills
+        cells = [level, f"{per_hour:,.0f}"]
+        for plus in (3, 6, 10, 15):
+            cells.append(f"{reached[(level, plus)] / per_hour * 60:.0f}")
+        hour_rows.append(cells)
+    monster = table("monsters")[GEAR_TARGET]
+    power_rows = []
+    for class_id in ("warrior", "archer"):
+        for level in (6, 12):
+            base = basic_dps(best_gear(class_id, level), monster)
+            for plus in (3, 6, 10, 15):
+                stats = best_gear(class_id, level, plus)
+                power_rows.append([class_name(class_id), level, f"+{plus}", stats.attack_damage(), stats.max_hp(),
+                                   stats.defense(), f"{basic_dps(stats, monster) / base * 100 - 100:+.0f}%"])
     per_plus = upgrades.get("per_plus", {})
-    bonus_rows = [[slot, ", ".join(f"+{v} {k}" for k, v in bonus.items())] for slot, bonus in per_plus.items()]
+    bonus_rows = [[slot, ", ".join(f"+{v:g} {k}" for k, v in values.items())] for slot, values in per_plus.items()]
+    gold = upgrades["gold"]
     return "\n".join([
-        "## שדרוג ציוד", "", md_table(["שלב", "אבן", "סיכוי", "אבנים בממוצע", "בכישלון"], rows), "",
-        md_table(["משבצת", "תוספת לכל +1"], bonus_rows), "",
+        "## שדרוג ציוד (בזהב)", "",
+        f"מחיר: {gold['base']} x (1 + {gold['per_item_level']} x (רמת הפריט - 1)) x {gold['growth']} בחזקת ה-+, "
+        f"מעוגל ל-5. בכישלון הפריט נשאר באותו +, ולניסיון הבא שלו נוסף {bonus * 100:.0f}% (`miss_bonus`). "
+        f"שום דבר לא נשבר. אבן מוסיפה {float(upgrades['stone_bonus']) * 100:.0f}%. "
+        "\"ניסיונות\": ממוצע הניסיונות לכל +, בלי אבנים. בסוגריים: הזהב הממוצע עד ה-+ הזה מ-+0.", "",
+        md_table(["שלב", "סיכוי", "ניסיונות", "פריט רמה 1", "פריט רמה 6", "פריט רמה 12"], rows), "",
+        "### דקות ציד בשביל השדרוג (פריט אחד, הזהב של לוחם באותה רמה)", "",
+        md_table(["רמה", "זהב בשעה", "עד +3", "עד +6", "עד +10", "עד +15"], hour_rows), "",
+        "### כמה כוח נותן השדרוג (כל הציוד הכי טוב, מול אותו ציוד ב-+0)", "",
+        f"כל + מוסיף לפי המשבצת, כפול (1 + {upgrades['per_plus_growth']} x (רמת הפריט - 1)).", "",
+        md_table(["מקצוע", "רמה", "+", "התקפה", "HP", "הגנה", "DPS"], power_rows), "",
+        md_table(["משבצת", "תוספת לכל + (פריט רמה 1)"], bonus_rows), "",
     ])
 
 

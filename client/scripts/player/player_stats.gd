@@ -354,20 +354,27 @@ func remove_equipped(slot: String) -> Dictionary:
 	return worn
 
 
-## Tries to raise a piece (an entry in the bag or worn) by one level, using one
-## stone from the bag. roll is 0..1 (randf()). Returns "up", "same" (failed,
-## level kept), "down" (failed, one level lost), or "" if it cannot be tried.
-func upgrade(stack: Dictionary, roll: float) -> String:
+## M5: tries to raise a piece (an entry in the bag or worn) by one level for
+## gold (ItemDb.upgrade_step), with one stone from the bag for a better chance
+## if use_stone. roll is 0..1 (randf()). Returns "up", "same" (missed: the
+## level is kept and the piece's next try is likelier), or "" if it cannot be
+## tried (at the top, too little gold, or no such stone).
+func upgrade(stack: Dictionary, roll: float, use_stone: bool = false) -> String:
 	var step: Dictionary = ItemDb.upgrade_step(stack)
-	if step.is_empty() or count_of(step["stone"]) <= 0:
+	if step.is_empty() or gold < int(step["cost"]):
 		return ""
-	_set_count(step["stone"], count_of(step["stone"]) - 1)
-	if roll < float(step["chance"]):
+	var chance: float = float(step["chance"])
+	if use_stone:
+		if step["stone"] == "" or count_of(step["stone"]) <= 0:
+			return ""
+		_set_count(step["stone"], count_of(step["stone"]) - 1)
+		chance += float(step["stone_bonus"])
+	gold -= int(step["cost"])
+	if roll < chance:
 		stack["plus"] = int(stack.get("plus", 0)) + 1
+		stack.erase("misses")
 		return "up"
-	if step.get("on_fail", "stay") == "down" and int(stack.get("plus", 0)) > 0:
-		stack["plus"] = int(stack["plus"]) - 1
-		return "down"
+	stack["misses"] = mini(int(stack.get("misses", 0)) + 1, ItemDb.MAX_MISSES)
 	return "same"
 
 

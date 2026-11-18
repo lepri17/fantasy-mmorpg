@@ -18,6 +18,8 @@ const GameData := preload("res://scripts/data/game_data.gd")
 const PERCENT_STATS := [
 	"crit_chance", "crit_damage", "evasion", "accuracy", "attack_speed", "skill_damage"
 ]
+## M5: misses kept on a piece (each one adds to its next try's chance).
+const MAX_MISSES := 20
 
 ## Item id -> its fields.
 static var items: Dictionary = GameData.table("items")["items"]
@@ -167,20 +169,58 @@ static func stat_of(stack: Dictionary, stat: String) -> float:
 	var plus: int = int(stack.get("plus", 0))
 	if plus > 0:
 		var per_plus: Dictionary = upgrades.get("per_plus", {}).get(item.get("slot", ""), {})
-		total += plus * float(per_plus.get(stat, 0.0))
+		total += plus * float(per_plus.get(stat, 0.0)) * upgrade_growth(stack["id"])
 	return total
 
 
-## The upgrade rule for the next level of a piece ({"up_to", "stone", "chance",
-## "on_fail"}), or {} when it cannot go higher.
+## M5: each + is worth more on higher-level gear: 1 + "per_plus_growth" x
+## (the piece's level - 1).
+static func upgrade_growth(item_id: String) -> float:
+	return 1.0 + float(upgrades.get("per_plus_growth", 0.0)) * (required_level(item_id) - 1)
+
+
+## M5: the next + of a piece, or {} at the top: {"plus": the new level,
+## "cost": gold, "chance": 0..1 with the bonus its misses earned, "misses",
+## "stone": the stone that can be added for "stone_bonus" more ("" when the
+## chance is already sure)}. A miss keeps the level; nothing breaks.
 static func upgrade_step(stack: Dictionary) -> Dictionary:
 	var plus: int = int(stack.get("plus", 0))
 	if not is_gear(stack.get("id", "")) or plus >= int(upgrades.get("max_plus", 0)):
 		return {}
-	for step in upgrades.get("steps", []):
-		if plus < int(step["up_to"]):
-			return step
-	return {}
+	var chances: Array = upgrades.get("chances", [1.0])
+	var misses: int = int(stack.get("misses", 0))
+	var chance: float = minf(
+		1.0,
+		(
+			float(chances[mini(plus, chances.size() - 1)])
+			+ misses * float(upgrades.get("miss_bonus", 0.0))
+		)
+	)
+	var stone: String = ""
+	if chance < 1.0:
+		for rule in upgrades.get("stones", []):
+			if plus < int(rule["up_to"]):
+				stone = rule["stone"]
+				break
+	return {
+		"plus": plus + 1,
+		"cost": upgrade_cost(stack),
+		"chance": chance,
+		"misses": misses,
+		"stone": stone,
+		"stone_bonus": float(upgrades.get("stone_bonus", 0.0)),
+	}
+
+
+## Gold for a piece's next +: "base" x (1 + "per_item_level" x (its level - 1))
+## x "growth" to the power of its +, rounded to 5.
+static func upgrade_cost(stack: Dictionary) -> int:
+	var rule: Dictionary = upgrades.get("gold", {})
+	var level_part: float = (
+		1.0 + float(rule.get("per_item_level", 0.0)) * (required_level(stack["id"]) - 1)
+	)
+	var growth: float = pow(float(rule.get("growth", 1.0)), int(stack.get("plus", 0)))
+	return roundi(float(rule.get("base", 0.0)) * level_part * growth / 5.0) * 5
 
 
 ## "Training Sword +3"; "Rare Training Sword +3" with_rarity, for gear above common.
@@ -225,7 +265,11 @@ static func clean_stack(stack) -> Dictionary:
 				else:
 					options[stat] = roundi(float(saved[stat]))
 	var plus: int = clampi(int(stack.get("plus", 0)), 0, int(upgrades.get("max_plus", 15)))
-	return gear(item_id, rarity, plus, options)
+	var entry: Dictionary = gear(item_id, rarity, plus, options)
+	var misses: int = clampi(int(stack.get("misses", 0)), 0, MAX_MISSES)
+	if misses > 0:
+		entry["misses"] = misses  # M5: upgrade tries missed since its last +
+	return entry
 
 
 static func _sort_key(stack: Dictionary, class_id: String) -> int:

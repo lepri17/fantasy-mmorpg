@@ -338,16 +338,16 @@ func use_from_bag(index: int) -> void:
 		_read_rebirth_scroll(index)
 
 
-## Upgrades the gear in a bag slot with a stone from the bag.
-func upgrade_bag_item(index: int) -> void:
+## Upgrades the gear in a bag slot for gold (M5), with a stone if use_stone.
+func upgrade_bag_item(index: int, use_stone: bool = false) -> void:
 	if index >= 0 and index < stats.bag.size():
-		_upgrade(stats.bag[index])
+		_upgrade(stats.bag[index], use_stone)
 
 
-## Upgrades worn gear (by gear slot, such as "weapon") with a stone from the bag.
-func upgrade_equipped(slot: String) -> void:
+## Upgrades worn gear (by gear slot, such as "weapon") for gold, with a stone if use_stone.
+func upgrade_equipped(slot: String, use_stone: bool = false) -> void:
 	if stats.equipment.has(slot):
-		_upgrade(stats.equipment[slot])
+		_upgrade(stats.equipment[slot], use_stone)
 
 
 ## Off -> 30% -> 50% -> 70% -> off: below that much HP a red potion is drunk by itself.
@@ -608,27 +608,33 @@ func _read_book(index: int, item: Dictionary) -> void:
 		_progress_changed()
 
 
-func _upgrade(stack: Dictionary) -> void:
+## M5: an upgrade for gold (ItemDb.upgrade_step), with a stone if use_stone
+## and there is one. A miss keeps the level and makes the next try likelier.
+func _upgrade(stack: Dictionary, use_stone: bool = false) -> void:
 	if is_dead:
 		return
 	var step: Dictionary = ItemDb.upgrade_step(stack)
 	if step.is_empty():
 		_say("%s cannot go any higher." % ItemDb.display_name(stack), WARNING_COLOR)
 		return
-	if stats.count_of(step["stone"]) <= 0:
-		_say("You need a %s." % _item_name(step["stone"]), WARNING_COLOR)
+	if stats.gold < int(step["cost"]):
+		_say("You need %d gold." % int(step["cost"]), WARNING_COLOR)
 		return
-	var item_name: String = _item_name(stack["id"])
-	match stats.upgrade(stack, randf()):
+	use_stone = use_stone and step["stone"] != "" and stats.count_of(step["stone"]) > 0
+	match stats.upgrade(stack, randf(), use_stone):
 		"up":
 			FloatingText.spawn(self, "+%d!" % int(stack["plus"]), LEVEL_COLOR, 120.0, 30)
 			_sfx("levelup")
 			_say("Success! %s." % ItemDb.display_name(stack), LEVEL_COLOR)
-		"down":
-			_sfx("hurt")
-			_say("It failed, and %s fell to +%d." % [item_name, stack["plus"]], WARNING_COLOR)
-		_:
-			_say("It failed. %s stays at +%d." % [item_name, stack["plus"]], WARNING_COLOR)
+		"same":
+			var next_try: int = roundi(float(ItemDb.upgrade_step(stack)["chance"]) * 100.0)
+			_say(
+				(
+					"It missed. %s stays at +%d. Next try: %d%%."
+					% [_item_name(stack["id"]), int(stack.get("plus", 0)), next_try]
+				),
+				WARNING_COLOR
+			)
 	_limits_changed()
 	_progress_changed()
 

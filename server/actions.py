@@ -3,7 +3,7 @@ the same rules and messages as client/scripts/player/player_base.gd."""
 
 from __future__ import annotations
 
-from .data import table
+from .data import roundi, table
 from .rules import items as item_db
 from .rules.stats import class_info, class_name, today, with_article
 from .world.maps import town
@@ -149,35 +149,35 @@ def upgrade(session, message) -> None:
     hero = session.hero
     index = _index(message, len(hero.stats.bag))
     if index is not None:
-        _upgrade(hero, hero.stats.bag[index])
+        _upgrade(hero, hero.stats.bag[index], message.get("stone") is True)
 
 
 def upgrade_worn(session, message) -> None:
     hero = session.hero
     if message.get("slot") in hero.stats.equipment:
-        _upgrade(hero, hero.stats.equipment[message["slot"]])
+        _upgrade(hero, hero.stats.equipment[message["slot"]], message.get("stone") is True)
 
 
-def _upgrade(hero, stack: dict) -> None:
+def _upgrade(hero, stack: dict, use_stone: bool = False) -> None:
+    """For gold, with a stone if asked and there is one (player_base.gd _upgrade)."""
     if hero.dead or hero.trade is not None:
         return
     step = item_db.upgrade_step(stack)
     if not step:
         hero.say(f"{item_db.display_name(stack)} cannot go any higher.", "warn")
         return
-    if hero.stats.count_of(step["stone"]) <= 0:
-        hero.say(f"You need a {item_db.items()[step['stone']]['name']}.", "warn")
+    if hero.stats.gold < int(step["cost"]):
+        hero.say(f"You need {step['cost']} gold.", "warn")
         return
-    name = item_db.items()[stack["id"]]["name"]
-    result = hero.stats.upgrade(stack, hero.game.rng.random())
+    use_stone = use_stone and step["stone"] != "" and hero.stats.count_of(step["stone"]) > 0
+    result = hero.stats.upgrade(stack, hero.game.rng.random(), use_stone)
     if result == "up":
         hero.fx("upgrade", f"+{stack['plus']}!", "level")
         hero.say(f"Success! {item_db.display_name(stack)}.", "level")
-    elif result == "down":
-        hero.fx("fail")
-        hero.say(f"It failed, and {name} fell to +{stack['plus']}.", "warn")
-    else:
-        hero.say(f"It failed. {name} stays at +{stack['plus']}.", "warn")
+    elif result == "same":
+        name = item_db.items()[stack["id"]]["name"]
+        next_try = roundi(float(item_db.upgrade_step(stack)["chance"]) * 100.0)
+        hero.say(f"It missed. {name} stays at +{stack['plus']}. Next try: {next_try}%.", "warn")
     _gear_changed(hero)
 
 

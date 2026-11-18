@@ -489,18 +489,24 @@ class Stats:
     def remove_equipped(self, slot: str) -> dict:
         return self.equipment.pop(slot, {}) if isinstance(slot, str) else {}
 
-    def upgrade(self, stack: dict, roll: float) -> str:
-        """"up", "same" (failed, level kept), "down" (failed, a level lost), or ""."""
+    def upgrade(self, stack: dict, roll: float, use_stone: bool = False) -> str:
+        """For gold, with a stone if use_stone: "up", "same" (missed: the level
+        is kept and the next try is likelier), or "" (player_stats.gd upgrade)."""
         step = item_db.upgrade_step(stack)
-        if not step or self.count_of(step["stone"]) <= 0:
+        if not step or self.gold < int(step["cost"]):
             return ""
-        self._set_count(step["stone"], self.count_of(step["stone"]) - 1)
-        if roll < float(step["chance"]):
+        chance = float(step["chance"])
+        if use_stone:
+            if step["stone"] == "" or self.count_of(step["stone"]) <= 0:
+                return ""
+            self._set_count(step["stone"], self.count_of(step["stone"]) - 1)
+            chance += float(step["stone_bonus"])
+        self.gold -= int(step["cost"])
+        if roll < chance:
             stack["plus"] = _int(stack.get("plus", 0)) + 1
+            stack.pop("misses", None)
             return "up"
-        if step.get("on_fail", "stay") == "down" and _int(stack.get("plus", 0)) > 0:
-            stack["plus"] = _int(stack["plus"]) - 1
-            return "down"
+        stack["misses"] = min(_int(stack.get("misses", 0)) + 1, item_db.MAX_MISSES)
         return "same"
 
     def remove_items(self, item_id: str, count: int) -> bool:

@@ -247,7 +247,7 @@
       "upgrade_stone": true,
       "icon": "res://assets/items/icons/ember_stone.png",
       "world_icon": "res://assets/items/ember_stone.png",
-      "text": "Upgrades gear from +0 to +6. It never fails.",
+      "text": "Adds 15% to an upgrade's chance, up to +9.",
       "price": 300
     },
     "moon_stone": {
@@ -256,7 +256,7 @@
       "upgrade_stone": true,
       "icon": "res://assets/items/icons/moon_stone.png",
       "world_icon": "res://assets/items/moon_stone.png",
-      "text": "Upgrades gear from +6 to +15. It can fail, and above +9 a failure costs a level.",
+      "text": "Adds 15% to an upgrade's chance, from +10 to +15.",
       "price": 1200
     },
     "verdant_headband": {
@@ -761,48 +761,63 @@
   },
   "upgrades": {
     "max_plus": 15,
-    "steps": [
-      {
-        "up_to": 6,
-        "stone": "ember_stone",
-        "chance": 1.0,
-        "on_fail": "stay"
-      },
+    "gold": {
+      "base": 30,
+      "growth": 1.32,
+      "per_item_level": 0.2
+    },
+    "chances": [
+      1.0,
+      1.0,
+      1.0,
+      0.95,
+      0.9,
+      0.85,
+      0.75,
+      0.7,
+      0.65,
+      0.55,
+      0.5,
+      0.45,
+      0.4,
+      0.35,
+      0.3
+    ],
+    "miss_bonus": 0.1,
+    "stones": [
       {
         "up_to": 9,
-        "stone": "moon_stone",
-        "chance": 0.6,
-        "on_fail": "stay"
+        "stone": "ember_stone"
       },
       {
         "up_to": 15,
-        "stone": "moon_stone",
-        "chance": 0.35,
-        "on_fail": "down"
+        "stone": "moon_stone"
       }
     ],
+    "stone_bonus": 0.15,
     "per_plus": {
       "head": {
-        "defense": 1,
+        "defense": 0.5,
         "max_hp": 2
       },
       "weapon": {
-        "attack": 2
+        "attack": 1.25
       },
       "gloves": {
-        "attack": 1
+        "attack": 0.4
       },
       "cape": {
-        "max_hp": 3
+        "max_hp": 2.5
       },
       "armor": {
-        "defense": 1,
-        "max_hp": 4
+        "defense": 0.6,
+        "max_hp": 3
       },
       "boots": {
-        "max_hp": 3
+        "max_hp": 2.5
       }
-    }
+    },
+    "per_plus_growth": 0.08
   },
   "sets": {
     "verdant": {

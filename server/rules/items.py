@@ -11,6 +11,7 @@ from ..data import roundi, snapped, table
 
 # Bonuses written as fractions (0.03 = 3%); the rest are whole numbers.
 PERCENT_STATS = ("crit_chance", "crit_damage", "evasion", "accuracy", "attack_speed", "skill_damage")
+MAX_MISSES = 20  # misses kept on a piece (item_db.gd MAX_MISSES)
 
 
 def data() -> dict:
@@ -169,19 +170,43 @@ def stat_of(stack: dict, stat: str) -> float:
     plus = int(stack.get("plus", 0))
     if plus > 0:
         per_plus = upgrades().get("per_plus", {}).get(item.get("slot", ""), {})
-        total += plus * float(per_plus.get(stat, 0.0))
+        total += plus * float(per_plus.get(stat, 0.0)) * upgrade_growth(stack["id"])
     return total
 
 
+def upgrade_growth(item_id: str) -> float:
+    """Each + is worth more on higher-level gear (item_db.gd upgrade_growth)."""
+    return 1.0 + float(upgrades().get("per_plus_growth", 0.0)) * (required_level(item_id) - 1)
+
+
 def upgrade_step(stack: dict) -> dict:
-    """The rule for the next level of a piece, or {} when it cannot go higher."""
+    """The next + of a piece, or {} at the top: plus, cost (gold), chance (with
+    the bonus its misses earned), misses, the stone that can be added ("" when
+    the chance is sure) and stone_bonus (item_db.gd upgrade_step)."""
     plus = int(stack.get("plus", 0))
     if not is_gear(stack.get("id", "")) or plus >= int(upgrades().get("max_plus", 0)):
         return {}
-    for step in upgrades().get("steps", []):
-        if plus < int(step["up_to"]):
-            return step
-    return {}
+    chances = upgrades().get("chances", [1.0])
+    misses = int(stack.get("misses", 0))
+    chance = min(1.0, float(chances[min(plus, len(chances) - 1)]) + misses * float(upgrades().get("miss_bonus", 0.0)))
+    stone = ""
+    if chance < 1.0:
+        for rule in upgrades().get("stones", []):
+            if plus < int(rule["up_to"]):
+                stone = rule["stone"]
+                break
+    return {
+        "plus": plus + 1, "cost": upgrade_cost(stack), "chance": chance, "misses": misses,
+        "stone": stone, "stone_bonus": float(upgrades().get("stone_bonus", 0.0)),
+    }
+
+
+def upgrade_cost(stack: dict) -> int:
+    """Gold for a piece's next +, rounded to 5 (item_db.gd upgrade_cost)."""
+    rule = upgrades().get("gold", {})
+    level_part = 1.0 + float(rule.get("per_item_level", 0.0)) * (required_level(stack["id"]) - 1)
+    growth = math.pow(float(rule.get("growth", 1.0)), int(stack.get("plus", 0)))
+    return roundi(float(rule.get("base", 0.0)) * level_part * growth / 5.0) * 5
 
 
 def display_name(stack: dict, with_rarity: bool = False) -> str:
@@ -212,7 +237,11 @@ def clean_stack(stack) -> dict:
             if stat in random_options():
                 options[stat] = float(value) if stat in PERCENT_STATS else roundi(float(value))
     plus = min(max(_int(stack.get("plus", 0)), 0), int(upgrades().get("max_plus", 15)))
-    return gear(item_id, rarity, plus, options)
+    entry = gear(item_id, rarity, plus, options)
+    misses = min(max(_int(stack.get("misses", 0)), 0), MAX_MISSES)
+    if misses > 0:
+        entry["misses"] = misses  # upgrade tries missed since its last +
+    return entry
 
 
 def _int(value) -> int:

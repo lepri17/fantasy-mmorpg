@@ -24,6 +24,7 @@ const SmokeProgress = preload("res://tests/smoke_progress.gd")
 const SmokeGear = preload("res://tests/smoke_gear.gd")
 const SmokeForest = preload("res://tests/smoke_forest.gd")
 const SmokeLoot = preload("res://tests/smoke_loot.gd")
+const SmokeUpgrade = preload("res://tests/smoke_upgrade.gd")
 const Settings = preload("res://scripts/settings.gd")
 const SETTINGS_PATH := "user://smoke_test_settings.cfg"
 
@@ -409,59 +410,7 @@ func _run() -> void:
 		"a version 3 save turns its gear into common pieces"
 	)
 
-	# --- upgrades with stones (+1..+15), the Blue Potion, auto potion
-	var practice: Dictionary = ItemDb.gear("training_sword")
-	var smith = PlayerStats.new()
-	_check(smith.upgrade(practice, 0.0) == "", "no upgrade without a stone")
-	smith.add_item("ember_stone", 6)
-	for _i in 6:
-		smith.upgrade(practice, 0.99)
-	_check(
-		int(practice["plus"]) == 6 and smith.count_of("ember_stone") == 0,
-		"six Ember Stones take a sword to +6 and never fail"
-	)
-	_check(
-		is_equal_approx(ItemDb.stat_of(practice, "attack"), 16.0), "each + adds 2 attack to a sword"
-	)
-	_check(ItemDb.upgrade_step(practice)["stone"] == "moon_stone", "after +6 it takes Moon Stones")
-	smith.add_item("moon_stone", 2)
-	_check(
-		smith.upgrade(practice, 0.99) == "same" and int(practice["plus"]) == 6,
-		"a failed Moon Stone keeps +6"
-	)
-	_check(
-		smith.upgrade(practice, 0.0) == "up" and int(practice["plus"]) == 7, "a lucky one makes +7"
-	)
-	practice["plus"] = 12
-	smith.add_item("moon_stone", 1)
-	_check(
-		smith.upgrade(practice, 0.99) == "down" and int(practice["plus"]) == 11,
-		"above +9 a failure costs a level"
-	)
-	practice["plus"] = 15
-	_check(
-		ItemDb.upgrade_step(practice).is_empty()
-		and ItemDb.display_name(practice) == "Training Sword +15",
-		"+15 is the top, and the name shows it"
-	)
-	while player.stats.bag.size() >= 12:
-		player.stats.bag.pop_back()
-	var attack_before_upgrade: int = player.stats.attack_damage()
-	player.add_item("ember_stone", 2)
-	inventory.refresh(player.stats, null)
-	inventory.call("_on_slot_tapped", inventory.gear_slots["weapon"])
-	_check(
-		inventory.get("_upgrade_button").visible
-		and "Ember Stone, 100%" in inventory.get("_info_label").text,
-		"the details show the next upgrade and its stone"
-	)
-	inventory.call("_on_upgrade_pressed")
-	await _frames(1)
-	_check(
-		int(player.stats.equipment["weapon"]["plus"]) == 1
-		and player.stats.attack_damage() == attack_before_upgrade + 2,
-		"UPGRADE on the worn sword makes it +1 and adds 2 attack"
-	)
+	# --- the Blue Potion, auto potion (upgrades: smoke_upgrade.gd)
 	player.stamina = 10.0
 	player.add_item("blue_potion")
 	player.use_from_bag(_bag_index(player, "blue_potion"))
@@ -778,6 +727,7 @@ func _run() -> void:
 	await SmokeGear.new().run(self, main, player, hud)
 	await SmokeForest.new().run(self, main, player, hud)
 	await SmokeLoot.new().run(self, main, player, hud)
+	await SmokeUpgrade.new().run(self, main, player, hud)
 
 	_remove_test_save()
 	root.remove_child(main)

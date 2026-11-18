@@ -199,7 +199,7 @@ EXP לפי פער הרמות (רמת הגיבור פחות רמת המפלצת):
 
 ## ציוד (נגד Blue Slime)
 
-"הכי טוב": בכל משבצת, הפריט הרגיל (Common) שהגיבור יכול ללבוש ברמה הזאת ונותן הכי הרבה DPS כפול שניות חיים. כולל ציוד שדרוג המקצוע ברמה 10 וציוד העץ הקדום (רק משלל) ברמה 12. "+6": אותו ציוד משודרג לכל +6 (אבני Ember, בלי סיכון). נקודות הסטטים כולן בסטט הראשי.
+"הכי טוב": בכל משבצת, הפריט הרגיל (Common) שהגיבור יכול ללבוש ברמה הזאת ונותן הכי הרבה DPS כפול שניות חיים. כולל ציוד שדרוג המקצוע ברמה 10 וציוד העץ הקדום (רק משלל) ברמה 12. "+6": אותו ציוד משודרג לכל +6 (בזהב). נקודות הסטטים כולן בסטט הראשי.
 
 | מקצוע | רמה | ציוד | התקפה | HP | הגנה | DPS | DPS מול ההתחלה | שנ' בחיים | פריטים |
 |---|---|---|---|---|---|---|---|---|---|
@@ -207,64 +207,96 @@ EXP לפי פער הרמות (רמת הגיבור פחות רמת המפלצת):
 | Warrior | 1 | הכי טוב | 10 | 100 | 4 | 21 | +0% | 9 | Red Headband, Training Sword, Leather Gloves, Red Cape, Blue Plate Armor, Leather Boots |
 | Warrior | 6 | התחלה | 40 | 175 | 4 | 100 | +0% | 16 | Red Headband, Training Sword, Leather Gloves, Red Cape, Blue Plate Armor, Leather Boots |
 | Warrior | 6 | הכי טוב | 52 | 215 | 8 | 132 | +32% | 29 | Verdant Headband, Crimson Sword, Verdant Gloves, Verdant Cape, Crimson Plate, Verdant Boots |
-| Warrior | 6 | הכי טוב +6 | 70 | 287 | 20 | 179 | +79% | 108 | Verdant Headband, Crimson Sword, Verdant Gloves, Verdant Cape, Crimson Plate, Verdant Boots |
+| Warrior | 6 | הכי טוב +6 | 65 | 289 | 17 | 166 | +66% | 105 | Verdant Headband, Crimson Sword, Verdant Gloves, Verdant Cape, Crimson Plate, Verdant Boots |
 | Warrior | 10 | התחלה | 64 | 235 | 4 | 164 | +0% | 21 | Red Headband, Training Sword, Leather Gloves, Red Cape, Blue Plate Armor, Leather Boots |
 | Warrior | 10 | הכי טוב | 76 | 293 | 8 | 207 | +26% | 36 | Verdant Headband, Crimson Sword, Verdant Gloves, Champion Cape, Crimson Plate, Swift Boots |
-| Warrior | 10 | הכי טוב +6 | 94 | 365 | 20 | 257 | +57% | 127 | Verdant Headband, Crimson Sword, Verdant Gloves, Champion Cape, Crimson Plate, Swift Boots |
+| Warrior | 10 | הכי טוב +6 | 90 | 377 | 17 | 242 | +48% | 131 | Verdant Headband, Crimson Sword, Hawk Gloves, Champion Cape, Crimson Plate, Verdant Boots |
 | Warrior | 12 | התחלה | 76 | 265 | 4 | 195 | +0% | 24 | Red Headband, Training Sword, Leather Gloves, Red Cape, Blue Plate Armor, Leather Boots |
 | Warrior | 12 | הכי טוב | 91 | 349 | 13 | 279 | +43% | 84 | Elderwood Band, Elderwood Blade, Elderwood Gloves, Elderwood Cape, Elderwood Plate, Elderwood Boots |
-| Warrior | 12 | הכי טוב +6 | 109 | 421 | 25 | 335 | +71% | 151 | Elderwood Band, Elderwood Blade, Elderwood Gloves, Elderwood Cape, Elderwood Plate, Elderwood Boots |
+| Warrior | 12 | הכי טוב +6 | 110 | 462 | 25 | 338 | +73% | 166 | Elderwood Band, Elderwood Blade, Elderwood Gloves, Elderwood Cape, Elderwood Plate, Elderwood Boots |
 | Archer | 1 | התחלה | 9 | 80 | 2 | 17 | +0% | 7 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots |
 | Archer | 1 | הכי טוב | 9 | 85 | 2 | 17 | +0% | 7 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots, Red Cape |
 | Archer | 6 | התחלה | 31 | 145 | 2 | 91 | +0% | 12 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots |
 | Archer | 6 | הכי טוב | 35 | 188 | 3 | 105 | +16% | 17 | Green Hood, Crimson Bow, Hawk Gloves, Shadow Vest, Verdant Boots, Verdant Cape |
-| Archer | 6 | הכי טוב +6 | 53 | 260 | 15 | 162 | +78% | 85 | Green Hood, Crimson Bow, Hawk Gloves, Shadow Vest, Verdant Boots, Verdant Cape |
+| Archer | 6 | הכי טוב +6 | 49 | 260 | 11 | 150 | +64% | 51 | Green Hood, Crimson Bow, Hawk Gloves, Shadow Vest, Verdant Boots, Verdant Cape |
 | Archer | 10 | התחלה | 49 | 197 | 2 | 170 | +0% | 16 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots |
 | Archer | 10 | הכי טוב | 53 | 236 | 3 | 213 | +25% | 21 | Azure Hood, Crimson Bow, Hawk Gloves, Shadow Vest, Swift Boots, Duelist Cape |
-| Archer | 10 | הכי טוב +6 | 71 | 308 | 15 | 288 | +69% | 97 | Azure Hood, Crimson Bow, Hawk Gloves, Shadow Vest, Swift Boots, Duelist Cape |
+| Archer | 10 | הכי טוב +6 | 67 | 325 | 13 | 271 | +59% | 81 | Azure Hood, Crimson Bow, Hawk Gloves, Shadow Vest, Swift Boots, Duelist Cape |
 | Archer | 12 | התחלה | 58 | 223 | 2 | 217 | +0% | 18 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots |
 | Archer | 12 | הכי טוב | 71 | 311 | 7 | 322 | +49% | 40 | Elderwood Hood, Elderwood Bow, Elderwood Gloves, Elderwood Vest, Elderwood Boots, Elderwood Cape |
-| Archer | 12 | הכי טוב +6 | 89 | 383 | 19 | 405 | +87% | 152 | Elderwood Hood, Elderwood Bow, Elderwood Gloves, Elderwood Vest, Elderwood Boots, Elderwood Cape |
+| Archer | 12 | הכי טוב +6 | 90 | 424 | 19 | 410 | +89% | 168 | Elderwood Hood, Elderwood Bow, Elderwood Gloves, Elderwood Vest, Elderwood Boots, Elderwood Cape |
 | Mage | 1 | התחלה | 9 | 70 | 1 | 14 | +0% | 5 | Sage Hat, Oak Staff, Violet Robe, Leather Boots |
 | Mage | 1 | הכי טוב | 10 | 75 | 1 | 16 | +16% | 6 | Sage Hat, Oak Staff, Violet Robe, Leather Boots, Leather Gloves, Red Cape |
 | Mage | 6 | התחלה | 39 | 125 | 1 | 72 | +0% | 9 | Sage Hat, Oak Staff, Violet Robe, Leather Boots |
 | Mage | 6 | הכי טוב | 44 | 168 | 3 | 87 | +20% | 14 | Sage Hat, Ember Staff, Midnight Robe, Verdant Boots, Hawk Gloves, Verdant Cape |
-| Mage | 6 | הכי טוב +6 | 62 | 240 | 15 | 124 | +71% | 73 | Sage Hat, Ember Staff, Midnight Robe, Verdant Boots, Hawk Gloves, Verdant Cape |
+| Mage | 6 | הכי טוב +6 | 58 | 240 | 11 | 115 | +60% | 44 | Sage Hat, Ember Staff, Midnight Robe, Verdant Boots, Hawk Gloves, Verdant Cape |
 | Mage | 10 | התחלה | 63 | 169 | 1 | 119 | +0% | 12 | Sage Hat, Oak Staff, Violet Robe, Leather Boots |
 | Mage | 10 | הכי טוב | 68 | 209 | 3 | 148 | +24% | 17 | Starlit Hat, Ember Staff, Midnight Robe, Swift Boots, Hawk Gloves, Duelist Cape |
-| Mage | 10 | הכי טוב +6 | 86 | 281 | 15 | 188 | +58% | 81 | Starlit Hat, Ember Staff, Midnight Robe, Swift Boots, Hawk Gloves, Duelist Cape |
+| Mage | 10 | הכי טוב +6 | 82 | 298 | 13 | 179 | +50% | 68 | Starlit Hat, Ember Staff, Midnight Robe, Swift Boots, Hawk Gloves, Duelist Cape |
 | Mage | 12 | התחלה | 75 | 191 | 1 | 142 | +0% | 14 | Sage Hat, Oak Staff, Violet Robe, Leather Boots |
 | Mage | 12 | הכי טוב | 89 | 277 | 7 | 204 | +44% | 32 | Elderwood Hat, Elderwood Staff, Elderwood Robe, Elderwood Boots, Elderwood Gloves, Elderwood Cape |
-| Mage | 12 | הכי טוב +6 | 107 | 349 | 19 | 246 | +73% | 124 | Elderwood Hat, Elderwood Staff, Elderwood Robe, Elderwood Boots, Elderwood Gloves, Elderwood Cape |
+| Mage | 12 | הכי טוב +6 | 108 | 390 | 19 | 249 | +75% | 139 | Elderwood Hat, Elderwood Staff, Elderwood Robe, Elderwood Boots, Elderwood Gloves, Elderwood Cape |
 
-## שדרוג ציוד
+## שדרוג ציוד (בזהב)
 
-| שלב | אבן | סיכוי | אבנים בממוצע | בכישלון |
-|---|---|---|---|---|
-| +0 -> +1 | Ember Stone | 100% | 1.0 | נשאר |
-| +1 -> +2 | Ember Stone | 100% | 1.0 | נשאר |
-| +2 -> +3 | Ember Stone | 100% | 1.0 | נשאר |
-| +3 -> +4 | Ember Stone | 100% | 1.0 | נשאר |
-| +4 -> +5 | Ember Stone | 100% | 1.0 | נשאר |
-| +5 -> +6 | Ember Stone | 100% | 1.0 | נשאר |
-| +6 -> +7 | Moon Stone | 60% | 1.7 | נשאר |
-| +7 -> +8 | Moon Stone | 60% | 1.7 | נשאר |
-| +8 -> +9 | Moon Stone | 60% | 1.7 | נשאר |
-| +9 -> +10 | Moon Stone | 35% | 2.9 | יורד רמה |
-| +10 -> +11 | Moon Stone | 35% | 2.9 | יורד רמה |
-| +11 -> +12 | Moon Stone | 35% | 2.9 | יורד רמה |
-| +12 -> +13 | Moon Stone | 35% | 2.9 | יורד רמה |
-| +13 -> +14 | Moon Stone | 35% | 2.9 | יורד רמה |
-| +14 -> +15 | Moon Stone | 35% | 2.9 | יורד רמה |
+מחיר: 30 x (1 + 0.2 x (רמת הפריט - 1)) x 1.32 בחזקת ה-+, מעוגל ל-5. בכישלון הפריט נשאר באותו +, ולניסיון הבא שלו נוסף 10% (`miss_bonus`). שום דבר לא נשבר. אבן מוסיפה 15%. "ניסיונות": ממוצע הניסיונות לכל +, בלי אבנים. בסוגריים: הזהב הממוצע עד ה-+ הזה מ-+0.
 
-| משבצת | תוספת לכל +1 |
+| שלב | סיכוי | ניסיונות | פריט רמה 1 | פריט רמה 6 | פריט רמה 12 |
+|---|---|---|---|---|---|
+| +0 -> +1 | 100% | 1.00 | 30 (30) | 60 (60) | 95 (95) |
+| +1 -> +2 | 100% | 1.00 | 40 (70) | 80 (140) | 125 (220) |
+| +2 -> +3 | 100% | 1.00 | 50 (120) | 105 (245) | 165 (385) |
+| +3 -> +4 | 95% | 1.05 | 70 (194) | 140 (392) | 220 (616) |
+| +4 -> +5 | 90% | 1.10 | 90 (292) | 180 (590) | 290 (935) |
+| +5 -> +6 | 85% | 1.16 | 120 (431) | 240 (868) | 385 (1,381) |
+| +6 -> +7 | 75% | 1.29 | 160 (638) | 315 (1,274) | 510 (2,038) |
+| +7 -> +8 | 70% | 1.37 | 210 (925) | 420 (1,848) | 670 (2,953) |
+| +8 -> +9 | 65% | 1.45 | 275 (1,324) | 555 (2,653) | 885 (4,238) |
+| +9 -> +10 | 55% | 1.65 | 365 (1,927) | 730 (3,860) | 1170 (6,172) |
+| +10 -> +11 | 50% | 1.77 | 480 (2,778) | 965 (5,571) | 1540 (8,903) |
+| +11 -> +12 | 45% | 1.91 | 635 (3,991) | 1270 (7,996) | 2035 (12,788) |
+| +12 -> +13 | 40% | 2.06 | 840 (5,724) | 1680 (11,463) | 2685 (18,329) |
+| +13 -> +14 | 35% | 2.24 | 1110 (8,212) | 2215 (16,427) | 3545 (26,274) |
+| +14 -> +15 | 30% | 2.44 | 1465 (11,793) | 2925 (23,578) | 4680 (37,715) |
+
+### דקות ציד בשביל השדרוג (פריט אחד, הזהב של לוחם באותה רמה)
+
+| רמה | זהב בשעה | עד +3 | עד +6 | עד +10 | עד +15 |
+|---|---|---|---|---|---|
+| 6 | 6,659 | 2 | 8 | 35 | 212 |
+| 12 | 10,784 | 2 | 8 | 34 | 210 |
+
+### כמה כוח נותן השדרוג (כל הציוד הכי טוב, מול אותו ציוד ב-+0)
+
+כל + מוסיף לפי המשבצת, כפול (1 + 0.08 x (רמת הפריט - 1)).
+
+| מקצוע | רמה | + | התקפה | HP | הגנה | DPS |
+|---|---|---|---|---|---|---|
+| Warrior | 6 | +3 | 59 | 252 | 12 | +14% |
+| Warrior | 6 | +6 | 65 | 289 | 17 | +26% |
+| Warrior | 6 | +10 | 74 | 338 | 22 | +44% |
+| Warrior | 6 | +15 | 85 | 400 | 29 | +66% |
+| Warrior | 12 | +3 | 100 | 405 | 19 | +10% |
+| Warrior | 12 | +6 | 110 | 462 | 25 | +21% |
+| Warrior | 12 | +10 | 122 | 537 | 34 | +35% |
+| Warrior | 12 | +15 | 138 | 631 | 44 | +53% |
+| Archer | 6 | +3 | 42 | 224 | 7 | +21% |
+| Archer | 6 | +6 | 49 | 260 | 11 | +42% |
+| Archer | 6 | +10 | 58 | 308 | 16 | +69% |
+| Archer | 6 | +15 | 69 | 368 | 23 | +102% |
+| Archer | 12 | +3 | 80 | 367 | 13 | +13% |
+| Archer | 12 | +6 | 90 | 424 | 19 | +27% |
+| Archer | 12 | +10 | 102 | 499 | 28 | +45% |
+| Archer | 12 | +15 | 118 | 593 | 38 | +68% |
+
+| משבצת | תוספת לכל + (פריט רמה 1) |
 |---|---|
-| head | +1 defense, +2 max_hp |
-| weapon | +2 attack |
-| gloves | +1 attack |
-| cape | +3 max_hp |
-| armor | +1 defense, +4 max_hp |
-| boots | +3 max_hp |
+| head | +0.5 defense, +2 max_hp |
+| weapon | +1.25 attack |
+| gloves | +0.4 attack |
+| cape | +2.5 max_hp |
+| armor | +0.6 defense, +3 max_hp |
+| boots | +2.5 max_hp |
 
 ## כלכלה
 

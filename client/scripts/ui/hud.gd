@@ -2,6 +2,7 @@ extends CanvasLayer
 ## Connects the HUD widgets to the player. Only shows state, decides nothing:
 ## requests from the inventory are passed on to the player.
 
+const UpgradePanel := preload("res://scripts/ui/upgrade_panel.gd")
 const ACTION_INVENTORY := "inventory"
 const ACTION_CHARACTER := "character"
 const ACTION_TALK := "talk"
@@ -69,6 +70,7 @@ var _dialog
 var _shop
 var _storage
 var _talk_button: Button
+var _upgrade: Control = null
 var _tracker: Label
 var _minimap: Control
 var _boss_bar: Control
@@ -105,6 +107,7 @@ func _ready() -> void:
 	_stats_button.pressed.connect(toggle_character)
 	_inventory.connect("close_requested", toggle_inventory)
 	_inventory.connect("item_action", _on_item_action)
+	_inventory.connect("upgrade_requested", _open_upgrade)
 	_character.connect("close_requested", toggle_character)
 	_character.connect("request", _on_character_request)
 	_player = get_tree().get_first_node_in_group("player")
@@ -193,6 +196,8 @@ func toggle_character() -> void:
 func _show_window(window: Control, open: bool) -> void:
 	for each in _windows():
 		each.visible = open and each == window
+	if _upgrade != null and not (open and window == _inventory):
+		_upgrade.hide()  # the upgrade window goes with the bag
 	get_tree().paused = open and window == _menu
 	_refresh_windows()
 	get_tree().call_group(ACTION_BUTTONS_GROUP, "set_visible", not open)
@@ -369,6 +374,8 @@ func _refresh_windows() -> void:
 	var stats = _player.get("stats")
 	if _inventory.visible:
 		_inventory.refresh(stats, _player.get("look_texture"))
+	if _upgrade != null and _upgrade.visible:
+		_upgrade.refresh(stats)
 	if _character.visible:
 		_character.refresh(stats)
 	if _shop.visible:
@@ -377,9 +384,16 @@ func _refresh_windows() -> void:
 		_storage.refresh(stats)
 
 
+## M5: UPGRADE in the bag opens the upgrade window for that piece.
+func _open_upgrade(place: String, key: Variant) -> void:
+	if _player != null:
+		_upgrade.open(_player.get("stats"), place, key)
+
+
+## The argument is one value, or an Array of them (an upgrade: [key, use_stone]).
 func _on_item_action(method: String, argument: Variant) -> void:
 	if _player != null and method in ITEM_ACTIONS:
-		_player.call(method, argument)
+		_player.callv(method, argument if argument is Array else [argument])
 
 
 func _on_character_request(method: String, argument: Variant) -> void:
@@ -502,6 +516,14 @@ func _build_town_windows() -> void:
 	_dialog = NpcDialog.new()
 	_dialog.name = "NpcDialog"
 	_place(_dialog, Control.PRESET_CENTER_BOTTOM, Rect2(-360, -340, 720, 320))
+	_upgrade = UpgradePanel.new()
+	_upgrade.name = "Upgrade"
+	# Left of the bag; it grows to fit what it shows.
+	_place(_upgrade, Control.PRESET_TOP_RIGHT, Rect2(-746, 150, 380, 330))
+	_upgrade.hide()
+	_upgrade.connect("close_requested", _upgrade.hide)
+	_upgrade.connect("item_action", _on_item_action)
+	add_child(_upgrade)
 	_shop = ShopPanel.new()
 	_shop.name = "Shop"
 	_place(_shop, Control.PRESET_TOP_RIGHT, Rect2(-396, 100, 380, 600))
