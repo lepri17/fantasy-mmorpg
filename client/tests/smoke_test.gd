@@ -326,7 +326,7 @@ func _run() -> void:
 	inventory.call("_on_slot_tapped", inventory.bag_slots[sharp_index])
 	var details: String = inventory.get("_info_label").text
 	_check(
-		"Compared with your Training Sword" in details and "+7 Attack (+3)" in details,
+		"vs Training Sword" in details and "+7 ATK (+3)" in details,
 		"the details compare it with the worn sword (%s)" % details.replace("\n", " / ")
 	)
 	player.equip_from_bag(sharp_index)
@@ -474,7 +474,7 @@ func _run() -> void:
 	inventory.refresh(player.stats, null)
 	inventory.call("_on_slot_tapped", inventory.bag_slots[player.stats.bag.size() - 1])
 	_check(
-		"Verdant Set (0/4 worn)" in inventory.get("_info_label").text,
+		"Verdant Set 0/4" in inventory.get("_info_label").text,
 		"the details name the set and how much of it is worn"
 	)
 

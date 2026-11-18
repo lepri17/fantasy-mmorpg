@@ -126,7 +126,7 @@ func _show_details() -> void:
 		var worn: Dictionary = {}
 		if _selected.place == "bag" and _stats != null:
 			worn = _stats.equipment.get(item["slot"], {})
-		text = _gear_text(stack, worn) + " " + text + _set_text(item) + "\n" + _upgrade_text(stack)
+		text = _gear_text(stack, worn) + _set_text(item) + "\n" + _upgrade_text(stack)
 		name_color = ItemDb.rarity_color(stack)
 	_name_label.text = ItemDb.display_name(stack, true)
 	_name_label.add_theme_color_override("font_color", name_color)
@@ -137,8 +137,8 @@ func _show_details() -> void:
 	_drop_button.show()
 
 
-## "+6 Attack (+2). +3% Crit (+3%)." For gear in the bag, each bonus also says
-## how it compares with the piece worn in that slot now (I7).
+## "vs Training Sword: +6 ATK (+2), +3% CRIT (+3%)". For gear in the bag, each
+## bonus also says how it compares with the piece worn in that slot now (I7).
 func _gear_text(stack: Dictionary, worn: Dictionary) -> String:
 	var parts := PackedStringArray()
 	for stat in STAT_NAMES:
@@ -146,18 +146,18 @@ func _gear_text(stack: Dictionary, worn: Dictionary) -> String:
 		var worn_value: float = 0.0 if worn.is_empty() else ItemDb.stat_of(worn, stat)
 		if is_zero_approx(value) and is_zero_approx(worn_value):
 			continue
-		var line: String = "%s %s" % [_amount(stat, value), STAT_NAMES[stat]]
+		var line: String = "%s %s" % [_amount(stat, value), UiStyle.SHORT_NAMES[stat]]
 		if not worn.is_empty():
 			var diff: float = value - worn_value
 			line += " (=)" if is_zero_approx(diff) else " (%s)" % _amount(stat, diff)
 		parts.append(line)
-	var text: String = (". ".join(parts) + ".") if not parts.is_empty() else ""
+	var text: String = ", ".join(parts)
 	if not worn.is_empty():
-		text = "Compared with your %s:\n%s" % [ItemDb.display_name(worn), text]
+		text = "vs %s: %s" % [ItemDb.display_name(worn), text]
 	return text
 
 
-## " Verdant Set (2/4 worn): 2 = +15 Max HP; 4 = +3 Attack, +3% Evasion."
+## "\nVerdant Set 2/4: 2 = +15 HP; 4 = +3 ATK, +3% EVA"
 func _set_text(item: Dictionary) -> String:
 	var set_id: String = item.get("set", "")
 	if set_id == "" or not ItemDb.sets.has(set_id):
@@ -166,21 +166,21 @@ func _set_text(item: Dictionary) -> String:
 	var steps := PackedStringArray()
 	var bonuses: Dictionary = ItemDb.sets[set_id]["bonuses"]
 	for needed in bonuses:
-		steps.append("%s = %s" % [needed, UiStyle.bonus_text(bonuses[needed])])
+		steps.append("%s = %s" % [needed, UiStyle.bonus_text(bonuses[needed], true)])
 	return (
-		" %s (%d/%d worn): %s."
+		"\n%s %d/%d: %s"
 		% [ItemDb.sets[set_id]["name"], worn, ItemDb.set_size(set_id), "; ".join(steps)]
 	)
 
 
-## "Next: +4 with an Ember Stone, 100% (you have 2)."
+## "Next +4: Ember Stone, 100% (have 2)"
 func _upgrade_text(stack: Dictionary) -> String:
 	var step: Dictionary = ItemDb.upgrade_step(stack)
 	if step.is_empty():
 		return "Fully upgraded."
 	var stones: int = _stats.count_of(step["stone"]) if _stats != null else 0
 	return (
-		"Next: +%d with a %s, %d%% (you have %d)."
+		"Next +%d: %s, %d%% (have %d)"
 		% [
 			int(stack.get("plus", 0)) + 1,
 			ItemDb.items[step["stone"]]["name"],
@@ -311,15 +311,23 @@ func _bag_grid() -> Control:
 	return grid
 
 
+## The tapped item's name and details. The details scroll inside a fixed
+## height, so a long text never pushes the buttons out of the window.
 func _info_box() -> Control:
 	var box := VBoxContainer.new()
-	box.custom_minimum_size = Vector2(0, 44)
+	box.add_theme_constant_override("separation", 2)
 	_name_label = _label("", 17, Color.WHITE)
-	_info_label = _label("", 14, Color(0.85, 0.85, 0.9))
+	_info_label = _label("", 13, Color(0.85, 0.85, 0.9))
 	_info_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_info_label.custom_minimum_size = Vector2(280, 0)
+	_info_label.custom_minimum_size = Vector2(286, 0)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size = Vector2(0, 54)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_info_label)
 	box.add_child(_name_label)
-	box.add_child(_info_label)
+	box.add_child(scroll)
+	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	return box
 
 

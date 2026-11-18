@@ -13,15 +13,24 @@ const BONUS_NAMES := {
 	"evasion": "Evasion",
 	"skill_damage": "Skill damage",
 }
+const SHORT_NAMES := {
+	"attack": "ATK",
+	"max_hp": "HP",
+	"defense": "DEF",
+	"max_stamina": "STA",
+	"crit_chance": "CRIT",
+	"evasion": "EVA",
+	"skill_damage": "SKILL",
+}
 const PERCENT_BONUSES := ["crit_chance", "evasion", "skill_damage"]
 
 
-## "+1 Attack, +2% Crit", or "No bonus".
-static func bonus_text(bonus: Dictionary) -> String:
+## "+1 Attack, +2% Crit" ("+1 ATK, +2% CRIT" when short), or "No bonus".
+static func bonus_text(bonus: Dictionary, short: bool = false) -> String:
 	var parts := PackedStringArray()
 	for stat in bonus:
 		var value: float = float(bonus[stat])
-		var stat_name: String = BONUS_NAMES.get(stat, stat)
+		var stat_name: String = (SHORT_NAMES if short else BONUS_NAMES).get(stat, stat)
 		if stat in PERCENT_BONUSES:
 			parts.append("+%s%% %s" % [number(value * 100.0), stat_name])
 		else:
