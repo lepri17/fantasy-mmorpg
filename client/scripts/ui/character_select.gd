@@ -8,6 +8,7 @@ const ClassDb := preload("res://scripts/player/class_db.gd")
 const HeroLook := preload("res://scripts/player/hero_look.gd")
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
 const GameData := preload("res://scripts/data/game_data.gd")
+const Language := preload("res://scripts/i18n/language.gd")
 const MAIN_SCENE := "res://scenes/main.tscn"
 ## The hero sheets: cell size, and the idle frames in the first row (facing down).
 const CELL := 128
@@ -33,6 +34,7 @@ var _cards: HBoxContainer
 var _name_row: HBoxContainer
 var _name_edit: LineEdit
 var _back_button: Button
+var _language_button: Button
 ## The idle frames shown on the cards; they move on together.
 var _previews: Array[AtlasTexture] = []
 var _idle_time: float = 0.0
@@ -41,6 +43,7 @@ var _delete_armed: int = 0
 
 
 func _ready() -> void:
+	Language.setup(get_tree())
 	SaveFile.adopt_old_save()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	resized.connect(queue_redraw)
@@ -148,10 +151,30 @@ func _build() -> void:
 	_cards.alignment = BoxContainer.ALIGNMENT_CENTER
 	_cards.add_theme_constant_override("separation", 24)
 	column.add_child(_cards)
+	_language_button = UiStyle.button("", BROWN, Vector2(150, 52))
+	_language_button.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_language_button.offset_left = -190.0
+	_language_button.offset_top = 24.0
+	_language_button.offset_right = -40.0
+	_language_button.offset_bottom = 76.0
+	_language_button.pressed.connect(_switch_language)
+	add_child(_language_button)
+	_update_language_button()
 	_back_button = UiStyle.button("BACK", BROWN, Vector2(180, 52))
 	_back_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_back_button.pressed.connect(show_slots)
 	column.add_child(_back_button)
+
+
+## The button shows the other language's own name: "עברית" or "English".
+func _switch_language() -> void:
+	Language.set_language(Language.other())
+	_update_language_button()
+
+
+func _update_language_button() -> void:
+	_language_button.text = Language.NAMES[Language.other()]
+	_language_button.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 
 
 func _show_slot_cards() -> void:

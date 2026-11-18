@@ -88,7 +88,7 @@ func _draw() -> void:
 		draw_texture_rect(_icon, Rect2(pad, size - pad * 2.0), false)
 	elif hint != "":
 		var middle := Vector2(0.0, size.y / 2.0 + 5.0)
-		draw_string(font, middle, hint, HORIZONTAL_ALIGNMENT_CENTER, size.x, 13, HINT_COLOR)
+		draw_string(font, middle, tr(hint), HORIZONTAL_ALIGNMENT_CENTER, size.x, 13, HINT_COLOR)
 	var plus: int = int(stack.get("plus", 0))
 	if plus > 0:
 		var top := Vector2(5.0, 17.0)
@@ -103,3 +103,9 @@ func _draw() -> void:
 			font, corner, text, HORIZONTAL_ALIGNMENT_RIGHT, width, 17, 5, COUNT_OUTLINE
 		)
 		draw_string(font, corner, text, HORIZONTAL_ALIGNMENT_RIGHT, width, 17, Color.WHITE)
+
+
+## Texts drawn by hand follow a change of language too.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED:
+		queue_redraw()

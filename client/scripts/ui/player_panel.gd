@@ -56,14 +56,14 @@ func _draw() -> void:
 	var font: Font = ThemeDB.fallback_font
 	var left: int = HORIZONTAL_ALIGNMENT_LEFT
 	var right: int = HORIZONTAL_ALIGNMENT_RIGHT
-	var title: String = "Lv.%d %s" % [_level, _class_name]
-	var purse: String = "Potions %d   Gold %d" % [_potions, _gold]
+	var title: String = tr("Lv.%d %s" % [_level, _class_name])
+	var purse: String = tr("Potions %d   Gold %d" % [_potions, _gold])
 	draw_string(font, Vector2(2, 20), title, left, -1, TEXT_SIZE + 2, Color.WHITE)
 	draw_string(font, Vector2(0, 20), purse, right, size.x, TEXT_SIZE - 2, Color(1, 0.9, 0.5))
 
 	var hp_rect := Rect2(0.0, HP_TOP, size.x, HP_HEIGHT)
 	_draw_bar(hp_rect, float(_hp) / float(maxi(_max_hp, 1)), Color(0.85, 0.2, 0.28))
-	var hp_text: String = "HP %d / %d" % [_hp, _max_hp]
+	var hp_text: String = tr("HP %d / %d" % [_hp, _max_hp])
 	draw_string(font, Vector2(10, HP_TOP + 18.0), hp_text, left, -1, TEXT_SIZE - 2, Color.WHITE)
 
 	var stamina_rect := Rect2(0.0, hp_rect.end.y + GAP, size.x, STAMINA_HEIGHT)
@@ -72,7 +72,7 @@ func _draw() -> void:
 	var xp_rect := Rect2(0.0, stamina_rect.end.y + GAP, size.x, XP_HEIGHT)
 	var xp_ratio: float = float(_xp) / float(maxi(_xp_to_next, 1))
 	_draw_bar(xp_rect, xp_ratio, Color(0.45, 0.7, 1.0))
-	var xp_text: String = "EXP %d / %d  (%.2f%%)" % [_xp, _xp_to_next, xp_ratio * 100.0]
+	var xp_text: String = tr("EXP %d / %d  (%.2f%%)" % [_xp, _xp_to_next, xp_ratio * 100.0])
 	var xp_baseline := Vector2(8.0, xp_rect.end.y - 2.0)
 	draw_string_outline(font, xp_baseline, xp_text, left, -1, 12, 3, Color(0.05, 0.1, 0.2))
 	draw_string(font, xp_baseline, xp_text, left, -1, 12, Color.WHITE)
@@ -82,3 +82,9 @@ func _draw_bar(rect: Rect2, ratio: float, color: Color) -> void:
 	draw_rect(rect.grow(3.0), Color(0.1, 0.06, 0.1, 0.8))
 	var fill := Vector2(rect.size.x * clampf(ratio, 0.0, 1.0), rect.size.y)
 	draw_rect(Rect2(rect.position, fill), color)
+
+
+## Texts drawn by hand follow a change of language too.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED:
+		queue_redraw()

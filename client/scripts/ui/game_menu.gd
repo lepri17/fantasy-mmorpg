@@ -8,6 +8,7 @@ signal request(method: String)
 
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
 const Settings := preload("res://scripts/settings.gd")
+const Language := preload("res://scripts/i18n/language.gd")
 const GREEN := Color(0.22, 0.48, 0.3)
 const BLUE := Color(0.22, 0.32, 0.55)
 const BROWN := Color(0.5, 0.3, 0.18)
@@ -26,6 +27,7 @@ var _pages: Dictionary = {}
 var _sliders: Dictionary = {}
 var _value_labels: Dictionary = {}
 var _toggles: Dictionary = {}
+var _language_button: Button
 
 
 func _ready() -> void:
@@ -108,6 +110,8 @@ func _settings_page() -> VBoxContainer:
 		var toggle := _button("", BLUE, _on_toggle.bind(entry[0]))
 		page.add_child(toggle)
 		_toggles[entry[0]] = [toggle, entry[1]]
+	_language_button = _button("", BLUE, _on_language)
+	page.add_child(_language_button)
 	page.add_child(_button("BACK", BROWN, func() -> void: show_page("main")))
 	return page
 
@@ -119,10 +123,17 @@ func _refresh_settings() -> void:
 	for key in _toggles:
 		var on: bool = Settings.get_value(key) == true
 		_toggles[key][0].text = "%s: %s" % [_toggles[key][1], "ON" if on else "OFF"]
+	_language_button.text = "%s: %s" % ["Language", Language.NAMES[Language.current()]]
 
 
 func _on_slider(value: float, key: String) -> void:
 	Settings.set_value(key, value)
+	_refresh_settings()
+	request.emit("settings_changed")
+
+
+func _on_language() -> void:
+	Language.set_language(Language.other())
 	_refresh_settings()
 	request.emit("settings_changed")
 

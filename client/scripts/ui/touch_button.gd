@@ -47,6 +47,8 @@ func _input(event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED:
+		queue_redraw()
 	var lost: bool = what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_EXIT_TREE
 	if what == NOTIFICATION_VISIBILITY_CHANGED and not is_visible_in_tree():
 		lost = true
@@ -73,7 +75,7 @@ func _draw() -> void:
 		draw_arc(spot, 17.0, 0.0, TAU, 32, Color(1, 1, 1, 0.8), 2.0, true)
 		var font: Font = ThemeDB.fallback_font
 		var baseline := Vector2(spot.x - 17.0, spot.y + 6.0)
-		draw_string(font, baseline, badge, HORIZONTAL_ALIGNMENT_CENTER, 34.0, 17, Color.WHITE)
+		draw_string(font, baseline, tr(badge), HORIZONTAL_ALIGNMENT_CENTER, 34.0, 17, Color.WHITE)
 
 
 func _release() -> void:

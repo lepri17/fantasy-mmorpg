@@ -23,6 +23,8 @@ func _initialize() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	GameScript.invasions_enabled = false
 	Settings.path = "user://screenshots_settings.cfg"
+	Settings.load_file()
+	Settings.set_value("language", "en")
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await _frames(30)
@@ -122,6 +124,18 @@ func _initialize() -> void:
 	await _shot("23_left_handed")
 	Settings.set_value("left_handed", false)
 	main.get_node("TouchControls").apply_settings()
+	Settings.set_value("language", "he")
+	TranslationServer.set_locale("he")
+	player.call("_say", "Got Slime Jelly x2.")
+	await _frames(5)
+	await _shot("24_hebrew")
+	hud.toggle_inventory()
+	await _shot("25_hebrew_bag")
+	hud.toggle_inventory()
+	hud.toggle_menu()
+	hud.get("_menu").show_page("settings")
+	await _shot("26_hebrew_settings")
+	hud.toggle_menu()
 	GameScript.sky_seconds = -1.0
 	# The character screen, with two heroes saved
 	SaveFile.slot_pattern = "user://shots_slot_%d.cfg"
@@ -139,6 +153,8 @@ func _initialize() -> void:
 	screen.show_classes(3)
 	await _frames(5)
 	await _shot("20_new_hero")
+	Settings.set_value("language", "en")
+	TranslationServer.set_locale("en")
 	for slot in range(1, SaveFile.SLOT_COUNT + 1):
 		SaveFile.delete_slot(slot)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))

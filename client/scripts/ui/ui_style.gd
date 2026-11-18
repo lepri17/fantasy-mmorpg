@@ -31,9 +31,10 @@ static var resource_short: String = "STA"
 
 ## "Max Mana" / "MP" for the mage's max_stamina; other bonuses by their names.
 static func stat_name(stat: String, short: bool = false) -> String:
+	var text: String = (SHORT_NAMES if short else BONUS_NAMES).get(stat, stat)
 	if stat == "max_stamina":
-		return resource_short if short else "Max " + resource_name
-	return (SHORT_NAMES if short else BONUS_NAMES).get(stat, stat)
+		text = resource_short if short else "Max " + resource_name
+	return TranslationServer.translate(text)
 
 
 ## "+1 Attack, +2% Crit" ("+1 ATK, +2% CRIT" when short), or "No bonus".
@@ -46,7 +47,7 @@ static func bonus_text(bonus: Dictionary, short: bool = false) -> String:
 			parts.append("+%s%% %s" % [number(value * 100.0), name_text])
 		else:
 			parts.append("+%s %s" % [number(value), name_text])
-	return "No bonus" if parts.is_empty() else ", ".join(parts)
+	return TranslationServer.translate("No bonus") if parts.is_empty() else ", ".join(parts)
 
 
 ## 3 -> "3", 2.5 -> "2.5".

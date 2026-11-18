@@ -5,6 +5,7 @@ extends Node2D
 ## "invasion" in maps.json, monsters invade at set minutes of the clock.
 
 const Settings = preload("res://scripts/settings.gd")
+const Language = preload("res://scripts/i18n/language.gd")
 const GameData := preload("res://scripts/data/game_data.gd")
 const MAP_SCENE := preload("res://scenes/maps/map.tscn")
 const SLIME_SCENE := preload("res://scenes/enemies/slime.tscn")
@@ -37,6 +38,7 @@ var _invaded_window: String = ""
 
 
 func _ready() -> void:
+	Language.setup(get_tree())
 	add_to_group("game")
 	_build_sky()
 	var pool := Node.new()

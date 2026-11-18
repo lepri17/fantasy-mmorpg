@@ -1,6 +1,7 @@
 extends RefCounted
 ## The player's settings, kept on the device (user://settings.cfg): music and
-## sound volume, joystick size, a floating joystick, left-handed controls.
+## sound volume, joystick size, a floating joystick, left-handed controls, and
+## the language ("auto" until chosen: the phone's).
 
 const PATH := "user://settings.cfg"
 const SECTION := "settings"
@@ -10,6 +11,7 @@ const DEFAULTS := {
 	"joystick_size": 1.0,
 	"floating_joystick": false,
 	"left_handed": false,
+	"language": "auto",
 }
 ## The two sound buses and the setting each one follows.
 const BUSES := {"Music": "music", "Sounds": "sounds"}

@@ -30,5 +30,12 @@ func _draw() -> void:
 	var text_position := Vector2(-LABEL_WIDTH / 2.0, origin.y - 8.0)
 	var centered: int = HORIZONTAL_ALIGNMENT_CENTER
 	var outline_color := Color(0.15, 0.08, 0.12)
-	draw_string_outline(font, text_position, _label, centered, LABEL_WIDTH, 14, 4, outline_color)
-	draw_string(font, text_position, _label, centered, LABEL_WIDTH, 14, Color.WHITE)
+	var label: String = tr(_label)
+	draw_string_outline(font, text_position, label, centered, LABEL_WIDTH, 14, 4, outline_color)
+	draw_string(font, text_position, label, centered, LABEL_WIDTH, 14, Color.WHITE)
+
+
+## Texts drawn by hand follow a change of language too.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED:
+		queue_redraw()

@@ -32,6 +32,10 @@ func _initialize() -> void:
 func _run() -> void:
 	SaveFile.path = SAVE_PATH
 	Settings.path = SETTINGS_PATH  # the default settings, whatever the computer has saved
+	if FileAccess.file_exists(SETTINGS_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SETTINGS_PATH))
+	Settings.load_file()
+	Settings.set_value("language", "en")  # the checks read English texts
 	_remove_test_save()
 	SlimeScript.elite_chance_override = 0.0  # random elites would change the numbers below
 	seed(20261118)  # the same drops on every run

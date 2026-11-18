@@ -7,6 +7,8 @@ extends RefCounted
 const Settings = preload("res://scripts/settings.gd")
 const SaveFile = preload("res://scripts/player/save_file.gd")
 const MapGuide = preload("res://scripts/maps/map_guide.gd")
+const Language = preload("res://scripts/i18n/language.gd")
+const UiStyle = preload("res://scripts/ui/ui_style.gd")
 ## Where the monsters not in a test wait, frozen.
 const PARK := Vector2(2300, 1350)
 
@@ -114,6 +116,42 @@ func run(test, main, player, hud) -> void:
 	)
 	await t._frames(2)
 	await _check_auto(main, player, hud)
+	await _check_hebrew(hud)
+
+
+## Q10: the Hebrew interface.
+func _check_hebrew(hud) -> void:
+	Language.set_language("he")
+	t._check(
+		TranslationServer.get_locale().begins_with("he") and tr("Slime") == "סליים",
+		"in Hebrew, names are translated"
+	)
+	t._check(
+		TranslationServer.translate("Got Slime Jelly x2.") == "קיבלת ג'לי סליים x2.",
+		"a sentence with blanks is translated, and what is in the blanks too"
+	)
+	t._check(
+		TranslationServer.translate("Lv.1 Elite Slime") == "רמה 1 סליים עלית"
+		and TranslationServer.translate("Rare Oak Staff +3") == "מטה אלון +3 נדיר",
+		"names the game builds (level, elite, rarity, upgrade) are translated"
+	)
+	t._check(
+		(
+			TranslationServer.translate("Slime Cleanup  3/8\nDaily Patrol  15/15  (done)")
+			== "ניקוי סליימים  3/8\nסיור יומי  15/15  (בוצע)"
+		),
+		"a list of lines is translated line by line"
+	)
+	var menu_button: Button = hud.get_node("MenuButton")
+	t._check(
+		menu_button.atr(menu_button.text) == "תפריט" and UiStyle.stat_name("attack") == "התקפה",
+		"buttons and stat names show in Hebrew"
+	)
+	Settings.load_file()
+	t._check(Settings.get_value("language") == "he", "the chosen language is kept")
+	await t._frames(2)
+	Language.set_language("en")
+	t._check(tr("Slime") == "Slime" and UiStyle.stat_name("attack") == "Attack", "and back to English")
 
 
 ## U5 auto hunt and U6 walking to a quest's target.
