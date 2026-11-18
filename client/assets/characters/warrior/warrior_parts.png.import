@@ -2,10 +2,13 @@
 
 importer="image"
 type="Image"
+uid="uid://db7o8o26yn43w"
+path="res://.godot/imported/warrior_parts.png-2b5133f83b73df24d8e57fe95bcae68e.image"
 
 [deps]
 
 source_file="res://assets/characters/warrior/warrior_parts.png"
+dest_files=["res://.godot/imported/warrior_parts.png-2b5133f83b73df24d8e57fe95bcae68e.image"]
 
 [params]
 

@@ -905,6 +905,7 @@ func _run() -> void:
 	_remove_test_save()
 	root.remove_child(main)
 	main.free()  # free the game before quitting, so nothing is left in use at exit
+	await _frames(10)  # and let the sounds that were still playing let go
 	print("SMOKE TEST: %s" % ("PASSED" if _failures == 0 else "%d FAILED" % _failures))
 	quit(1 if _failures > 0 else 0)
 
