@@ -204,6 +204,14 @@
             1024,
             380
           ]
+        },
+        {
+          "type": "npc",
+          "id": "master",
+          "pos": [
+            1024,
+            900
+          ]
         }
       ],
       "teleport_price": 0,

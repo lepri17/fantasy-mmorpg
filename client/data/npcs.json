@@ -60,5 +60,14 @@
     "services": [
       "quests"
     ]
+  },
+  "master": {
+    "name": "Master Hale",
+    "title": "Class Master",
+    "look": "master",
+    "greeting": "Reach level 10 and come to me for your trial. Pass it, and your class grows.",
+    "services": [
+      "quests"
+    ]
   }
 }

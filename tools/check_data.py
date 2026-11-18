@@ -111,6 +111,9 @@ def check_classes(classes: dict, character: dict, items: dict, skills: dict) -> 
         return
     if classes.get("order") != list(table):
         error(f"{where}: 'order' must list every class once, in the same order")
+    playable = classes.get("playable", [])
+    if not playable or any(class_id not in table for class_id in playable):
+        error(f"{where}: 'playable' must name classes from 'classes'")
     for class_id, info in table.items():
         place = f"{where}: '{class_id}'"
         for key in ("name", "text", "resource", "resource_short"):
@@ -152,6 +155,10 @@ def check_classes(classes: dict, character: dict, items: dict, skills: dict) -> 
         advanced = info.get("advanced", {})
         if not isinstance(advanced.get("name"), str) or len(advanced.get("color", [])) != 3:
             error(f"{place}: 'advanced' needs a 'name' and a 'color'")
+        look_item = items.get(advanced.get("item"), {})
+        if not look_item or class_id not in look_item.get("classes", [class_id]):
+            error(f"{place}: the advancement item '{advanced.get('item')}' is not gear for it")
+        check_bonus(f"{place} advanced", advanced.get("bonus", {}))
     for skill_id, skill in skills.items():
         if skill.get("class") not in table:
             error(f"skills.json: '{skill_id}' class '{skill.get('class')}' is not a class")
@@ -492,6 +499,8 @@ def check_quests(quests: dict, npcs: dict, items: dict, monsters: dict) -> None:
         else:
             error(f"{where}: goal type must be kill, collect or talk")
         reward = quest.get("reward", {})
+        if not isinstance(reward.get("advance", False), bool):
+            error(f"{where}: reward 'advance' must be true or false")
         for key in ("xp", "gold"):
             if key in reward:
                 need_number(where + " reward", reward, key, 0)

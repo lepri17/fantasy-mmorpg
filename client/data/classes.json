@@ -4,6 +4,10 @@
     "mage",
     "archer"
   ],
+  "playable": [
+    "warrior",
+    "archer"
+  ],
   "classes": {
     "warrior": {
       "name": "Warrior",
@@ -27,7 +31,12 @@
           1.0,
           0.72,
           0.3
-        ]
+        ],
+        "item": "champion_cape",
+        "bonus": {
+          "max_hp": 40,
+          "attack": 4
+        }
       }
     },
     "mage": {
@@ -92,7 +101,13 @@
           0.62,
           0.52,
           1.0
-        ]
+        ],
+        "item": "starlit_hat",
+        "bonus": {
+          "max_hp": 25,
+          "attack": 4,
+          "max_stamina": 30
+        }
       }
     },
     "archer": {
@@ -150,7 +165,13 @@
           0.45,
           0.85,
           1.0
-        ]
+        ],
+        "item": "azure_hood",
+        "bonus": {
+          "max_hp": 30,
+          "attack": 4,
+          "crit_chance": 0.03
+        }
       }
     }
   }

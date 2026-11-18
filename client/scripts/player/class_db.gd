@@ -12,6 +12,11 @@ static func ids() -> Array:
 	return GameData.table("classes")["order"]
 
 
+## The classes a new hero can be (classes.json "playable"; the mage waits for now).
+static func playable() -> Array:
+	return GameData.table("classes").get("playable", ids())
+
+
 static func exists(class_id: String) -> bool:
 	return GameData.table("classes")["classes"].has(class_id)
 
@@ -50,6 +55,12 @@ static func skills(class_id: String) -> Array:
 static func display_name(class_id: String, advanced: bool = false) -> String:
 	var data: Dictionary = info(class_id)
 	return data["advanced"]["name"] if advanced else data["name"]
+
+
+## The colour of the glow under a hero who made the job advancement.
+static func advanced_color(class_id: String) -> Color:
+	var rgb: Array = info(class_id)["advanced"]["color"]
+	return Color(rgb[0], rgb[1], rgb[2])
 
 
 ## The colour of the second bar (stamina or mana).

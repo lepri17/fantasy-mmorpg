@@ -70,7 +70,7 @@ func run(test, main, player, hud) -> void:
 
 	# --- the townspeople: TALK, the shop, storage, the healer and the guide (W1, W9)
 	var townspeople: Array = t.get_nodes_in_group("npcs")
-	t._check(townspeople.size() == 5, "five townspeople in Willow Town")
+	t._check(townspeople.size() == 6, "six townspeople in Willow Town")
 	var mira = townspeople.filter(func(npc): return npc.npc_id == "merchant")[0]
 	player.global_position = mira.global_position + Vector2(70, 30)
 	await t._frames(4)

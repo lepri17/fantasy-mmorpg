@@ -10,6 +10,8 @@ const HeroLook = preload("res://scripts/player/hero_look.gd")
 const PlayerStats = preload("res://scripts/player/player_stats.gd")
 const ItemDb = preload("res://scripts/items/item_db.gd")
 const GameData = preload("res://scripts/data/game_data.gd")
+const SaveFile = preload("res://scripts/player/save_file.gd")
+const SELECT_SCENE = preload("res://scenes/ui/character_select.tscn")
 ## Where the monsters not in a test wait, frozen.
 const PARK := Vector2(2300, 1350)
 
@@ -25,6 +27,7 @@ func run(test, main, player, hud) -> void:
 	await _check_mage(player, hud)
 	await _check_archer(player, hud)
 	await _check_warrior_job(player, hud)
+	await _check_select()
 
 
 func _check_data() -> void:
@@ -253,8 +256,36 @@ func _check_archer(player, hud) -> void:
 
 func _check_warrior_job(player, hud) -> void:
 	_become(player, hud, "warrior")
-	player.stats.advanced = true
-	hud.call("_refresh_progress")
+	player.stats.level = 9
+	player.accept_quest("trial_of_the_king")
+	t._check(
+		not player.stats.quests.active.has("trial_of_the_king"), "the trial waits for level 10"
+	)
+	player.stats.level = 10
+	var hp_before_job: int = player.stats.max_hp()
+	var hp_per_level: int = int(player.stats.rule("hp_per_level"))
+	player.accept_quest("trial_of_the_king")
+	t._check(
+		player.stats.quests.active.has("trial_of_the_king"),
+		"at level 10 Master Hale gives the Trial of the King"
+	)
+	player.record_kill("slime_king", false)
+	player.turn_in_quest("trial_of_the_king")
+	t._check(
+		player.stats.advanced and t._bag_index(player, "champion_cape") >= 0,
+		"beating the Slime King makes the warrior a Champion, with the Champion Cape"
+	)
+	var from_levels: int = (player.stats.level - 10) * hp_per_level  # the reward's XP
+	t._check(
+		player.stats.max_hp() == hp_before_job + 40 + from_levels,
+		"the advancement adds 40 HP (%d -> %d)" % [hp_before_job + from_levels, player.stats.max_hp()]
+	)
+	t._check(
+		hud.get("_panel").get("_class_name") == "Champion" and _button(hud, "skill_5").visible,
+		"the HUD says Champion and shows the fifth skill"
+	)
+	player.equip_from_bag(t._bag_index(player, "champion_cape"))
+	t._check(player.stats.equipped_id("cape") == "champion_cape", "the Champion wears the new cape")
 	var three: Array = _line_up(player, [Vector2(100, 0), Vector2(110, 60), Vector2(-120, 0)])
 	var before: Array = three.map(func(enemy): return enemy.hp)
 	player.facing = "right"
@@ -266,6 +297,57 @@ func _check_warrior_job(player, hud) -> void:
 	)
 	t._check(_button_label(hud, "skill") == "SPIN", "back as a warrior, the first button says SPIN")
 	_release(player)
+
+
+## The character screen: three slots, NEW HERO (Warrior or Archer), PLAY and
+## DELETE, on test files.
+func _check_select() -> void:
+	var game_save: String = SaveFile.path
+	SaveFile.slot_pattern = "user://test_slot_%d.cfg"
+	for slot in range(1, SaveFile.SLOT_COUNT + 1):
+		SaveFile.delete_slot(slot)
+	SaveFile.save_data({"version": 8, "level": 7, "gold": 5})
+	SaveFile.adopt_old_save(game_save)
+	t._check(
+		int(SaveFile.peek(1).get("level", 0)) == 7 and not FileAccess.file_exists(game_save),
+		"the save from before the character screen becomes the first slot"
+	)
+	var screen: Control = SELECT_SCENE.instantiate()
+	screen.starts_game = false
+	t.root.add_child(screen)
+	await t._frames(3)
+	var cards: HBoxContainer = screen.get("_cards")
+	t._check(cards.get_child_count() == 3, "the character screen shows three slots")
+	screen.show_classes(2)
+	t._check(
+		ClassDb.playable() == ["warrior", "archer"] and cards.get_child_count() == 2,
+		"a new hero can be a Warrior or an Archer (the mage waits for now)"
+	)
+	screen.get("_name_edit").text = "Tavi"
+	screen.create("archer")
+	var made: Dictionary = SaveFile.peek(2)
+	t._check(
+		made.get("class") == "archer" and made.get("name") == "Tavi",
+		"NEW HERO saves the class and the name in its slot"
+	)
+	t._check(SaveFile.path == SaveFile.slot_path(2), "and plays that slot")
+	var archer = PlayerStats.new()
+	archer.from_dict(made)
+	t._check(archer.equipped_id("weapon") == "short_bow", "the new archer starts with a bow")
+	screen.show_slots()
+	t._check(
+		not screen.request_delete(2) and FileAccess.file_exists(SaveFile.slot_path(2)),
+		"DELETE asks first"
+	)
+	t._check(
+		screen.request_delete(2) and SaveFile.peek(2).is_empty(), "and deletes on the second press"
+	)
+	screen.queue_free()
+	for slot in range(1, SaveFile.SLOT_COUNT + 1):
+		SaveFile.delete_slot(slot)
+	SaveFile.slot_pattern = SaveFile.SLOT_PATH
+	SaveFile.path = game_save
+	await t._frames(2)
 
 
 ## Turns the live hero into a new character of the class: its own gear, look,

@@ -387,7 +387,10 @@ func turn_in_quest(quest_id: String) -> void:
 		return
 	var quest: Dictionary = QuestLog.list[quest_id]
 	var reward: Dictionary = quest.get("reward", {})
-	if not stats.room_for(reward.get("items", [])):
+	var reward_items: Array = reward.get("items", []).duplicate()
+	if reward.get("advance", false):
+		reward_items.append({"id": ClassDb.info(stats.class_id)["advanced"]["item"], "count": 1})
+	if not stats.room_for(reward_items):
 		_say("Make room in your bag for the reward first.", WARNING_COLOR)
 		return
 	if quest["goal"]["type"] == "collect":
@@ -402,7 +405,25 @@ func turn_in_quest(quest_id: String) -> void:
 		add_gold(int(reward["gold"]))
 	if int(reward.get("xp", 0)) > 0:
 		gain_xp(int(reward["xp"]))
+	if reward.get("advance", false):
+		_advance()
 	_progress_changed()
+
+
+## The job advancement (P6): the class gets its new name, a bonus, the fifth
+## skill and its own piece of gear to wear; a glow under the hero shows it.
+func _advance() -> void:
+	if stats.advanced:
+		return
+	stats.advanced = true
+	var info: Dictionary = ClassDb.info(stats.class_id)["advanced"]
+	stats.add_item(info["item"], 1)
+	var new_name: String = ClassDb.display_name(stats.class_id, true)
+	_say("You are now a %s! Got %s." % [new_name, _item_name(info["item"])], QUEST_COLOR)
+	get_tree().call_group("hud", "show_banner", "You are now a %s!" % new_name, "A new skill opens")
+	Burst.spawn(self, Vector2(0, -24), ClassDb.advanced_color(stats.class_id), 60, 280.0)
+	_sfx("levelup")
+	_limits_changed()
 
 
 ## Talking to a townsperson finishes the "talk" goals about them.

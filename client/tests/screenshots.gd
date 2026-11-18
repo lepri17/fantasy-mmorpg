@@ -98,7 +98,34 @@ func _initialize() -> void:
 	hud.toggle_inventory()
 	await _shot("17_archer_bag")
 	hud.toggle_inventory()
+	player.stats.advanced = true
+	player.add_item("azure_hood")
+	for i in player.stats.bag.size():
+		if player.stats.bag[i]["id"] == "azure_hood":
+			player.equip_from_bag(i)
+			break
+	hud.call("_refresh_progress")
+	await _frames(20)
+	await _shot("18_ranger")
 	GameScript.sky_seconds = -1.0
+	# The character screen, with two heroes saved
+	SaveFile.slot_pattern = "user://shots_slot_%d.cfg"
+	SaveFile.path = SaveFile.slot_path(1)
+	SaveFile.save_data(player.stats.to_dict())
+	SaveFile.create_slot(2, "warrior", "Doran")
+	SaveFile.delete_slot(3)
+	root.remove_child(main)
+	main.free()
+	var screen: Control = load("res://scenes/ui/character_select.tscn").instantiate()
+	screen.starts_game = false
+	root.add_child(screen)
+	await _frames(10)
+	await _shot("19_select")
+	screen.show_classes(3)
+	await _frames(5)
+	await _shot("20_new_hero")
+	for slot in range(1, SaveFile.SLOT_COUNT + 1):
+		SaveFile.delete_slot(slot)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	quit()
 

@@ -22,6 +22,8 @@ void fragment() {
 var _light: PointLight2D
 var _silhouette: AnimatedSprite2D
 var _silhouette_check: float = 0.0
+## Time for the pulse of the job advancement glow.
+var _aura_time: float = 0.0
 
 
 func _ready() -> void:
@@ -45,7 +47,23 @@ func _ready() -> void:
 	_make_silhouette()
 
 
+## After the job advancement, a soft ring in the class's colour under the hero
+## (drawn under the sprite, which is a child).
+func _draw() -> void:
+	if not stats.advanced:
+		return
+	var color: Color = ClassDb.advanced_color(stats.class_id)
+	var pulse: float = 0.5 + 0.5 * sin(_aura_time * 3.0)
+	draw_set_transform(Vector2(0.0, 2.0), 0.0, Vector2(1.0, 0.45))
+	draw_circle(Vector2.ZERO, 30.0, Color(color, 0.14))
+	var ring := Color(color, 0.5 + 0.3 * pulse)
+	draw_arc(Vector2.ZERO, 31.0 + pulse * 3.0, 0.0, TAU, 40, ring, 3.0, true)
+
+
 func _physics_process(delta: float) -> void:
+	if stats.advanced:
+		_aura_time += delta
+		queue_redraw()
 	_update_silhouette(delta)
 	if is_dead:
 		return

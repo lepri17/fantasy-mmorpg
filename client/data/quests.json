@@ -119,5 +119,22 @@
       "gold": 150
     },
     "daily": true
+  },
+  "trial_of_the_king": {
+    "name": "Trial of the King",
+    "giver": "master",
+    "level": 10,
+    "text": "You have grown strong. Defeat the Slime King in Mossy Woods, and I will show you the higher path of your class.",
+    "done_text": "The King has fallen. From today you walk a higher path: a new name, a new skill, and something to wear for it.",
+    "goal": {
+      "type": "kill",
+      "monster": "slime_king",
+      "count": 1
+    },
+    "reward": {
+      "xp": 500,
+      "gold": 300,
+      "advance": true
+    }
   }
 }
