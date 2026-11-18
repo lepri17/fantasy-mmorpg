@@ -18,6 +18,9 @@ const HeroLook = preload("res://scripts/player/hero_look.gd")
 const GameScript = preload("res://scripts/game.gd")
 const SmokeWorld = preload("res://tests/smoke_world.gd")
 const SmokeClasses = preload("res://tests/smoke_classes.gd")
+const SmokeUi = preload("res://tests/smoke_ui.gd")
+const Settings = preload("res://scripts/settings.gd")
+const SETTINGS_PATH := "user://smoke_test_settings.cfg"
 
 var _failures: int = 0
 
@@ -28,6 +31,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	SaveFile.path = SAVE_PATH
+	Settings.path = SETTINGS_PATH  # the default settings, whatever the computer has saved
 	_remove_test_save()
 	SlimeScript.elite_chance_override = 0.0  # random elites would change the numbers below
 	seed(20261118)  # the same drops on every run
@@ -735,6 +739,7 @@ func _run() -> void:
 
 	await SmokeWorld.new().run(self, main, player, hud)
 	await SmokeClasses.new().run(self, main, player, hud)
+	await SmokeUi.new().run(self, main, player, hud)
 
 	_remove_test_save()
 	root.remove_child(main)
@@ -757,8 +762,9 @@ func _first_alive(enemies: Array):
 
 
 func _remove_test_save() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	for path in [SAVE_PATH, SETTINGS_PATH]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
 func _bag_index(player, item_id: String) -> int:

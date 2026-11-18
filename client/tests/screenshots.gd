@@ -9,6 +9,7 @@ const SaveFile = preload("res://scripts/player/save_file.gd")
 const ItemDb = preload("res://scripts/items/item_db.gd")
 const GameScript = preload("res://scripts/game.gd")
 const SAVE_PATH := "user://screenshots_save.cfg"
+const Settings = preload("res://scripts/settings.gd")
 
 var _folder: String = "/tmp/shots"
 
@@ -21,6 +22,7 @@ func _initialize() -> void:
 	SaveFile.path = SAVE_PATH
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	GameScript.invasions_enabled = false
+	Settings.path = "user://screenshots_settings.cfg"
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await _frames(30)
@@ -107,6 +109,19 @@ func _initialize() -> void:
 	hud.call("_refresh_progress")
 	await _frames(20)
 	await _shot("18_ranger")
+	hud.toggle_menu()
+	await _frames(3)
+	await _shot("21_menu")
+	hud.get("_menu").show_page("settings")
+	await _frames(3)
+	await _shot("22_settings")
+	hud.toggle_menu()
+	Settings.set_value("left_handed", true)
+	main.get_node("TouchControls").apply_settings()
+	await _frames(3)
+	await _shot("23_left_handed")
+	Settings.set_value("left_handed", false)
+	main.get_node("TouchControls").apply_settings()
 	GameScript.sky_seconds = -1.0
 	# The character screen, with two heroes saved
 	SaveFile.slot_pattern = "user://shots_slot_%d.cfg"

@@ -48,6 +48,15 @@ func _ready() -> void:
 	show_slots()
 
 
+## The phone's back button: from NEW HERO back to the slots, from the slots out.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		if _back_button != null and _back_button.visible:
+			show_slots()
+		else:
+			get_tree().quit()
+
+
 func _process(delta: float) -> void:
 	_idle_time += delta
 	var column: int = int(_idle_time / IDLE_SECONDS) % IDLE_FRAMES
@@ -121,7 +130,9 @@ func _build() -> void:
 	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	column.add_theme_constant_override("separation", 18)
 	add_child(column)
-	_title = _centered(UiStyle.label("", 34, UiStyle.GOLD_TEXT))
+	var game_name: String = ProjectSettings.get_setting("application/config/name", "")
+	column.add_child(_centered(UiStyle.label(game_name, 40, UiStyle.GOLD_TEXT)))
+	_title = _centered(UiStyle.label("", 26, Color.WHITE))
 	column.add_child(_title)
 	_name_row = HBoxContainer.new()
 	_name_row.alignment = BoxContainer.ALIGNMENT_CENTER

@@ -4,6 +4,7 @@ extends Node2D
 ## else the meadow that main.tscn starts with. W7: on a map with an
 ## "invasion" in maps.json, monsters invade at set minutes of the clock.
 
+const Settings = preload("res://scripts/settings.gd")
 const GameData := preload("res://scripts/data/game_data.gd")
 const MAP_SCENE := preload("res://scenes/maps/map.tscn")
 const SLIME_SCENE := preload("res://scenes/enemies/slime.tscn")
@@ -193,7 +194,9 @@ func _build_sky() -> void:
 	_rain.color = Color(0.75, 0.85, 1.0, 0.5)
 	_rain.emitting = false
 	_player.add_child(_rain)
+	Settings.apply_audio()
 	_music = AudioStreamPlayer.new()
+	_music.bus = "Music"
 	_music.name = "Music"
 	_music.volume_db = MUSIC_DB
 	_music.finished.connect(_music.play)

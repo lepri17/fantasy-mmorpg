@@ -25,6 +25,9 @@ const Minimap := preload("res://scripts/ui/minimap.gd")
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
 const PlayerStats := preload("res://scripts/player/player_stats.gd")
 const ClassDb := preload("res://scripts/player/class_db.gd")
+const GameMenu := preload("res://scripts/ui/game_menu.gd")
+const SafeArea := preload("res://scripts/ui/safe_area.gd")
+const SELECT_SCENE := "res://scenes/ui/character_select.tscn"
 ## The fifth skill button opens with the job advancement.
 const JOB_ACTION := "skill_5"
 const DEATH_RED := Color(1.0, 0.45, 0.5)
@@ -47,8 +50,12 @@ const ITEM_ACTIONS := [
 ## Player methods the character window may ask for.
 const CHARACTER_ACTIONS := ["add_stat_point", "reset_stats", "choose_title"]
 
+## CHANGE HERO goes back to the character screen. The smoke test turns it off.
+var leaves_game: bool = true
 var _player: Node = null
 var _banner: Label
+var _menu: PanelContainer
+var _menu_button: Button
 var _dialog
 var _shop
 var _storage
@@ -80,6 +87,8 @@ func _ready() -> void:
 	_build_death_screen()
 	_build_town_windows()
 	_build_boss_bar()
+	_build_menu()
+	_fit_safe_area()
 	_style_round_button(_bag_button)
 	_style_round_button(_stats_button)
 	_stats_button.add_theme_font_size_override("font_size", 18)
@@ -130,6 +139,11 @@ func _physics_process(_delta: float) -> void:
 		toggle_inventory()
 	if Input.is_action_just_pressed(ACTION_CHARACTER):
 		toggle_character()
+	if Input.is_action_just_pressed("ui_cancel"):
+		if _windows().any(func(window) -> bool: return window.visible):
+			_close_windows()
+		else:
+			toggle_menu()
 	if Input.is_action_just_pressed(ACTION_TALK) and _talk_button.visible:
 		talk()
 	if _player != null:
@@ -150,13 +164,75 @@ func toggle_character() -> void:
 func _show_window(window: Control, open: bool) -> void:
 	for each in _windows():
 		each.visible = open and each == window
+	get_tree().paused = open and window == _menu
 	_refresh_windows()
 	get_tree().call_group(ACTION_BUTTONS_GROUP, "set_visible", not open)
 	_update_talk_button()
 
 
 func _windows() -> Array:
-	return [_inventory, _character, _dialog, _shop, _storage]
+	return [_inventory, _character, _dialog, _shop, _storage, _menu]
+
+
+## The game menu pauses the game while it is open.
+func toggle_menu() -> void:
+	var open: bool = not _menu.visible
+	_show_window(_menu, open)
+	if open:
+		_menu.show_page("main")
+
+
+func _build_menu() -> void:
+	_menu = GameMenu.new()
+	_menu.visible = false
+	add_child(_menu)
+	_menu.request.connect(_on_menu_request)
+	_menu_button = Button.new()
+	_menu_button.name = "MenuButton"
+	_menu_button.text = "MENU"
+	_menu_button.anchor_left = 1.0
+	_menu_button.anchor_right = 1.0
+	_menu_button.offset_left = -308.0
+	_menu_button.offset_right = -216.0
+	_menu_button.offset_top = 16.0
+	_menu_button.offset_bottom = 92.0
+	_menu_button.focus_mode = Control.FOCUS_NONE
+	_style_round_button(_menu_button)
+	_menu_button.add_theme_font_size_override("font_size", 18)
+	_menu_button.pressed.connect(toggle_menu)
+	add_child(_menu_button)
+
+
+func _on_menu_request(method: String) -> void:
+	match method:
+		"resume":
+			if _menu.visible:
+				toggle_menu()
+		"settings_changed":
+			get_tree().call_group("touch_controls", "apply_settings")
+		"change_hero":
+			_player.call("_progress_changed")
+			_show_window(null, false)
+			if leaves_game:
+				get_tree().change_scene_to_file(SELECT_SCENE)
+
+
+## The phone's back button: closes the open window, or opens the menu.
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_WM_GO_BACK_REQUEST or _menu == null:
+		return
+	if not _menu.visible and _windows().any(func(window) -> bool: return window.visible):
+		_close_windows()
+	else:
+		toggle_menu()
+
+
+## Keeps everything on the HUD clear of a phone's notch or round corners.
+func _fit_safe_area() -> void:
+	var margins: Array = SafeArea.margins(get_viewport())
+	for child in get_children():
+		if child is Control:
+			SafeArea.place(child, SafeArea.home_of(child), margins)
 
 
 func _close_windows() -> void:

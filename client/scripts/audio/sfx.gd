@@ -24,6 +24,7 @@ func play(sound_name: String) -> void:
 		return
 	var player := AudioStreamPlayer.new()
 	player.stream = SOUNDS[sound_name]
+	player.bus = "Sounds"
 	add_child(player)
 	player.finished.connect(player.queue_free)
 	player.play()
