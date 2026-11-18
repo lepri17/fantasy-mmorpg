@@ -299,6 +299,7 @@ func _run() -> void:
 
 	# --- the character window: C opens it, + spends a point, titles change
 	var character = hud.get_node("Character")
+	var inventory_was_open: bool = inventory.visible
 	var free_before: int = player.stats.free_points()
 	_check(
 		free_before > 0 and "+%d" % free_before in hud.get_node("StatsButton").text,
@@ -331,6 +332,8 @@ func _run() -> void:
 	)
 	hud.toggle_character()
 	_check(not character.visible, "the character window closes")
+	if inventory_was_open:
+		hud.toggle_inventory()  # the checks below close it with the inventory key
 
 	await _hold("inventory", 2)
 	_check(not inventory.visible, "the inventory key closes it")
