@@ -611,6 +611,12 @@
           "spawn": "default"
         }
       ],
+      "pvp_zone": [
+        280,
+        1040,
+        960,
+        1420
+      ],
       "teleport_price": 40,
       "music": "music_forest"
     },

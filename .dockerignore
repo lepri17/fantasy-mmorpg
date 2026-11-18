@@ -1,0 +1,6 @@
+*
+!server
+!client/data
+!client/scenes/maps/field.tscn
+server/tests
+**/__pycache__

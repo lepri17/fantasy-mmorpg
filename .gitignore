@@ -9,6 +9,12 @@ build/
 # Python
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# The server's local database
+server.db*
 
 # Godot writes these on import; only the custom ones for the class parts are kept
 *.import

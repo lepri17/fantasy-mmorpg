@@ -35,6 +35,35 @@ jobs:
       - name: Lint GDScript
         run: .venv/bin/gdlint client/
 
+  server:
+    # The game server (server/): lint, then its tests on SQLite and on PostgreSQL.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mmo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install the server and its test tools
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --quiet -r server/requirements-dev.txt
+
+      - name: Lint the server
+        run: .venv/bin/ruff check --config server/ruff.toml server/
+
+      - name: Test the server (SQLite and PostgreSQL)
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/mmo_test
+        run: .venv/bin/python -m pytest -q server/tests
+
   build-apk:
     needs: checks
     runs-on: ubuntu-latest
