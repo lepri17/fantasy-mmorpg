@@ -6,6 +6,9 @@ extends RefCounted
 
 const PATH := "user://settings.cfg"
 const SECTION := "settings"
+## The round buttons' layout. Places moved in the button editor for an older
+## layout are dropped (they would put the buttons in odd places now).
+const BUTTON_LAYOUT := 2
 const DEFAULTS := {
 	"music": 0.8,
 	"sounds": 1.0,
@@ -17,6 +20,7 @@ const DEFAULTS := {
 	"colorblind": false,
 	"button_offsets": {},
 	"button_scale": 1.0,
+	"button_layout": BUTTON_LAYOUT,
 	"show_dps": false,
 }
 ## The two sound buses and the setting each one follows.
@@ -50,6 +54,9 @@ static func load_file() -> void:
 	if config.load(path) == OK:
 		for key in DEFAULTS:
 			_values[key] = config.get_value(SECTION, key, DEFAULTS[key])
+		if int(config.get_value(SECTION, "button_layout", 1)) < BUTTON_LAYOUT:
+			_values["button_offsets"] = {}
+			_values["button_layout"] = BUTTON_LAYOUT
 
 
 ## The Music and Sounds buses at the chosen volumes (made the first time).

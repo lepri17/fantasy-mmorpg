@@ -123,6 +123,7 @@ func run(test, main, player, hud) -> void:
 	await _check_auto(main, player, hud)
 	await _check_hebrew(hud)
 	_check_tutorial(player, hud)
+	_check_layout(main)
 	_check_editor(main, hud)
 	_check_text_and_colours(hud)
 
@@ -288,6 +289,59 @@ func _check_tutorial(player, hud) -> void:
 		"SKIP ends the hints, and that is saved"
 	)
 	player.global_position = was_at
+
+
+## The round buttons in their own places: none on another, all on the screen,
+## and together they cover little of it. Places moved for the old layout are
+## dropped.
+func _check_layout(main) -> void:
+	var touch: CanvasLayer = main.get_node("TouchControls")
+	var screen: Rect2 = touch.get_viewport().get_visible_rect()
+	var buttons: Array = touch.get_children().filter(func(c): return c.has_method("touches"))
+	var apart: bool = true
+	var inside: bool = true
+	var covered: float = 0.0
+	for i in buttons.size():
+		var one: Control = buttons[i]
+		var radius: float = minf(one.size.x, one.size.y) / 2.0
+		covered += PI * radius * radius
+		inside = inside and screen.encloses(one.get_global_rect())
+		for other in buttons.slice(i + 1):
+			var gap: float = one.get_global_rect().get_center().distance_to(
+				other.get_global_rect().get_center()
+			)
+			apart = apart and gap >= radius + minf(other.size.x, other.size.y) / 2.0
+	t._check(
+		buttons.size() == 9 and apart and inside,
+		"the round buttons do not overlap and are all on the screen"
+	)
+	var base_area: float = (
+		float(ProjectSettings.get_setting("display/window/size/viewport_width"))
+		* float(ProjectSettings.get_setting("display/window/size/viewport_height"))
+	)
+	t._check(
+		covered / base_area < 0.07,
+		"together they cover little of the map (%.1f%%)" % (covered / base_area * 100.0)
+	)
+	var corner: Vector2 = touch.get_node("AttackButton").get_global_rect().get_center()
+	t._check(
+		touch.get_node("AttackButton").call("touches", corner + Vector2(68, 0))
+		and not touch.get_node("AttackButton").call("touches", corner + Vector2(60, 60)),
+		"a touch just outside the drawn circle counts, but not the square's corner"
+	)
+	var kept: String = FileAccess.get_file_as_string(Settings.path)
+	var old := ConfigFile.new()
+	old.set_value(Settings.SECTION, "button_offsets", {"AttackButton": [-60.0, -40.0]})
+	old.save(Settings.path)
+	Settings.load_file()
+	t._check(
+		Settings.get_value("button_offsets").is_empty(),
+		"buttons moved for the old layout go back to the new places"
+	)
+	var file := FileAccess.open(Settings.path, FileAccess.WRITE)
+	file.store_string(kept)
+	file.close()
+	Settings.load_file()
 
 
 ## U4: moving the touch buttons and making them bigger.

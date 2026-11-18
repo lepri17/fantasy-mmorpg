@@ -53,9 +53,10 @@ func _draw() -> void:
 	if _touch_index != NO_TOUCH:
 		center = _center - global_position
 	var radius: float = base_radius * size_scale
-	draw_circle(center, radius, Color(1, 1, 1, 0.16))
-	draw_arc(center, radius, 0.0, TAU, 48, Color(1, 1, 1, 0.5), 3.0, true)
-	draw_circle(center + _knob_offset, knob_radius * size_scale, Color(1, 1, 1, 0.55))
+	var held: bool = _touch_index != NO_TOUCH  # fainter while resting, to hide less of the map
+	draw_circle(center, radius, Color(1, 1, 1, 0.16 if held else 0.1))
+	draw_arc(center, radius, 0.0, TAU, 48, Color(1, 1, 1, 0.5 if held else 0.35), 2.5, true)
+	draw_circle(center + _knob_offset, knob_radius * size_scale, Color(1, 1, 1, 0.55 if held else 0.4))
 
 
 func _home_center() -> Vector2:
