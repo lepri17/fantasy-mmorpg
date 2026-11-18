@@ -1202,6 +1202,113 @@ def build_icon(sheet: Image.Image) -> Image.Image:
     return icon
 
 
+TILE = 128
+# Ground kinds in tiles.png, two seamless variants each, in this column order.
+# client/data/maps.json names them in "tile_kinds".
+TILE_KINDS = ["grass", "path", "stone", "forest", "cellar"]
+
+
+def _seamless(size: int, base, paint, seed: int) -> Image.Image:
+    """Paints on a 3x3 grid of the tile (paint(draw, rng, everywhere, size, scale)),
+    keeps the middle, so the tile repeats without seams."""
+    rng = random.Random(seed)
+    scale = 2
+    full = size * 3 * scale
+    image = Image.new("RGBA", (full, full), base)
+    draw = ImageDraw.Draw(image)
+
+    def everywhere(shape):
+        for ox in range(3):
+            for oy in range(3):
+                shape(ox * size * scale, oy * size * scale)
+
+    paint(draw, rng, everywhere, size, scale)
+    middle = image.crop((size * scale, size * scale, size * 2 * scale, size * 2 * scale))
+    return middle.resize((size, size), Image.LANCZOS)
+
+
+def _paint_path(draw, rng, everywhere, size, scale):
+    for _ in range(10):
+        x, y = rng.uniform(0, size) * scale, rng.uniform(0, size) * scale
+        rx, ry = rng.uniform(14, 30) * scale, rng.uniform(8, 16) * scale
+        color = rng.choice([(206, 170, 118, 255), (186, 150, 100, 255)])
+        everywhere(lambda ox, oy: draw.ellipse(
+            [ox + x - rx, oy + y - ry, ox + x + rx, oy + y + ry], fill=color))
+    for _ in range(26):  # pebbles
+        x, y = rng.uniform(0, size) * scale, rng.uniform(0, size) * scale
+        r = rng.uniform(1.5, 3.2) * scale
+        color = rng.choice([(150, 120, 86, 255), (226, 200, 156, 255)])
+        everywhere(lambda ox, oy: draw.ellipse([ox + x - r, oy + y - r * 0.7, ox + x + r,
+                                                oy + y + r * 0.7], fill=color))
+
+
+def _paint_stone(draw, rng, everywhere, size, scale):
+    stones = 4
+    step = size / stones
+    for row in range(stones):
+        for col in range(stones):
+            shift = step / 2 if row % 2 else 0
+            x0 = (col * step + shift + rng.uniform(1.5, 3)) * scale
+            y0 = (row * step + rng.uniform(1.5, 3)) * scale
+            x1 = x0 + (step - rng.uniform(4, 6)) * scale
+            y1 = y0 + (step - rng.uniform(4, 6)) * scale
+            color = rng.choice([(196, 192, 204, 255), (182, 178, 192, 255), (208, 204, 214, 255)])
+            everywhere(lambda ox, oy: draw.rounded_rectangle(
+                [ox + x0, oy + y0, ox + x1, oy + y1], radius=6 * scale, fill=color,
+                outline=(150, 144, 160, 255), width=scale))
+            everywhere(lambda ox, oy: draw.line(
+                [(ox + x0 + 4 * scale, oy + y0 + 4 * scale), (ox + x0 + 12 * scale,
+                                                            oy + y0 + 4 * scale)],
+                fill=(232, 230, 238, 255), width=scale))
+
+
+def _paint_forest(draw, rng, everywhere, size, scale):
+    for _ in range(12):
+        x, y = rng.uniform(0, size) * scale, rng.uniform(0, size) * scale
+        rx, ry = rng.uniform(16, 34) * scale, rng.uniform(10, 20) * scale
+        color = rng.choice([(70, 134, 76, 255), (92, 154, 84, 255), (64, 120, 92, 255)])
+        everywhere(lambda ox, oy: draw.ellipse(
+            [ox + x - rx, oy + y - ry, ox + x + rx, oy + y + ry], fill=color))
+    for _ in range(40):
+        x, y = rng.uniform(0, size) * scale, rng.uniform(0, size) * scale
+        h = rng.uniform(4, 7) * scale
+        color = rng.choice([(52, 110, 64, 255), (110, 170, 96, 255)])
+        everywhere(lambda ox, oy: draw.line(
+            [(ox + x - 3 * scale, oy + y - h), (ox + x, oy + y), (ox + x + 3 * scale, oy + y - h)],
+            fill=color, width=int(1.5 * scale)))
+
+
+def _paint_cellar(draw, rng, everywhere, size, scale):
+    bricks = 4
+    step = size / bricks
+    for row in range(bricks):
+        for col in range(bricks // 2 + 1):
+            shift = step if row % 2 else 0
+            x0 = (col * step * 2 - shift + 2) * scale
+            y0 = (row * step + 2) * scale
+            x1, y1 = x0 + (step * 2 - 4) * scale, y0 + (step - 4) * scale
+            color = rng.choice([(92, 84, 104, 255), (84, 76, 96, 255), (100, 92, 112, 255)])
+            everywhere(lambda ox, oy: draw.rounded_rectangle(
+                [ox + x0, oy + y0, ox + x1, oy + y1], radius=4 * scale, fill=color,
+                outline=(58, 52, 70, 255), width=scale))
+
+
+def build_tiles() -> Image.Image:
+    """tiles.png: a row of 128 px ground tiles, TILE_KINDS order, two variants each."""
+    makers = {
+        "grass": lambda seed: build_grass_tile(TILE, seed),
+        "path": lambda seed: _seamless(TILE, (196, 160, 110, 255), _paint_path, seed),
+        "stone": lambda seed: _seamless(TILE, (160, 154, 170, 255), _paint_stone, seed),
+        "forest": lambda seed: _seamless(TILE, (78, 142, 82, 255), _paint_forest, seed),
+        "cellar": lambda seed: _seamless(TILE, (60, 54, 72, 255), _paint_cellar, seed),
+    }
+    sheet = Image.new("RGBA", (TILE * 2 * len(TILE_KINDS), TILE), (0, 0, 0, 0))
+    for i, kind in enumerate(TILE_KINDS):
+        for variant in range(2):
+            sheet.paste(makers[kind](11 + variant * 31 + i), ((i * 2 + variant) * TILE, 0))
+    return sheet
+
+
 def build_grass_tile(size: int = 256, seed: int = 7) -> Image.Image:
     """Seamless tile: everything is drawn on a 3x3 grid, then the middle is kept."""
     rng = random.Random(seed)
@@ -1353,6 +1460,7 @@ def main() -> None:
         build_sprite_frames("res://assets/characters/warrior/warrior.png"), encoding="utf-8"
     )
     build_grass_tile().save(environment_dir / "grass.png")
+    build_tiles().save(environment_dir / "tiles.png")
     build_tree().save(environment_dir / "tree.png")
     build_rock().save(environment_dir / "rock.png")
 

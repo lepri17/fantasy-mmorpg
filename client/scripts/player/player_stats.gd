@@ -11,7 +11,8 @@ const AchievementRecord := preload("res://scripts/player/achievement_record.gd")
 ## 2 = adds the bag and the gear; potions live in the bag.
 ## 3 = adds stat points, skills learned from books, achievements and the title.
 ## 4 = gear keeps its own rarity, upgrade level and random options.
-const SAVE_VERSION := 4
+## 5 = adds the map the warrior is on.
+const SAVE_VERSION := 5
 const POTION_ID := "red_potion"
 
 ## The numbers from res://data/character.json: health and damage without gear
@@ -41,6 +42,8 @@ var potions: int:
 var stat_points: Dictionary = {}
 ## Skills learned from books (skills.json entries with a "book").
 var learned_skills: Array = []
+## The map the warrior is on (maps.json id), or "" before he has been anywhere.
+var map_id: String = ""
 ## Drink a red potion by itself below this percent of HP (0 = off).
 var auto_potion: int = 0
 ## Achievements, their counters and the title shown (achievement_record.gd).
@@ -355,6 +358,7 @@ func to_dict() -> Dictionary:
 		"stat_points": stat_points.duplicate(),
 		"learned_skills": learned_skills.duplicate(),
 		"auto_potion": auto_potion,
+		"map": map_id,
 	}.merged(record.to_dict())
 
 
@@ -402,6 +406,7 @@ func _load_progress(data: Dictionary) -> void:
 			if skills.has(skill_id) and not learned_skills.has(skill_id):
 				learned_skills.append(skill_id)
 	record.from_dict(data)
+	map_id = str(data.get("map", ""))
 	auto_potion = int(data.get("auto_potion", 0))
 	if auto_potion not in auto_potion_choices():
 		auto_potion = 0

@@ -255,6 +255,26 @@ func add_item(item_id: String, count: int = 1) -> bool:
 	return true
 
 
+## Puts the warrior on a map (game.gd): where he arrives, where he gets back
+## up after falling, and how far the camera may go.
+func enter_map(map_id: String, point: Vector2, respawn_point: Vector2, limits: Rect2) -> void:
+	global_position = point
+	velocity = Vector2.ZERO
+	_spawn_position = respawn_point
+	camera_limits = limits
+	_apply_camera_limits()
+	_camera.reset_smoothing()
+	if stats.map_id != map_id:
+		stats.map_id = map_id
+		_progress_changed()
+
+
+## Gets up at once (the death screen's button), instead of after the wait.
+func revive() -> void:
+	if is_dead:
+		_respawn()
+
+
 ## Picks up an entry as it is: gear keeps its rarity, upgrades and options.
 func add_stack(stack: Dictionary) -> bool:
 	if not ItemDb.is_gear(stack.get("id", "")):
@@ -699,7 +719,8 @@ func _die() -> void:
 	fall.tween_property(_sprite, "rotation", PI / 2.0 * (-1.0 if facing == "left" else 1.0), 0.3)
 	fall.tween_property(_sprite, "modulate:a", 0.0, 0.6)
 	await get_tree().create_timer(_respawn_seconds).timeout
-	_respawn()
+	if is_dead:  # not already up from the death screen's button
+		_respawn()
 
 
 func _respawn() -> void:
@@ -888,7 +909,8 @@ func _drop_on_ground(stack: Dictionary) -> void:
 	pickup.set("lifetime", DROPPED_ITEM_SECONDS)
 	pickup.set("pickup_delay", 1.0)
 	pickup.position = position + FACING_VECTORS[facing] * DROP_DISTANCE
-	get_parent().call_deferred("add_child", pickup)
+	var current_map: Node = get_tree().get_first_node_in_group("maps")
+	(current_map if current_map != null else get_parent()).call_deferred("add_child", pickup)
 	_say("Dropped %s." % ItemDb.display_name(stack))
 
 

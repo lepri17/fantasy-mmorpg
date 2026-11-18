@@ -1,0 +1,503 @@
+{
+  "start": "field",
+  "town": "town",
+  "tile_size": 128,
+  "tile_kinds": [
+    "grass",
+    "path",
+    "stone",
+    "forest",
+    "cellar"
+  ],
+  "legend": {
+    "g": "grass",
+    "p": "path",
+    "s": "stone",
+    "f": "forest",
+    "c": "cellar"
+  },
+  "maps": {
+    "town": {
+      "name": "Willow Town",
+      "levels": "Safe town",
+      "safe": true,
+      "ground": [
+        "gggggggggggggggg",
+        "gggggggggggggggg",
+        "ggggssssssssgggg",
+        "ggggssssssssgggg",
+        "ggggssssssssgggg",
+        "ggggsssssssspppp",
+        "ggggssssssssgggg",
+        "ggggssssssssgggg",
+        "gggggggggggggggg",
+        "gggggggggggggggg"
+      ],
+      "spawns": {
+        "default": [
+          1024,
+          640
+        ],
+        "east": [
+          1850,
+          704
+        ]
+      },
+      "objects": [
+        {
+          "type": "tree",
+          "pos": [
+            150,
+            150
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            420,
+            120
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            800,
+            110
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1250,
+            120
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1650,
+            140
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1920,
+            200
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            120,
+            480
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            140,
+            900
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            300,
+            1150
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            700,
+            1180
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1150,
+            1170
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1600,
+            1150
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1920,
+            1050
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1880,
+            420
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            420,
+            820
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1700,
+            950
+          ]
+        },
+        {
+          "type": "portal",
+          "pos": [
+            1990,
+            704
+          ],
+          "to": "field",
+          "spawn": "west"
+        }
+      ]
+    },
+    "field": {
+      "name": "Green Meadow",
+      "levels": "Lv 1-5",
+      "scene": "res://scenes/maps/field.tscn",
+      "size": [
+        2560,
+        1536
+      ],
+      "spawns": {
+        "default": [
+          1280,
+          768
+        ],
+        "west": [
+          200,
+          768
+        ],
+        "east": [
+          2360,
+          880
+        ]
+      },
+      "objects": [
+        {
+          "type": "portal",
+          "pos": [
+            70,
+            768
+          ],
+          "to": "town",
+          "spawn": "east"
+        },
+        {
+          "type": "portal",
+          "pos": [
+            2490,
+            880
+          ],
+          "to": "forest",
+          "spawn": "west"
+        }
+      ]
+    },
+    "forest": {
+      "name": "Mossy Woods",
+      "levels": "Lv 3-8",
+      "ground": [
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff",
+        "fffffffffppfffffffff",
+        "fffffffffppfffffffff",
+        "ppppppppppppffffffff",
+        "fffffffffppfffffffff",
+        "fffffffffppfffffffff",
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff"
+      ],
+      "spawns": {
+        "default": [
+          260,
+          832
+        ],
+        "west": [
+          200,
+          832
+        ]
+      },
+      "objects": [
+        {
+          "type": "tree",
+          "pos": [
+            200,
+            200
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            480,
+            160
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            760,
+            260
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1050,
+            150
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1350,
+            230
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1650,
+            140
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1950,
+            220
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2300,
+            180
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2450,
+            450
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            180,
+            520
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            520,
+            600
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            880,
+            520
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2150,
+            650
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2420,
+            980
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            160,
+            1150
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            450,
+            1280
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            820,
+            1150
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1100,
+            1350
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1450,
+            1450
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1820,
+            1320
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2150,
+            1420
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2450,
+            1300
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1300,
+            1000
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1800,
+            1000
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            650,
+            380
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1250,
+            620
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1700,
+            520
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            2000,
+            1200
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            600,
+            1000
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            2300,
+            820
+          ]
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1400,
+            500
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1700,
+            800
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2000,
+            450
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2200,
+            1100
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1500,
+            1200
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "portal",
+          "pos": [
+            70,
+            832
+          ],
+          "to": "field",
+          "spawn": "east"
+        }
+      ]
+    }
+  }
+}

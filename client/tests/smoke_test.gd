@@ -715,6 +715,52 @@ func _run() -> void:
 	_check(player.global_position.distance_to(Vector2(1280, 768)) < 5.0, "respawns at the start")
 	_check(player.stats.record.earned.has("back_again"), "getting back up earns Back Again")
 
+	# --- maps: a portal to town, the forest, the death screen (last: the meadow is left)
+	_check(
+		main.map.map_id == "field" and player.stats.map_id == "field", "the game starts in the meadow"
+	)
+	var town_portal = null
+	for portal in get_nodes_in_group("portals"):
+		if portal.get("to_map") == "town":
+			town_portal = portal
+	_check(town_portal != null, "the meadow has a portal to town")
+	if town_portal != null:
+		player.global_position = town_portal.global_position
+		await _frames(6)
+	_check(main.map.map_id == "town", "walking into the portal goes to town")
+	_check(get_nodes_in_group("enemies").is_empty(), "there are no monsters in town")
+	_check(
+		player.global_position.distance_to(main.map.spawn_point("east")) < 5.0,
+		"the warrior arrives by the town gate"
+	)
+	var town_ground = main.map.get_node("Ground")
+	_check(
+		town_ground is TileMapLayer and town_ground.get_used_cells().size() == 160,
+		"the town ground is a TileMapLayer built from the map rows"
+	)
+	_check(SaveFile.load_data().get("map", "") == "town", "the town is saved as the current map")
+	main.change_map("forest", "west")
+	await _frames(3)
+	_check(
+		main.map.map_id == "forest" and get_nodes_in_group("enemies").size() == 5,
+		"the forest has its own blue slimes"
+	)
+	player.take_damage(99999)
+	await _frames(2)
+	var death_screen = hud.get_node("DeathScreen")
+	_check(death_screen.visible, "falling shows the death screen")
+	death_screen.find_child("TownButton", true, false).pressed.emit()
+	await _frames(4)
+	_check(
+		not player.is_dead and main.map.map_id == "town" and not death_screen.visible,
+		"RETURN TO TOWN gets the warrior up in town"
+	)
+	await _frames(200)
+	_check(
+		player.global_position.distance_to(main.map.spawn_point("default")) < 5.0,
+		"the old respawn timer does not move him afterwards"
+	)
+
 	_remove_test_save()
 	print("SMOKE TEST: %s" % ("PASSED" if _failures == 0 else "%d FAILED" % _failures))
 	quit(1 if _failures > 0 else 0)

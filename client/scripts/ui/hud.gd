@@ -4,6 +4,9 @@ extends CanvasLayer
 
 const ACTION_INVENTORY := "inventory"
 const ACTION_CHARACTER := "character"
+const UiStyle := preload("res://scripts/ui/ui_style.gd")
+const PlayerStats := preload("res://scripts/player/player_stats.gd")
+const DEATH_RED := Color(1.0, 0.45, 0.5)
 ## The round touch buttons on the right (ATK, SPIN, POT) are in this group.
 const ACTION_BUTTONS_GROUP := "action_buttons"
 ## Player methods the inventory may ask for.
@@ -21,6 +24,10 @@ const ITEM_ACTIONS := [
 const CHARACTER_ACTIONS := ["add_stat_point", "reset_stats", "choose_title"]
 
 var _player: Node = null
+var _banner: Label
+var _death_screen: Control
+var _death_count: Label
+var _death_left: float = 0.0
 
 @onready var _panel = $PlayerPanel
 @onready var _message: Label = $Message
@@ -33,6 +40,8 @@ var _player: Node = null
 
 func _ready() -> void:
 	_message.hide()
+	_build_banner()
+	_build_death_screen()
 	_style_round_button(_bag_button)
 	_style_round_button(_stats_button)
 	_stats_button.add_theme_font_size_override("font_size", 18)
@@ -50,7 +59,7 @@ func _ready() -> void:
 	_player.connect("stamina_changed", Callable(_panel, "set_stamina"))
 	_player.connect("stats_changed", _refresh_progress)
 	_player.connect("died", _on_player_died)
-	_player.connect("respawned", _message.hide)
+	_player.connect("respawned", _on_player_respawned)
 	_player.connect("message", Callable(_log, "add_message"))
 	_panel.set_hp(_player.get("hp"), _player.get("max_hp"))
 	_panel.set_stamina(_player.get("stamina"), _player.get("max_stamina"))
@@ -141,6 +150,76 @@ func _style_round_button(button: Button) -> void:
 		button.add_theme_stylebox_override(state, box)
 
 
+## The map's name for a moment when the warrior arrives.
+func show_banner(title: String, subtitle: String = "") -> void:
+	_banner.text = title if subtitle == "" else "%s\n%s" % [title, subtitle]
+	_banner.modulate.a = 0.0
+	var fade: Tween = create_tween()
+	fade.tween_property(_banner, "modulate:a", 1.0, 0.4)
+	fade.tween_interval(1.6)
+	fade.tween_property(_banner, "modulate:a", 0.0, 0.6)
+
+
+func _process(delta: float) -> void:
+	if _death_screen.visible:
+		_death_left = maxf(0.0, _death_left - delta)
+		_death_count.text = "Back on your feet in %d..." % ceili(_death_left)
+
+
+## K5: a real death screen with a countdown, and a button to get up in town.
 func _on_player_died() -> void:
-	_message.text = "Defeated..."
-	_message.show()
+	_death_left = float(PlayerStats.rules["respawn_seconds"])
+	_death_screen.show()
+
+
+func _on_player_respawned() -> void:
+	_death_screen.hide()
+	_message.hide()
+
+
+func _on_town_pressed() -> void:
+	get_tree().call_group("game", "return_to_town")
+
+
+func _build_banner() -> void:
+	_banner = Label.new()
+	_banner.name = "MapBanner"
+	_banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_banner.offset_left = -320.0
+	_banner.offset_right = 320.0
+	_banner.offset_top = 120.0
+	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banner.add_theme_font_size_override("font_size", 34)
+	_banner.add_theme_color_override("font_color", UiStyle.GOLD_TEXT)
+	_banner.add_theme_color_override("font_outline_color", Color(0.12, 0.06, 0.12))
+	_banner.add_theme_constant_override("outline_size", 10)
+	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_banner.modulate.a = 0.0
+	add_child(_banner)
+
+
+func _build_death_screen() -> void:
+	_death_screen = ColorRect.new()
+	_death_screen.name = "DeathScreen"
+	_death_screen.color = Color(0.08, 0.02, 0.06, 0.62)
+	_death_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_death_screen.mouse_filter = Control.MOUSE_FILTER_STOP
+	_death_screen.hide()
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	var column := VBoxContainer.new()
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
+	column.add_theme_constant_override("separation", 18)
+	var title := UiStyle.label("YOU FELL", 60, DEATH_RED)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(title)
+	_death_count = UiStyle.label("", 22, Color.WHITE)
+	_death_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	column.add_child(_death_count)
+	var town := UiStyle.button("RETURN TO TOWN", Color(0.3, 0.22, 0.42), Vector2(300, 56))
+	town.name = "TownButton"
+	town.pressed.connect(_on_town_pressed)
+	column.add_child(town)
+	center.add_child(column)
+	_death_screen.add_child(center)
+	add_child(_death_screen)

@@ -12,6 +12,7 @@ Run:  python tools/check_data.py        (exit code 1 when something is wrong)
 from __future__ import annotations
 
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -354,6 +355,76 @@ def check_upgrades(items_data: dict) -> None:
         check_bonus(f"{where} per_plus '{slot}'", bonus)
 
 
+OBJECT_TYPES = {"tree", "rock", "monster", "portal"}
+
+
+def check_maps(maps_data: dict, monsters: dict) -> None:
+    """maps.json: ground rows, spawns, and objects; portals lead to a real spawn."""
+    maps = maps_data.get("maps", {})
+    for key in ("start", "town"):
+        if maps_data.get(key) not in maps:
+            error(f"maps.json: '{key}' must name a map")
+    tile = need_number("maps.json", maps_data, "tile_size", 16) or 128
+    kinds = maps_data.get("tile_kinds", [])
+    legend = maps_data.get("legend", {})
+    for letter, kind in legend.items():
+        if len(letter) != 1 or kind not in kinds:
+            error(f"maps.json: legend '{letter}' -> '{kind}' is not one letter and a tile kind")
+    for map_id, data in maps.items():
+        where = f"maps.json: map '{map_id}'"
+        if not isinstance(data.get("name"), str):
+            error(f"{where}: needs a 'name'")
+        if "ground" in data:
+            rows = data["ground"]
+            if not rows or any(len(row) != len(rows[0]) for row in rows):
+                error(f"{where}: ground rows must all be the same length")
+                continue
+            for row in rows:
+                for letter in row:
+                    if letter not in legend:
+                        error(f"{where}: ground letter '{letter}' is not in the legend")
+            size = (len(rows[0]) * tile, len(rows) * tile)
+        elif "scene" in data:
+            if not res_exists(data["scene"]):
+                error(f"{where}: scene {data['scene']} does not exist")
+            size = tuple(data.get("size", (0, 0)))
+        else:
+            error(f"{where}: needs 'ground' rows or a 'scene'")
+            continue
+
+        def inside(point, what):
+            if not (isinstance(point, list) and len(point) == 2 and all(is_number(v) for v in point)
+                    and 0 <= point[0] <= size[0] and 0 <= point[1] <= size[1]):
+                error(f"{where}: {what} {point} is not a point on the map")
+                return False
+            return True
+
+        spawns = data.get("spawns", {})
+        if "default" not in spawns:
+            error(f"{where}: needs a 'default' spawn")
+        for spawn_name, point in spawns.items():
+            inside(point, f"spawn '{spawn_name}'")
+        for thing in data.get("objects", []):
+            kind = thing.get("type")
+            if kind not in OBJECT_TYPES:
+                error(f"{where}: object type '{kind}' is not one of {sorted(OBJECT_TYPES)}")
+                continue
+            if not inside(thing.get("pos"), kind):
+                continue
+            if kind == "monster" and thing.get("id") not in monsters:
+                error(f"{where}: monster '{thing.get('id')}' is not in monsters.json")
+            if kind == "portal":
+                target = maps.get(thing.get("to"), {})
+                if not target:
+                    error(f"{where}: portal to unknown map '{thing.get('to')}'")
+                elif thing.get("spawn", "default") not in target.get("spawns", {}):
+                    error(f"{where}: portal to '{thing['to']}' names no spawn there")
+                for spawn_name, point in spawns.items():
+                    if isinstance(point, list) and len(point) == 2 and all(
+                            is_number(v) for v in point) and math.dist(point, thing["pos"]) < 80:
+                        error(f"{where}: spawn '{spawn_name}' is too close to a portal")
+
+
 def check_art(items: dict) -> None:
     """The warrior's gear parts must name real items."""
     sys.path.insert(0, str(ROOT / "tools"))
@@ -405,6 +476,7 @@ def main() -> int:
     check_progress(load("character"), items, load("skills"), load("monsters"),
                    load("achievements"))
     check_gear(items_data, load("monsters"), elite)
+    check_maps(load("maps"), load("monsters"))
     check_art(items)
     if errors:
         print("DATA PROBLEMS:")
