@@ -787,10 +787,11 @@ func _run() -> void:
 	_check(player.stats.gold == 80, "she does not sell what is not on her list")
 	while player.stats.bag.size() >= 14:
 		player.stats.bag.pop_back()
+	var jelly_before: int = player.stats.count_of("slime_jelly")
 	player.add_item("slime_jelly", 2)
 	shop.request.emit("sell_from_bag", _bag_index(player, "slime_jelly"))
 	_check(
-		player.stats.gold == 87 and player.stats.count_of("slime_jelly") == 1,
+		player.stats.gold == 87 and player.stats.count_of("slime_jelly") == jelly_before + 1,
 		"selling a Slime Jelly gives 7 gold"
 	)
 	hud.call("_close_windows")

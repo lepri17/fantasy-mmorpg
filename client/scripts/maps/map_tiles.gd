@@ -6,9 +6,6 @@ extends RefCounted
 const GameData := preload("res://scripts/data/game_data.gd")
 const TEXTURE := preload("res://assets/environment/tiles.png")
 
-static var _tileset: TileSet = null
-
-
 ## A TileMapLayer named "Ground" with one cell per letter of the rows.
 static func build(rows: Array) -> TileMapLayer:
 	var maps: Dictionary = GameData.table("maps")
@@ -26,16 +23,16 @@ static func build(rows: Array) -> TileMapLayer:
 	return layer
 
 
-## One atlas source with every tile of tiles.png, made once.
+## One atlas source with every tile of tiles.png. Made for each map (not kept
+## in a static variable, which would still hold it when the game quits).
 static func tileset() -> TileSet:
-	if _tileset == null:
-		var size: int = int(GameData.table("maps")["tile_size"])
-		_tileset = TileSet.new()
-		_tileset.tile_size = Vector2i(size, size)
-		var source := TileSetAtlasSource.new()
-		source.texture = TEXTURE
-		source.texture_region_size = Vector2i(size, size)
-		for column in floori(TEXTURE.get_width() / float(size)):
-			source.create_tile(Vector2i(column, 0))
-		_tileset.add_source(source, 0)
-	return _tileset
+	var size: int = int(GameData.table("maps")["tile_size"])
+	var tiles := TileSet.new()
+	tiles.tile_size = Vector2i(size, size)
+	var source := TileSetAtlasSource.new()
+	source.texture = TEXTURE
+	source.texture_region_size = Vector2i(size, size)
+	for column in floori(TEXTURE.get_width() / float(size)):
+		source.create_tile(Vector2i(column, 0))
+	tiles.add_source(source, 0)
+	return tiles
