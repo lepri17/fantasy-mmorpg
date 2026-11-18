@@ -75,7 +75,7 @@
 
 ## קבצים מרכזיים
 - `client/scenes/main.tscn` – המפה וכל מה שעליה.
-- `client/scripts/player/` – `player.gd`, `player_stats.gd` (רמה, ציוד, תיק, נקודות סטטים), `achievement_record.gd` (הישגים ותארים), `save_file.gd` (שמירה, גרסה 3).
+- `client/scripts/player/` – `player.gd`, `player_stats.gd` (רמה, ציוד, תיק, נקודות סטטים), `achievement_record.gd` (הישגים ותארים), `save_file.gd` (שמירה, גרסה 4).
 - `client/scripts/enemies/slime.gd`, `client/scenes/enemies/slime.tscn`.
 - `client/scripts/combat/` – `combat_rules.gd` (קריטי, הגנה, התחמקות), `slash_effect.gd`, `hit_spark.gd`, `target_marker.gd`, `status_effects.gd` (רעל, האטה, הלם), `telegraph.gd` (עיגול אזהרה).
 - `client/scripts/items/pickup.gd` – שלל על הרצפה. `item_db.gd` – טבלת כל הפריטים.
