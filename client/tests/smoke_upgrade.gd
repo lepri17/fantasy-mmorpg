@@ -7,7 +7,6 @@ extends RefCounted
 
 const ItemDb = preload("res://scripts/items/item_db.gd")
 const PlayerStats = preload("res://scripts/player/player_stats.gd")
-const Language = preload("res://scripts/i18n/language.gd")
 
 var t = null
 
@@ -164,15 +163,6 @@ func _check_window(player, hud) -> void:
 		window.visible and window.get("place") == "bag" and "Training Sword" in window.get("_title").text,
 		"the window follows the piece into the bag"
 	)
-	Language.set_language("he")
-	t._check(
-		(
-			TranslationServer.translate("Cost: 30 gold (you have 5000)") == "מחיר: 30 זהב (יש לך 5000)"
-			and TranslationServer.translate("Success! Now +2.") == "הצלחה! עכשיו +2."
-		),
-		"the upgrade window is in Hebrew too"
-	)
-	Language.set_language("en")
 	hud.toggle_inventory()
 	t._check(not window.visible, "closing the bag closes the upgrade window")
 	stats.gold = saved_gold

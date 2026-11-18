@@ -6,7 +6,6 @@ extends RefCounted
 ## bag. smoke_test.gd runs it last; t is the test (a SceneTree).
 
 const ItemDb = preload("res://scripts/items/item_db.gd")
-const Language = preload("res://scripts/i18n/language.gd")
 const PICKUP_SCENE = preload("res://scenes/items/pickup.tscn")
 const JOB_GEAR := ["champion_cape", "azure_hood", "starlit_hat"]
 
@@ -148,15 +147,6 @@ func _check_window(player, hud) -> void:
 		"Elderwood Set %d/6" % int(stats.set_pieces().get("elderwood", 0)) in details,
 		"and counts the set pieces the hero's class can wear"
 	)
-	Language.set_language("he")
-	t._check(
-		(
-			TranslationServer.translate("Epic Elderwood Blade") == "להב עץ קדום אפי"
-			and TranslationServer.translate("Options: +6 ATK (5~7)").begins_with("בונוסים: ")
-		),
-		"the new gear and the Options line are in Hebrew"
-	)
-	Language.set_language("en")
 	stats.bag = saved_bag
 	hud.toggle_inventory()
 	inventory.refresh(stats, null)

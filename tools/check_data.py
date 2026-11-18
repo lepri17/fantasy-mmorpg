@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import json
 import math
-import re
 import sys
 from pathlib import Path
 
@@ -175,51 +174,6 @@ def check_classes(classes: dict, character: dict, items: dict, skills: dict) -> 
                 error(f"items.json: '{item_id}' names unknown class '{class_id}'")
         if "classes" in item and item.get("slot", "") == "":
             error(f"items.json: '{item_id}' is not gear, so it cannot be for some classes only")
-
-
-def check_translations(he: dict) -> None:
-    """he.json: the Hebrew for every text the player reads in the data files,
-    and the same blanks in the Hebrew ({0}, {1}...) as in the English (%s, %d)."""
-    where = "he.json"
-    if not isinstance(he, dict) or not he:
-        error(f"{where}: must be a non-empty object")
-        return
-    for key, value in he.items():
-        if not isinstance(value, str) or not value:
-            error(f"{where}: '{key}' needs a Hebrew text")
-            continue
-        blanks = len(re.findall(r"%(\.\d+)?[sdf]", key))
-        used = {int(n) for n in re.findall(r"\{(\d+)\}", value)}
-        if used != set(range(blanks)):
-            error(f"{where}: '{key}' has {blanks} blanks, the Hebrew uses {sorted(used)}")
-    wanted = []
-    items = load("items")
-    for item in items.get("items", {}).values():
-        wanted += [item.get("name"), item.get("text")]
-    wanted += [r.get("name") for r in items.get("rarities", {}).values()]
-    wanted += [s.get("name") for s in items.get("sets", {}).values()]
-    wanted += list(items.get("slot_names", {}).values())
-    for skill in load("skills").values():
-        wanted += [skill.get("name"), skill.get("text"), skill.get("button")]
-    for quest in load("quests").values():
-        wanted += [quest.get("name"), quest.get("text"), quest.get("done_text")]
-    for npc in load("npcs").values():
-        wanted += [npc.get("name"), npc.get("title"), npc.get("greeting")]
-    for achievement in load("achievements").values():
-        wanted += [achievement.get("name"), achievement.get("text"), achievement.get("title")]
-    for map_data in load("maps").get("maps", {}).values():
-        wanted += [map_data.get("name"), map_data.get("levels")]
-    for monster in load("monsters").values():
-        wanted.append(monster.get("name"))
-    for info in load("classes").get("classes", {}).values():
-        wanted += [info.get("name"), info.get("text"), info.get("resource"),
-                   info.get("resource_short"), info.get("advanced", {}).get("name")]
-        wanted += [rule.get("text") for rule in info.get("stats", {}).values()]
-    for rule in load("character").get("stats", {}).values():
-        wanted += [rule.get("text"), rule.get("short")]
-    for text in wanted:
-        if isinstance(text, str) and text and text not in he:
-            error(f"{where}: no Hebrew for '{text}'")
 
 
 def check_character(character: dict, items: dict, gear_slots: list) -> None:
@@ -550,7 +504,7 @@ def check_upgrades(items_data: dict) -> None:
     if not (isinstance(chances, list) and len(chances) == max_plus
             and all(is_number(c) and 0.01 <= c <= 1.0 for c in chances)):
         error(f"{where}: 'chances' must list {max_plus} chances from 0.01 to 1, one for each +")
-    elif any(later > earlier for earlier, later in zip(chances, chances[1:])):
+    elif any(later > earlier for earlier, later in zip(chances, chances[1:], strict=False)):
         error(f"{where}: 'chances' must not grow with the +")
     need_number(where, upgrades, "miss_bonus", 0.0, 1.0)
     need_number(where, upgrades, "stone_bonus", 0.0, 1.0)
@@ -829,7 +783,6 @@ def main() -> int:
     for item_id, item in items_data.get("items", {}).items():
         need_number(f"items.json: '{item_id}'", item, "price", 0)
     check_art(items)
-    check_translations(load("he"))
     if errors:
         print("DATA PROBLEMS:")
         for message in errors:

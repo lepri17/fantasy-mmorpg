@@ -41,7 +41,6 @@ func _run() -> void:
 	if FileAccess.file_exists(SETTINGS_PATH):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SETTINGS_PATH))
 	Settings.load_file()
-	Settings.set_value("language", "en")  # the checks read English texts
 	_remove_test_save()
 	SlimeScript.elite_chance_override = 0.0  # random elites would change the numbers below
 	seed(20261118)  # the same drops on every run

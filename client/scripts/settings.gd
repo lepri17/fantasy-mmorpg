@@ -1,8 +1,8 @@
 extends RefCounted
 ## The player's settings, kept on the device (user://settings.cfg): music and
-## sound volume, joystick size, a floating joystick, left-handed controls, and
-## the language ("auto" until chosen: the phone's), text size, colour-blind
-## colours, and where the touch buttons are and how big (the button editor).
+## sound volume, joystick size, a floating joystick, left-handed controls, text
+## size, colour-blind colours, and where the touch buttons are and how big (the
+## button editor).
 
 const PATH := "user://settings.cfg"
 const SECTION := "settings"
@@ -15,7 +15,6 @@ const DEFAULTS := {
 	"joystick_size": 1.0,
 	"floating_joystick": false,
 	"left_handed": false,
-	"language": "auto",
 	"text_size": 1.0,
 	"colorblind": false,
 	"button_offsets": {},

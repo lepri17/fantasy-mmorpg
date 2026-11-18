@@ -1,11 +1,11 @@
 extends PanelContainer
 ## U2: the first minutes of a new hero. One short hint at a time at the top of
 ## the screen; each goes away when the hero has done it (moved, attacked,
-## picked up loot, used a skill, opened the bag, gone to town, taken a quest).
+## picked up loot, used a skill, opened the bag, gone to town).
 ## SKIP ends it. The step is kept in the save (player_stats.gd "tutorial").
 
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
-## [id, hint]. The hints are English here and translated like every text.
+## [id, hint].
 const STEPS := [
 	["move", "Move with the joystick on the left (or WASD)."],
 	["attack", "Tap ATK near a monster to attack it."],
@@ -13,8 +13,7 @@ const STEPS := [
 	["skill", "Tap a coloured skill button to use a skill."],
 	["bag", "Open your bag (top right) to see your gear."],
 	["town", "The portal on the left of the meadow leads to town."],
-	["quest", "Talk to people in town (TALK) and take a quest."],
-	["auto", "Tap a quest at the top right to walk to it. AUTO hunts for you. Have fun!"],
+	["auto", "AUTO hunts for you. Explore the world. Have fun!"],
 ]
 ## The last hint stays this long.
 const LAST_SECONDS := 6.0
@@ -97,7 +96,6 @@ func _done(id: String) -> bool:
 		"skill": int(counters.get("skills_used", 0)) > _start["skills"],
 		"bag": hud.get("_inventory").visible,
 		"town": stats.map_id == "town",
-		"quest": not stats.quests.active.is_empty() or not stats.quests.done.is_empty(),
 	}
 	return checks.get(id, true)
 

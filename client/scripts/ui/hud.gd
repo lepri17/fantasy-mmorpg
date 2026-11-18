@@ -4,6 +4,9 @@ extends CanvasLayer
 
 const UpgradePanel := preload("res://scripts/ui/upgrade_panel.gd")
 const ACTION_INVENTORY := "inventory"
+## The quest list at the top right (Mor, 2026-11-18: not needed now). The
+## quests themselves still work; true shows the list again.
+const SHOW_QUEST_LIST := false
 const ACTION_CHARACTER := "character"
 const ACTION_TALK := "talk"
 const NpcDialog := preload("res://scripts/ui/npc_dialog.gd")
@@ -330,7 +333,7 @@ func _quest_rows(npc_id: String) -> Array:
 
 func _update_talk_button() -> void:
 	var any_open: bool = _windows().any(func(each: Control) -> bool: return each.visible)
-	_tracker.visible = not any_open
+	_tracker.visible = SHOW_QUEST_LIST and not any_open
 	_minimap.visible = not any_open
 	_talk_button.visible = (
 		_nearby_npc != null
