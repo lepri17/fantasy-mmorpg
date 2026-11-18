@@ -28,6 +28,17 @@ static var rarities: Dictionary = GameData.table("items")["rarities"]
 static var random_options: Dictionary = GameData.table("items")["random_options"]
 ## +1..+15 upgrades; empty when the data has none.
 static var upgrades: Dictionary = GameData.table("items").get("upgrades", {})
+## Set id -> {"name", "bonuses": {"<pieces worn>": {stat: value}}}.
+static var sets: Dictionary = GameData.table("items").get("sets", {})
+
+
+## How many items belong to a set.
+static func set_size(set_id: String) -> int:
+	var total: int = 0
+	for item_id in items:
+		if items[item_id].get("set", "") == set_id:
+			total += 1
+	return total
 
 
 static func is_gear(item_id: String) -> bool:

@@ -44,7 +44,11 @@
         "leather_gloves",
         "red_cape",
         "blue_plate",
-        "leather_boots"
+        "leather_boots",
+        "verdant_headband",
+        "verdant_cape",
+        "verdant_gloves",
+        "verdant_boots"
       ]
     }
   },
@@ -113,7 +117,13 @@
         "leather_gloves",
         "red_cape",
         "blue_plate",
-        "leather_boots"
+        "leather_boots",
+        "verdant_headband",
+        "verdant_cape",
+        "verdant_gloves",
+        "verdant_boots",
+        "crimson_plate",
+        "crimson_sword"
       ]
     }
   }

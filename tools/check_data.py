@@ -305,6 +305,30 @@ def check_gear(items_data: dict, monsters: dict, elite: dict) -> None:
         if "stamina_fraction" in item:
             need_number(f"items.json: '{item_id}'", item, "stamina_fraction", 0.01, 1.0)
     check_upgrades(items_data)
+    check_sets(items_data)
+
+
+def check_sets(items_data: dict) -> None:
+    """Look-alike gear ("look") and sets ("set", with bonuses by pieces worn)."""
+    items = items_data.get("items", {})
+    sets = items_data.get("sets", {})
+    for item_id, item in items.items():
+        where = f"items.json: '{item_id}'"
+        if "look" in item:
+            base = items.get(item["look"], {})
+            if not base.get("slot") or base.get("slot") != item.get("slot") or "look" in base:
+                error(f"{where}: look '{item['look']}' must be plain gear of the same slot")
+        if "set" in item and item["set"] not in sets:
+            error(f"{where}: set '{item['set']}' is not in 'sets'")
+    for set_id, set_data in sets.items():
+        where = f"items.json: set '{set_id}'"
+        size = sum(1 for item in items.values() if item.get("set") == set_id)
+        if not isinstance(set_data.get("name"), str):
+            error(f"{where}: needs a 'name'")
+        for needed, bonus in set_data.get("bonuses", {}).items():
+            if not needed.isdigit() or not 2 <= int(needed) <= size:
+                error(f"{where}: bonus key '{needed}' must be a piece count from 2 to {size}")
+            check_bonus(f"{where} bonus {needed}", bonus)
 
 
 def check_upgrades(items_data: dict) -> None:
@@ -342,6 +366,17 @@ def check_art(items: dict) -> None:
         for item_id in needed:
             if item_id not in items:
                 error(f"generate_assets.py: part '{part}' needs unknown item '{item_id}'")
+    variants = generate_assets.LOOK_VARIANTS
+    for item_id, (base, _, parts, _) in variants.items():
+        if items.get(item_id, {}).get("look") != base:
+            error(f"generate_assets.py: '{item_id}' is drawn like '{base}', "
+                  "but items.json does not give it that look")
+        for part in parts:
+            if base not in generate_assets.PART_REQUIRES.get(part, []):
+                error(f"generate_assets.py: '{item_id}' recolours '{part}', not a part of '{base}'")
+    for item_id, item in items.items():
+        if "look" in item and item_id not in variants:
+            error(f"items.json: '{item_id}' has a look but no recoloured art in LOOK_VARIANTS")
 
 
 def main() -> int:

@@ -185,6 +185,65 @@
       "icon": "res://assets/items/icons/moon_stone.png",
       "world_icon": "res://assets/items/moon_stone.png",
       "text": "Upgrades gear from +6 to +15. It can fail, and above +9 a failure costs a level."
+    },
+    "verdant_headband": {
+      "name": "Verdant Headband",
+      "slot": "head",
+      "look": "red_headband",
+      "set": "verdant",
+      "max_hp": 10,
+      "defense": 1,
+      "icon": "res://assets/items/icons/verdant_headband.png",
+      "text": "Woven from forest thread."
+    },
+    "verdant_cape": {
+      "name": "Verdant Cape",
+      "slot": "cape",
+      "look": "red_cape",
+      "set": "verdant",
+      "max_hp": 10,
+      "evasion": 0.01,
+      "icon": "res://assets/items/icons/verdant_cape.png",
+      "text": "Light as a leaf."
+    },
+    "verdant_gloves": {
+      "name": "Verdant Gloves",
+      "slot": "gloves",
+      "look": "leather_gloves",
+      "set": "verdant",
+      "attack": 2,
+      "crit_chance": 0.03,
+      "icon": "res://assets/items/icons/verdant_gloves.png",
+      "text": "A sure grip for quick hits."
+    },
+    "verdant_boots": {
+      "name": "Verdant Boots",
+      "slot": "boots",
+      "look": "leather_boots",
+      "set": "verdant",
+      "max_hp": 10,
+      "evasion": 0.03,
+      "icon": "res://assets/items/icons/verdant_boots.png",
+      "text": "Soft soles for a fast step."
+    },
+    "crimson_plate": {
+      "name": "Crimson Plate",
+      "slot": "armor",
+      "look": "blue_plate",
+      "set": "crimson",
+      "max_hp": 30,
+      "defense": 5,
+      "icon": "res://assets/items/icons/crimson_plate.png",
+      "text": "Heavy red plate, hard to dent."
+    },
+    "crimson_sword": {
+      "name": "Crimson Sword",
+      "slot": "weapon",
+      "look": "training_sword",
+      "set": "crimson",
+      "attack": 8,
+      "icon": "res://assets/items/icons/crimson_sword.png",
+      "text": "A red-steel blade."
     }
   },
   "upgrades": {
@@ -229,6 +288,29 @@
       },
       "boots": {
         "max_hp": 3
+      }
+    }
+  },
+  "sets": {
+    "verdant": {
+      "name": "Verdant Set",
+      "bonuses": {
+        "2": {
+          "max_hp": 15
+        },
+        "4": {
+          "attack": 3,
+          "evasion": 0.03
+        }
+      }
+    },
+    "crimson": {
+      "name": "Crimson Set",
+      "bonuses": {
+        "2": {
+          "attack": 4,
+          "defense": 2
+        }
       }
     }
   }

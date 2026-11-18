@@ -14,6 +14,7 @@ const CombatRules = preload("res://scripts/combat/combat_rules.gd")
 const SlimeScript = preload("res://scripts/enemies/slime.gd")
 const AchievementRecord = preload("res://scripts/player/achievement_record.gd")
 const ItemDb = preload("res://scripts/items/item_db.gd")
+const WarriorLook = preload("res://scripts/player/warrior_look.gd")
 
 var _failures: int = 0
 
@@ -436,6 +437,45 @@ func _run() -> void:
 		"the auto potion setting is saved, and odd values turn it off"
 	)
 	player.stats.auto_potion = 0
+
+	# --- sets: look-alike gear in its own colours, and bonuses by pieces worn
+	var dresser = PlayerStats.new()
+	var hp_plain: int = dresser.max_hp()
+	var attack_plain: int = dresser.attack_damage()
+	var defense_plain: int = dresser.defense()
+	var look_plain: PackedByteArray = WarriorLook.build(dresser.equipment).get_image().get_data()
+	dresser.equipment["head"] = ItemDb.gear("verdant_headband")
+	dresser.equipment["cape"] = ItemDb.gear("verdant_cape")
+	_check(
+		dresser.set_pieces().get("verdant", 0) == 2 and dresser.max_hp() == hp_plain + 25,
+		"two Verdant pieces add their HP and the 2-piece bonus (%d)" % dresser.max_hp()
+	)
+	dresser.equipment["gloves"] = ItemDb.gear("verdant_gloves")
+	dresser.equipment["boots"] = ItemDb.gear("verdant_boots")
+	_check(
+		dresser.attack_damage() == attack_plain + 4,
+		"four Verdant pieces add the 4-piece bonus (attack %d)" % dresser.attack_damage()
+	)
+	dresser.equipment["weapon"] = ItemDb.gear("crimson_sword")
+	dresser.equipment["armor"] = ItemDb.gear("crimson_plate")
+	_check(
+		dresser.attack_damage() == attack_plain + 12 and dresser.defense() == defense_plain + 4,
+		"the Crimson pair adds +4 attack and +2 defense on top of its own"
+	)
+	var look_sets: PackedByteArray = WarriorLook.build(dresser.equipment).get_image().get_data()
+	_check(
+		look_sets.size() == look_plain.size() and look_sets != look_plain,
+		"the sets are drawn in their own colours"
+	)
+	while player.stats.bag.size() >= 14:
+		player.stats.bag.pop_back()
+	player.add_stack(ItemDb.gear("verdant_headband"))
+	inventory.refresh(player.stats, null)
+	inventory.call("_on_slot_tapped", inventory.bag_slots[player.stats.bag.size() - 1])
+	_check(
+		"Verdant Set (0/4 worn)" in inventory.get("_info_label").text,
+		"the details name the set and how much of it is worn"
+	)
 
 	# --- the character window: C opens it, + spends a point, titles change
 	var character = hud.get_node("Character")

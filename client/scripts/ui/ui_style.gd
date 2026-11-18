@@ -4,6 +4,34 @@ extends RefCounted
 
 const GOLD_TEXT := Color(1.0, 0.86, 0.45)
 const FRAME_BORDER := Color(0.85, 0.68, 0.32)
+const BONUS_NAMES := {
+	"attack": "Attack",
+	"max_hp": "Max HP",
+	"defense": "Defense",
+	"max_stamina": "Max Stamina",
+	"crit_chance": "Crit",
+	"evasion": "Evasion",
+	"skill_damage": "Skill damage",
+}
+const PERCENT_BONUSES := ["crit_chance", "evasion", "skill_damage"]
+
+
+## "+1 Attack, +2% Crit", or "No bonus".
+static func bonus_text(bonus: Dictionary) -> String:
+	var parts := PackedStringArray()
+	for stat in bonus:
+		var value: float = float(bonus[stat])
+		var stat_name: String = BONUS_NAMES.get(stat, stat)
+		if stat in PERCENT_BONUSES:
+			parts.append("+%s%% %s" % [number(value * 100.0), stat_name])
+		else:
+			parts.append("+%s %s" % [number(value), stat_name])
+	return "No bonus" if parts.is_empty() else ", ".join(parts)
+
+
+## 3 -> "3", 2.5 -> "2.5".
+static func number(value: float) -> String:
+	return str(roundi(value)) if is_equal_approx(value, roundf(value)) else "%.1f" % value
 
 
 static func label(text: String, font_size: int, color: Color) -> Label:

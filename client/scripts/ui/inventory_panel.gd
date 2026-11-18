@@ -126,7 +126,7 @@ func _show_details() -> void:
 		var worn: Dictionary = {}
 		if _selected.place == "bag" and _stats != null:
 			worn = _stats.equipment.get(item["slot"], {})
-		text = _gear_text(stack, worn) + " " + text + "\n" + _upgrade_text(stack)
+		text = _gear_text(stack, worn) + " " + text + _set_text(item) + "\n" + _upgrade_text(stack)
 		name_color = ItemDb.rarity_color(stack)
 	_name_label.text = ItemDb.display_name(stack, true)
 	_name_label.add_theme_color_override("font_color", name_color)
@@ -155,6 +155,22 @@ func _gear_text(stack: Dictionary, worn: Dictionary) -> String:
 	if not worn.is_empty():
 		text = "Compared with your %s:\n%s" % [ItemDb.display_name(worn), text]
 	return text
+
+
+## " Verdant Set (2/4 worn): 2 = +15 Max HP; 4 = +3 Attack, +3% Evasion."
+func _set_text(item: Dictionary) -> String:
+	var set_id: String = item.get("set", "")
+	if set_id == "" or not ItemDb.sets.has(set_id):
+		return ""
+	var worn: int = int(_stats.set_pieces().get(set_id, 0)) if _stats != null else 0
+	var steps := PackedStringArray()
+	var bonuses: Dictionary = ItemDb.sets[set_id]["bonuses"]
+	for needed in bonuses:
+		steps.append("%s = %s" % [needed, UiStyle.bonus_text(bonuses[needed])])
+	return (
+		" %s (%d/%d worn): %s."
+		% [ItemDb.sets[set_id]["name"], worn, ItemDb.set_size(set_id), "; ".join(steps)]
+	)
 
 
 ## "Next: +4 with an Ember Stone, 100% (you have 2)."

@@ -181,9 +181,31 @@ func gear_bonus_fraction(stat: String) -> float:
 
 ## One stat over all the gear worn: own values, random options and upgrades.
 func gear_total(stat: String) -> float:
-	var total: float = 0.0
+	var total: float = set_bonus(stat)
 	for stack in equipment.values():
 		total += ItemDb.stat_of(stack, stat)
+	return total
+
+
+## Set id -> how many of its pieces are worn.
+func set_pieces() -> Dictionary:
+	var counts: Dictionary = {}
+	for stack in equipment.values():
+		var set_id: String = ItemDb.items[stack["id"]].get("set", "")
+		if set_id != "":
+			counts[set_id] = int(counts.get(set_id, 0)) + 1
+	return counts
+
+
+## What the worn sets add to one stat: every bonus whose piece count is reached.
+func set_bonus(stat: String) -> float:
+	var total: float = 0.0
+	var counts: Dictionary = set_pieces()
+	for set_id in counts:
+		var bonuses: Dictionary = ItemDb.sets[set_id]["bonuses"]
+		for needed in bonuses:
+			if int(counts[set_id]) >= int(needed):
+				total += float(bonuses[needed].get(stat, 0.0))
 	return total
 
 
