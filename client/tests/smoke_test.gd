@@ -550,6 +550,7 @@ func _run() -> void:
 	player.global_position = blue.global_position + Vector2(30, 0)
 	await _frames(5)
 	player.set("_invincible_left", 0.0)
+	player.hp = player.max_hp  # the slam must not knock out a warrior worn down earlier
 	var hp_before_slam: int = player.hp
 	blue.call("_start_slam")
 	_check(get_nodes_in_group("telegraphs").size() > 0, "a red circle warns before the slam")
@@ -562,6 +563,9 @@ func _run() -> void:
 
 	# --- a moment of invincibility after a hit
 	_freeze(enemies, true)  # no slime may land a hit of its own in this check
+	while player.is_dead:
+		await _frames(10)
+	_check(not player.is_dead, "the warrior is standing before the invincibility check")
 	player.global_position = Vector2(1000, 500)
 	await _frames(5)
 	player.set("_invincible_left", 0.0)
