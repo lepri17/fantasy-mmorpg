@@ -57,6 +57,8 @@ const TARGET_MARKER_REACH := 1.6
 const HURT_ANIMATION_SECONDS := 0.2
 const STATUS_COLOR := Color(0.75, 0.9, 1.0)
 const ACHIEVEMENT_COLOR := Color(1.0, 0.72, 0.95)
+const QUEST_COLOR := Color(0.6, 0.9, 1.0)
+const QuestLog = preload("res://scripts/player/quest_log.gd")
 
 ## Walking speed in pixels per second.
 @export var move_speed: float = 220.0
@@ -325,8 +327,52 @@ func cycle_auto_potion(_unused: Variant = null) -> void:
 	_progress_changed()
 
 
+## Takes a quest a townsperson offers.
+func accept_quest(quest_id: String) -> void:
+	if stats.quests.start(quest_id, stats, QuestLog.today()):
+		_say("New quest: %s." % QuestLog.list[quest_id]["name"], QUEST_COLOR)
+		_progress_changed()
+
+
+## Hands a finished quest back to its giver: collected items go, the reward comes.
+func turn_in_quest(quest_id: String) -> void:
+	if stats.quests.state(quest_id, stats, QuestLog.today()) != "ready":
+		return
+	var quest: Dictionary = QuestLog.list[quest_id]
+	var reward: Dictionary = quest.get("reward", {})
+	if not stats.room_for(reward.get("items", [])):
+		_say("Make room in your bag for the reward first.", WARNING_COLOR)
+		return
+	if quest["goal"]["type"] == "collect":
+		stats.remove_items(quest["goal"]["item"], int(quest["goal"]["count"]))
+	stats.quests.finish(quest_id, QuestLog.today())
+	FloatingText.spawn(self, "QUEST COMPLETE!", QUEST_COLOR, 130.0, 28)
+	_say("Quest complete: %s!" % quest["name"], QUEST_COLOR)
+	for entry in reward.get("items", []):
+		stats.add_item(entry["id"], int(entry["count"]))
+		_say("Got %s x%d." % [_item_name(entry["id"]), int(entry["count"])], QUEST_COLOR)
+	if int(reward.get("gold", 0)) > 0:
+		add_gold(int(reward["gold"]))
+	if int(reward.get("xp", 0)) > 0:
+		gain_xp(int(reward["xp"]))
+	_progress_changed()
+
+
+## Talking to a townsperson finishes the "talk" goals about them.
+func talked_to(npc_id: String) -> void:
+	var reached: Array = stats.quests.on_talk(npc_id)
+	for quest_id in reached:
+		_say("%s: done! Go back for the reward." % QuestLog.list[quest_id]["name"], QUEST_COLOR)
+	if not reached.is_empty():
+		_progress_changed()
+
+
 ## Called by a monster as it dies, just before it gives its XP (which saves).
 func record_kill(monster_id: String, elite: bool) -> void:
+	for quest_id in stats.quests.on_kill(monster_id):
+		var counted: int = stats.quests.progress(quest_id, stats)
+		var needed: int = stats.quests.goal_count(quest_id)
+		_say("%s %d/%d" % [QuestLog.list[quest_id]["name"], counted, needed], QUEST_COLOR)
 	var earned: Array = _count("kills")
 	earned += _count("kills:" + monster_id)
 	if elite:

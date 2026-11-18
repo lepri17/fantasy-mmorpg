@@ -2,16 +2,20 @@ extends PanelContainer
 ## The character window (STATS button or C). STATS page: level, free points,
 ## a + button for each of STR, AGI, VIT and ENE, the numbers that follow from
 ## them, and a stat reset for gold. TITLES page: the title shown (with < and >
-## to change it) and every achievement with its progress. Only shows state:
+## to change it) and every achievement with its progress. QUESTS page: the
+## quest journal, active quests first. Only shows state:
 ## each change is a request that the HUD passes on to the player.
 
 signal close_requested
 signal request(method: String, argument: Variant)
 
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
+const GameData := preload("res://scripts/data/game_data.gd")
 const CombatRules := preload("res://scripts/combat/combat_rules.gd")
 const PlayerStats := preload("res://scripts/player/player_stats.gd")
 const AchievementRecord := preload("res://scripts/player/achievement_record.gd")
+const QuestLog := preload("res://scripts/player/quest_log.gd")
+const QUEST_STATES := {"ready": "done, hand it in", "active": "", "available": "can start"}
 
 const POINTS_COLOR := Color(0.55, 1.0, 0.6)
 const DIM_TEXT := Color(0.78, 0.75, 0.84)
@@ -29,6 +33,7 @@ var _reset_button: Button
 var _title_label: Label
 var _title_bonus_label: Label
 var _achievement_rows: VBoxContainer
+var _quest_rows: VBoxContainer
 ## "stats" / "titles" -> the page, and -> its tab button.
 var _pages: Dictionary = {}
 var _tab_buttons: Dictionary = {}
@@ -47,6 +52,7 @@ func _ready() -> void:
 	column.add_child(_tabs_row())
 	_pages["stats"] = _stats_page()
 	_pages["titles"] = _titles_page()
+	_pages["quests"] = _quests_page()
 	for page in _pages.values():
 		page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		column.add_child(page)
@@ -88,6 +94,36 @@ func refresh(stats) -> void:
 		_reset_button, stats.spent_points() > 0 and stats.gold >= stats.reset_cost()
 	)
 	_refresh_titles(stats.record, stats.level)
+	_refresh_quests(stats)
+
+
+## Active quests (with progress), then the ones that can be taken now.
+func _refresh_quests(stats) -> void:
+	for child in _quest_rows.get_children():
+		_quest_rows.remove_child(child)
+		child.queue_free()
+	var today: String = QuestLog.today()
+	for wanted in ["ready", "active", "available"]:
+		for quest_id in QuestLog.list:
+			if stats.quests.state(quest_id, stats, today) != wanted:
+				continue
+			var quest: Dictionary = QuestLog.list[quest_id]
+			var needed: int = stats.quests.goal_count(quest_id)
+			var counted: int = mini(stats.quests.progress(quest_id, stats), needed)
+			var status: String = QUEST_STATES[wanted]
+			if wanted == "active":
+				status = "%d/%d" % [counted, needed]
+			var giver: String = GameData.table("npcs")[quest["giver"]]["name"]
+			var row := UiStyle.label(
+				"%s  %s\n%s From %s." % [quest["name"], status, quest["text"], giver],
+				14,
+				DONE_TEXT if wanted == "ready" else (Color.WHITE if wanted == "active" else DIM_TEXT)
+			)
+			row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			_quest_rows.add_child(row)
+	if _quest_rows.get_child_count() == 0:
+		_quest_rows.add_child(UiStyle.label("No quests yet. Ask in Willow Town.", 14, DIM_TEXT))
 
 
 func _refresh_titles(record, level: int) -> void:
@@ -151,7 +187,7 @@ func _title_row() -> Control:
 func _tabs_row() -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	for page_name in ["stats", "titles"]:
+	for page_name in ["stats", "titles", "quests"]:
 		var tab := UiStyle.button(page_name.to_upper(), BROWN, Vector2(0, 40))
 		tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tab.pressed.connect(show_page.bind(page_name))
@@ -201,6 +237,16 @@ func _stat_row(stat_id: String, rule: Dictionary) -> Control:
 	_stat_values[stat_id] = value
 	_plus_buttons[stat_id] = plus
 	return row
+
+
+func _quests_page() -> Control:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_quest_rows = VBoxContainer.new()
+	_quest_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_quest_rows.add_theme_constant_override("separation", 10)
+	scroll.add_child(_quest_rows)
+	return scroll
 
 
 func _titles_page() -> Control:

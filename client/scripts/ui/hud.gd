@@ -11,8 +11,16 @@ const StoragePanel := preload("res://scripts/ui/storage_panel.gd")
 const GameData := preload("res://scripts/data/game_data.gd")
 ## Player methods the town windows (dialog, shop, storage) may ask for.
 const TOWN_ACTIONS := [
-	"buy_item", "sell_from_bag", "store_item", "take_stored", "heal_at_npc", "travel"
+	"buy_item",
+	"sell_from_bag",
+	"store_item",
+	"take_stored",
+	"heal_at_npc",
+	"travel",
+	"accept_quest",
+	"turn_in_quest",
 ]
+const QuestLog := preload("res://scripts/player/quest_log.gd")
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
 const PlayerStats := preload("res://scripts/player/player_stats.gd")
 const DEATH_RED := Color(1.0, 0.45, 0.5)
@@ -38,6 +46,7 @@ var _dialog
 var _shop
 var _storage
 var _talk_button: Button
+var _tracker: Label
 ## The townsperson close enough to talk to, or null.
 var _nearby_npc: Node = null
 var _death_screen: Control
@@ -137,12 +146,29 @@ func clear_nearby_npc(npc: Node) -> void:
 func talk() -> void:
 	if _nearby_npc == null or not is_instance_valid(_nearby_npc):
 		return
-	_dialog.open(_nearby_npc.get("npc_id"))
+	var npc_id: String = _nearby_npc.get("npc_id")
+	_player.call("talked_to", npc_id)
+	_dialog.open(npc_id, _quest_rows(npc_id))
 	_show_window(_dialog, true)
 
 
+## Dialog rows for the quests this townsperson gives that can be taken or handed in.
+func _quest_rows(npc_id: String) -> Array:
+	var rows: Array = []
+	var stats = _player.get("stats")
+	for quest_id in QuestLog.given_by(npc_id):
+		var quest: Dictionary = QuestLog.list[quest_id]
+		match stats.quests.state(quest_id, stats, QuestLog.today()):
+			"ready":
+				rows.append(["Complete: %s" % quest["name"], "turn_in_quest", quest_id])
+			"available":
+				var kind: String = "Daily" if quest.get("daily", false) else "Quest"
+				rows.append(["%s: %s" % [kind, quest["name"]], "offer_quest", quest_id])
+	return rows
+
 func _update_talk_button() -> void:
 	var any_open: bool = _windows().any(func(each: Control) -> bool: return each.visible)
+	_tracker.visible = not any_open
 	_talk_button.visible = (
 		_nearby_npc != null
 		and is_instance_valid(_nearby_npc)
@@ -161,6 +187,13 @@ func _on_town_request(method: String, argument: Variant) -> void:
 			_show_window(_shop, true)
 		"open_storage":
 			_show_window(_storage, true)
+		"offer_quest":
+			var quest: Dictionary = QuestLog.list[argument]
+			_dialog.open(_dialog.npc_id, [["Accept", "accept_quest", argument]], quest["text"], false)
+		"turn_in_quest":
+			_player.call("turn_in_quest", argument)
+			if not _player.get("stats").quests.active.has(argument):
+				_dialog.open(_dialog.npc_id, [], QuestLog.list[argument]["done_text"], false)
 		"buy_item":
 			var stock: Array = GameData.table("npcs").get(_shop.npc_id, {}).get("shop", [])
 			if argument in stock:
@@ -168,7 +201,7 @@ func _on_town_request(method: String, argument: Variant) -> void:
 		_:
 			if method in TOWN_ACTIONS:
 				_player.call(method, argument)
-				if method in ["travel", "heal_at_npc"]:
+				if method in ["travel", "heal_at_npc", "accept_quest"]:
 					_close_windows()
 
 
@@ -220,6 +253,24 @@ func _refresh_progress() -> void:
 	var free: int = stats.free_points()
 	_stats_button.text = "STATS" if free == 0 else "STATS\n+%d" % free
 	_refresh_windows()
+	_refresh_tracker(stats)
+
+
+## Active quests at the top right: "Slime Cleanup 3/8".
+func _refresh_tracker(stats) -> void:
+	var lines := PackedStringArray()
+	for quest_id in stats.quests.active:
+		var quest: Dictionary = QuestLog.list[quest_id]
+		var counted: int = mini(stats.quests.progress(quest_id, stats), stats.quests.goal_count(quest_id))
+		var needed: int = stats.quests.goal_count(quest_id)
+		var line: String = "%s  %d/%d" % [quest["name"], counted, needed]
+		if quest["goal"]["type"] == "talk":
+			var who: String = GameData.table("npcs")[quest["goal"]["npc"]]["name"]
+			line = "%s: talk to %s" % [quest["name"], who]
+		if counted >= needed:
+			line += "  (done)"
+		lines.append(line)
+	_tracker.text = "\n".join(lines)
 
 
 func _style_round_button(button: Button) -> void:
@@ -295,6 +346,14 @@ func _build_town_windows() -> void:
 	_talk_button.pressed.connect(talk)
 	_talk_button.hide()
 	add_child(_talk_button)
+	_tracker = UiStyle.label("", 15, Color(0.6, 0.9, 1.0))
+	_tracker.name = "QuestTracker"
+	_tracker.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_tracker.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.12))
+	_tracker.add_theme_constant_override("outline_size", 5)
+	_tracker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_place(_tracker, Control.PRESET_TOP_RIGHT, Rect2(-460, 100, 444, 120))
+	add_child(_tracker)
 
 
 ## Anchors a control to a corner or side, offset by rect (position and size).

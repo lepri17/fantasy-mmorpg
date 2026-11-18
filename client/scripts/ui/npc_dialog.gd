@@ -33,8 +33,9 @@ func _ready() -> void:
 	add_child(column)
 
 
-## Shows a townsperson. extra: [text, method, argument] rows to add (quests).
-func open(id: String, extra: Array = [], text: String = "") -> void:
+## Shows a townsperson. extra: [text, method, argument] rows to add (quests);
+## text replaces the greeting; with_services false shows only extra and Goodbye.
+func open(id: String, extra: Array = [], text: String = "", with_services: bool = true) -> void:
 	npc_id = id
 	var data: Dictionary = GameData.table("npcs")[id]
 	_name_label.text = "%s, %s" % [data["name"], data["title"]]
@@ -42,7 +43,7 @@ func open(id: String, extra: Array = [], text: String = "") -> void:
 	for child in _options.get_children():
 		_options.remove_child(child)
 		child.queue_free()
-	for service in data["services"]:
+	for service in data["services"] if with_services else []:
 		match service:
 			"shop":
 				_add_option("Buy and sell", "open_shop", id)

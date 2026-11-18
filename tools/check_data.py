@@ -359,6 +359,43 @@ OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc"}
 SERVICES = {"shop", "heal", "storage", "teleport", "quests"}
 
 
+def check_quests(quests: dict, npcs: dict, items: dict, monsters: dict) -> None:
+    """quests.json: givers, goals, rewards and the order quests open in."""
+    for quest_id, quest in quests.items():
+        where = f"quests.json: '{quest_id}'"
+        for key in ("name", "text", "done_text"):
+            if not isinstance(quest.get(key), str) or not quest[key]:
+                error(f"{where}: needs a '{key}'")
+        if quest.get("giver") not in npcs:
+            error(f"{where}: giver '{quest.get('giver')}' is not in npcs.json")
+        need_number(where, quest, "level", 1, 999)
+        if "after" in quest and quest["after"] not in quests:
+            error(f"{where}: comes after unknown quest '{quest['after']}'")
+        goal = quest.get("goal", {})
+        kind = goal.get("type")
+        if kind == "kill":
+            if goal.get("monster") != "any" and goal.get("monster") not in monsters:
+                error(f"{where}: kills unknown monster '{goal.get('monster')}'")
+            need_number(where + " goal", goal, "count", 1)
+        elif kind == "collect":
+            if goal.get("item") not in items:
+                error(f"{where}: collects unknown item '{goal.get('item')}'")
+            need_number(where + " goal", goal, "count", 1)
+        elif kind == "talk":
+            if goal.get("npc") not in npcs:
+                error(f"{where}: talks to unknown npc '{goal.get('npc')}'")
+        else:
+            error(f"{where}: goal type must be kill, collect or talk")
+        reward = quest.get("reward", {})
+        for key in ("xp", "gold"):
+            if key in reward:
+                need_number(where + " reward", reward, key, 0)
+        for entry in reward.get("items", []):
+            if entry.get("id") not in items:
+                error(f"{where}: rewards unknown item '{entry.get('id')}'")
+            need_number(where + " reward", entry, "count", 1)
+
+
 def check_npcs(npcs: dict, items: dict) -> None:
     """npcs.json: names, looks with art, services, and what shops sell."""
     for npc_id, npc in npcs.items():
@@ -500,6 +537,7 @@ def main() -> int:
                    load("achievements"))
     check_gear(items_data, load("monsters"), elite)
     check_npcs(load("npcs"), items_data.get("items", {}))
+    check_quests(load("quests"), load("npcs"), items_data.get("items", {}), load("monsters"))
     check_maps(load("maps"), load("monsters"), load("npcs"))
     need_number("character.json", load("character"), "storage_size", 1, 200)
     need_number("items.json", items_data, "sell_fraction", 0.01, 1.0)

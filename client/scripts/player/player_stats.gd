@@ -6,6 +6,7 @@ extends RefCounted
 const ItemDb := preload("res://scripts/items/item_db.gd")
 const GameData := preload("res://scripts/data/game_data.gd")
 const AchievementRecord := preload("res://scripts/player/achievement_record.gd")
+const QuestLog := preload("res://scripts/player/quest_log.gd")
 
 ## Version of what to_dict() writes. 1 = level, xp, gold, potions.
 ## 2 = adds the bag and the gear; potions live in the bag.
@@ -13,7 +14,8 @@ const AchievementRecord := preload("res://scripts/player/achievement_record.gd")
 ## 4 = gear keeps its own rarity, upgrade level and random options.
 ## 5 = adds the map the warrior is on.
 ## 6 = adds the storage in town.
-const SAVE_VERSION := 6
+## 7 = adds quests.
+const SAVE_VERSION := 7
 const POTION_ID := "red_potion"
 
 ## The numbers from res://data/character.json: health and damage without gear
@@ -50,6 +52,8 @@ var storage: Array = []
 var map_id: String = ""
 ## Drink a red potion by itself below this percent of HP (0 = off).
 var auto_potion: int = 0
+## Quests taken and finished (quest_log.gd).
+var quests = QuestLog.new()
 ## Achievements, their counters and the title shown (achievement_record.gd).
 var record = AchievementRecord.new()
 
@@ -335,6 +339,25 @@ func upgrade(stack: Dictionary, roll: float) -> String:
 	return "same"
 
 
+## Takes some of an item out of the bag (a quest's collected items).
+func remove_items(item_id: String, count: int) -> bool:
+	if count_of(item_id) < count:
+		return false
+	_set_count(item_id, count_of(item_id) - count)
+	return true
+
+
+## True when all these [{"id", "count"}] would fit in the bag together.
+func room_for(entries: Array) -> bool:
+	var slots_needed: int = 0
+	for entry in entries:
+		if ItemDb.is_gear(entry["id"]):
+			slots_needed += int(entry.get("count", 1))
+		elif _stack_index(entry["id"]) < 0:
+			slots_needed += 1
+	return bag.size() + slots_needed <= bag_size
+
+
 ## Moves a whole bag slot into storage. Returns false when storage is full.
 func store(index: int) -> bool:
 	if index < 0 or index >= bag.size():
@@ -398,7 +421,7 @@ func to_dict() -> Dictionary:
 		"auto_potion": auto_potion,
 		"map": map_id,
 		"storage": storage.duplicate(true),
-	}.merged(record.to_dict())
+	}.merged(record.to_dict()).merged(quests.to_dict())
 
 
 func from_dict(data: Dictionary) -> void:
@@ -445,6 +468,7 @@ func _load_progress(data: Dictionary) -> void:
 			if skills.has(skill_id) and not learned_skills.has(skill_id):
 				learned_skills.append(skill_id)
 	record.from_dict(data)
+	quests.from_dict(data)
 	map_id = str(data.get("map", ""))
 	storage = []
 	var saved_storage = data.get("storage", [])

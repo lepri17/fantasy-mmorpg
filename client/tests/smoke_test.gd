@@ -810,6 +810,90 @@ func _run() -> void:
 	player.hp = 10
 	player.heal_at_npc()
 	_check(player.hp == player.max_hp, "Sister Lune heals fully")
+	# --- quests (W4) and daily quests (W5)
+	var quest_book = PlayerStats.new()
+	quest_book.level = 2
+	var day: String = "2026-11-18"
+	_check(
+		quest_book.quests.state("blue_trouble", quest_book, day) == "locked",
+		"Blue Trouble waits for Slime Cleanup and level 3"
+	)
+	_check(quest_book.quests.start("slime_cleanup", quest_book, day), "Slime Cleanup can be taken")
+	for _i in 8:
+		quest_book.quests.on_kill("green_slime")
+	quest_book.quests.on_kill("blue_slime")
+	_check(
+		quest_book.quests.state("slime_cleanup", quest_book, day) == "ready",
+		"eight green slimes finish Slime Cleanup"
+	)
+	quest_book.quests.finish("slime_cleanup", day)
+	_check(quest_book.quests.state("slime_cleanup", quest_book, day) == "done", "a quest is done once")
+	quest_book.quests.start("daily_patrol", quest_book, day)
+	for _i in 15:
+		quest_book.quests.on_kill("blue_slime")
+	quest_book.quests.finish("daily_patrol", day)
+	_check(
+		(
+			quest_book.quests.state("daily_patrol", quest_book, day) == "done"
+			and quest_book.quests.state("daily_patrol", quest_book, "2026-11-19") == "available"
+		),
+		"a daily quest comes back the next day"
+	)
+	var saved_quests = PlayerStats.new()
+	saved_quests.from_dict(quest_book.to_dict())
+	_check(saved_quests.quests.done == quest_book.quests.done, "quests survive saving (version 7)")
+	while player.stats.bag.size() >= 13:
+		player.stats.bag.pop_back()
+	var rowan = townspeople.filter(func(npc): return npc.npc_id == "captain")[0]
+	var lune = townspeople.filter(func(npc): return npc.npc_id == "healer")[0]
+	player.global_position = rowan.global_position + Vector2(70, 30)
+	await _frames(4)
+	hud.talk()
+	_check(dialog.option("Quest: A Friendly Face") != null, "Captain Rowan offers a quest")
+	if dialog.option("Quest: A Friendly Face") != null:
+		dialog.option("Quest: A Friendly Face").pressed.emit()
+		dialog.option("Accept").pressed.emit()
+	_check(player.stats.quests.active.has("a_friendly_face"), "Accept takes the quest")
+	_check(
+		"A Friendly Face" in hud.get_node("QuestTracker").text, "the quest shows at the top right"
+	)
+	player.global_position = lune.global_position + Vector2(70, 30)
+	await _frames(4)
+	hud.talk()
+	hud.call("_close_windows")
+	player.global_position = rowan.global_position + Vector2(70, 30)
+	await _frames(4)
+	hud.talk()
+	var blue_before_reward: int = player.stats.count_of("blue_potion")
+	if dialog.option("Complete: A Friendly Face") != null:
+		dialog.option("Complete: A Friendly Face").pressed.emit()
+	_check(
+		(
+			player.stats.quests.done.has("a_friendly_face")
+			and player.stats.count_of("blue_potion") == blue_before_reward + 2
+		),
+		"after talking to Sister Lune, Rowan gives the reward"
+	)
+	hud.call("_close_windows")
+	player.accept_quest("sticky_business")
+	player.add_item("slime_jelly", 5)
+	var jelly_held: int = player.stats.count_of("slime_jelly")
+	player.turn_in_quest("sticky_business")
+	_check(
+		(
+			player.stats.count_of("slime_jelly") == jelly_held - 5
+			and player.stats.quests.done.has("sticky_business")
+		),
+		"Sticky Business takes 5 Slime Jelly for its reward"
+	)
+	hud.toggle_character()
+	var journal = hud.get_node("Character")
+	journal.show_page("quests")
+	_check(
+		journal.get("_quest_rows").get_child_count() > 0, "the QUESTS page lists quests to take"
+	)
+	hud.toggle_character()
+
 	player.stats.gold = 100
 	player.travel("forest")
 	await _frames(3)
@@ -819,6 +903,8 @@ func _run() -> void:
 	)
 
 	_remove_test_save()
+	root.remove_child(main)
+	main.free()  # free the game before quitting, so nothing is left in use at exit
 	print("SMOKE TEST: %s" % ("PASSED" if _failures == 0 else "%d FAILED" % _failures))
 	quit(1 if _failures > 0 else 0)
 

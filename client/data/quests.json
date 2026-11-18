@@ -1,0 +1,123 @@
+{
+  "a_friendly_face": {
+    "name": "A Friendly Face",
+    "giver": "captain",
+    "level": 1,
+    "text": "New in town? Go and say hello to Sister Lune first.",
+    "done_text": "Good. Now you know where to go when you are hurt.",
+    "goal": {
+      "type": "talk",
+      "npc": "healer"
+    },
+    "reward": {
+      "xp": 40,
+      "items": [
+        {
+          "id": "blue_potion",
+          "count": 2
+        }
+      ]
+    }
+  },
+  "slime_cleanup": {
+    "name": "Slime Cleanup",
+    "giver": "captain",
+    "level": 1,
+    "text": "Green slimes are eating the meadow flowers. Defeat 8 of them.",
+    "done_text": "The meadow thanks you, and so do I.",
+    "goal": {
+      "type": "kill",
+      "monster": "green_slime",
+      "count": 8
+    },
+    "reward": {
+      "xp": 120,
+      "gold": 60,
+      "items": [
+        {
+          "id": "red_potion",
+          "count": 5
+        }
+      ]
+    }
+  },
+  "sticky_business": {
+    "name": "Sticky Business",
+    "giver": "merchant",
+    "level": 2,
+    "text": "Slime Jelly sells well in the city. Bring me 5 and I will pay you.",
+    "done_text": "Lovely and sticky. Here is your share.",
+    "goal": {
+      "type": "collect",
+      "item": "slime_jelly",
+      "count": 5
+    },
+    "reward": {
+      "xp": 150,
+      "gold": 120
+    }
+  },
+  "blue_trouble": {
+    "name": "Blue Trouble",
+    "giver": "captain",
+    "level": 3,
+    "text": "Blue slimes are pushing out of Mossy Woods. Defeat 6 of them.",
+    "done_text": "That will keep them back for a while. Take these stones.",
+    "goal": {
+      "type": "kill",
+      "monster": "blue_slime",
+      "count": 6
+    },
+    "reward": {
+      "xp": 400,
+      "gold": 150,
+      "items": [
+        {
+          "id": "ember_stone",
+          "count": 2
+        }
+      ]
+    },
+    "after": "slime_cleanup"
+  },
+  "daily_patrol": {
+    "name": "Daily Patrol",
+    "giver": "captain",
+    "level": 2,
+    "text": "Every day: defeat 15 monsters, anywhere.",
+    "done_text": "Same time tomorrow?",
+    "goal": {
+      "type": "kill",
+      "monster": "any",
+      "count": 15
+    },
+    "reward": {
+      "xp": 200,
+      "gold": 80,
+      "items": [
+        {
+          "id": "ember_stone",
+          "count": 1
+        }
+      ]
+    },
+    "daily": true
+  },
+  "daily_pantry": {
+    "name": "Jelly for the Pantry",
+    "giver": "merchant",
+    "level": 2,
+    "text": "Every day: bring me 10 Slime Jelly.",
+    "done_text": "My customers can never get enough.",
+    "goal": {
+      "type": "collect",
+      "item": "slime_jelly",
+      "count": 10
+    },
+    "reward": {
+      "xp": 150,
+      "gold": 150
+    },
+    "daily": true
+  }
+}
