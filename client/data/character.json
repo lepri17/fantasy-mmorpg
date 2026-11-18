@@ -63,5 +63,12 @@
     "cooldown": 0.6,
     "seconds": 0.18,
     "speed_multiplier": 3.2
-  }
+  },
+  "auto_potion_choices": [
+    0,
+    30,
+    50,
+    70
+  ],
+  "auto_potion_seconds": 1.5
 }

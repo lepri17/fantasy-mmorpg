@@ -25,6 +25,14 @@
       {
         "item": "rebirth_scroll",
         "chance": 0.15
+      },
+      {
+        "item": "ember_stone",
+        "chance": 0.6
+      },
+      {
+        "item": "moon_stone",
+        "chance": 0.3
       }
     ],
     "gear_chance": 0.5,

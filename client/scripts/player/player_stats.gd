@@ -41,12 +41,19 @@ var potions: int:
 var stat_points: Dictionary = {}
 ## Skills learned from books (skills.json entries with a "book").
 var learned_skills: Array = []
+## Drink a red potion by itself below this percent of HP (0 = off).
+var auto_potion: int = 0
 ## Achievements, their counters and the title shown (achievement_record.gd).
 var record = AchievementRecord.new()
 
 
 func _init() -> void:
 	_start_fresh()
+
+
+## The auto-potion settings as whole percents (JSON gives floats).
+static func auto_potion_choices() -> Array:
+	return rules["auto_potion_choices"].map(func(value): return int(value))
 
 
 func max_hp() -> int:
@@ -282,6 +289,23 @@ func remove_equipped(slot: String) -> Dictionary:
 	return worn
 
 
+## Tries to raise a piece (an entry in the bag or worn) by one level, using one
+## stone from the bag. roll is 0..1 (randf()). Returns "up", "same" (failed,
+## level kept), "down" (failed, one level lost), or "" if it cannot be tried.
+func upgrade(stack: Dictionary, roll: float) -> String:
+	var step: Dictionary = ItemDb.upgrade_step(stack)
+	if step.is_empty() or count_of(step["stone"]) <= 0:
+		return ""
+	_set_count(step["stone"], count_of(step["stone"]) - 1)
+	if roll < float(step["chance"]):
+		stack["plus"] = int(stack.get("plus", 0)) + 1
+		return "up"
+	if step.get("on_fail", "stay") == "down" and int(stack.get("plus", 0)) > 0:
+		stack["plus"] = int(stack["plus"]) - 1
+		return "down"
+	return "same"
+
+
 ## XP needed to finish the current level.
 func xp_to_next() -> int:
 	return int(rules["xp_per_level"]) * level
@@ -308,6 +332,7 @@ func to_dict() -> Dictionary:
 		"equipment": equipment.duplicate(true),
 		"stat_points": stat_points.duplicate(),
 		"learned_skills": learned_skills.duplicate(),
+		"auto_potion": auto_potion,
 	}.merged(record.to_dict())
 
 
@@ -355,6 +380,9 @@ func _load_progress(data: Dictionary) -> void:
 			if skills.has(skill_id) and not learned_skills.has(skill_id):
 				learned_skills.append(skill_id)
 	record.from_dict(data)
+	auto_potion = int(data.get("auto_potion", 0))
+	if auto_potion not in auto_potion_choices():
+		auto_potion = 0
 
 
 ## Starting gear and bag from the data.

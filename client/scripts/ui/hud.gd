@@ -8,7 +8,14 @@ const ACTION_CHARACTER := "character"
 const ACTION_BUTTONS_GROUP := "action_buttons"
 ## Player methods the inventory may ask for.
 const ITEM_ACTIONS := [
-	"equip_from_bag", "unequip", "use_from_bag", "drop_from_bag", "drop_equipped"
+	"equip_from_bag",
+	"unequip",
+	"use_from_bag",
+	"drop_from_bag",
+	"drop_equipped",
+	"upgrade_bag_item",
+	"upgrade_equipped",
+	"cycle_auto_potion",
 ]
 ## Player methods the character window may ask for.
 const CHARACTER_ACTIONS := ["add_stat_point", "reset_stats", "choose_title"]

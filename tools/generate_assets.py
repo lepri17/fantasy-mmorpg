@@ -952,14 +952,36 @@ def build_coin(out_size: int = 32, shadow: bool = True) -> Image.Image:
     return c.finish(out_size)
 
 
-def build_potion(out_size: int = 32, shadow: bool = True) -> Image.Image:
+RED_POTION = ((232, 70, 86, 255), (255, 170, 176, 255))
+BLUE_POTION = ((70, 130, 235, 255), (175, 210, 255, 255))
+
+
+def build_potion(out_size: int = 32, shadow: bool = True, colors=RED_POTION) -> Image.Image:
+    liquid, shine = colors
     c = Canvas(32)
     if shadow:
         c.ellipse(16, 28, 9, 3, SHADOW, outline=False)
     c.rect(13, 5, 19, 14, (214, 234, 244, 255), radius=1.5)
     c.rect(12, 3, 20, 7, GRIP, radius=1.5)
-    c.ellipse(16, 19, 9, 8.5, (232, 70, 86, 255))
-    c.ellipse(13, 16, 2.6, 2, (255, 170, 176, 255), outline=False)
+    c.ellipse(16, 19, 9, 8.5, liquid)
+    c.ellipse(13, 16, 2.6, 2, shine, outline=False)
+    return c.finish(out_size)
+
+
+EMBER_STONE = ((240, 118, 48, 255), (255, 206, 120, 255), (186, 66, 38, 255))
+MOON_STONE = ((160, 196, 244, 255), (238, 246, 255, 255), (100, 128, 198, 255))
+
+
+def build_stone(out_size: int = 32, shadow: bool = True, colors=EMBER_STONE) -> Image.Image:
+    """An upgrade stone: a cut gem with a bright top facet and a dark lower one."""
+    body, light, dark = colors
+    c = Canvas(32)
+    if shadow:
+        c.ellipse(16, 27.5, 9, 3, SHADOW, outline=False)
+    c.polygon([(16, 4.5), (25.5, 11), (24.5, 21), (16, 27), (7.5, 21), (6.5, 11)], body)
+    c.polygon([(16, 4.5), (25.5, 11), (16, 14.5), (6.5, 11)], light)
+    c.polygon([(16, 14.5), (24.5, 21), (16, 27), (7.5, 21)], dark)
+    c.ellipse(12.5, 9.5, 1.7, 1.1, WHITE, outline=False)
     return c.finish(out_size)
 
 
@@ -1088,6 +1110,9 @@ def build_item_icons() -> dict[str, Image.Image]:
     icons["potion"] = build_potion(ICON, shadow=False)
     icons["coin"] = build_coin(ICON, shadow=False)
     icons["book"] = build_book(ICON, shadow=False)
+    icons["blue_potion"] = build_potion(ICON, shadow=False, colors=BLUE_POTION)
+    icons["ember_stone"] = build_stone(ICON, shadow=False, colors=EMBER_STONE)
+    icons["moon_stone"] = build_stone(ICON, shadow=False, colors=MOON_STONE)
     icons["scroll"] = build_scroll(ICON, shadow=False)
     return icons
 
@@ -1262,6 +1287,9 @@ def main() -> None:
     build_coin().save(items_dir / "coin.png")
     build_potion().save(items_dir / "potion.png")
     build_book().save(items_dir / "book.png")
+    build_potion(colors=BLUE_POTION).save(items_dir / "blue_potion.png")
+    build_stone(colors=EMBER_STONE).save(items_dir / "ember_stone.png")
+    build_stone(colors=MOON_STONE).save(items_dir / "moon_stone.png")
     build_scroll().save(items_dir / "scroll.png")
     icons_dir = items_dir / "icons"
     icons_dir.mkdir(parents=True, exist_ok=True)

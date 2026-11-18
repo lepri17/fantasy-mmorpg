@@ -18,6 +18,14 @@
       {
         "item": "red_potion",
         "chance": 0.3
+      },
+      {
+        "item": "ember_stone",
+        "chance": 0.05
+      },
+      {
+        "item": "blue_potion",
+        "chance": 0.08
       }
     ],
     "tint": [
@@ -63,6 +71,18 @@
       {
         "item": "book_ground_slam",
         "chance": 0.05
+      },
+      {
+        "item": "ember_stone",
+        "chance": 0.1
+      },
+      {
+        "item": "moon_stone",
+        "chance": 0.04
+      },
+      {
+        "item": "blue_potion",
+        "chance": 0.15
       }
     ],
     "tint": [

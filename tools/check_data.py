@@ -210,6 +210,11 @@ def check_progress(character: dict, items: dict, skills: dict, monsters: dict,
                    achievements: dict) -> None:
     """Stat points, skill books, the Rebirth Scroll and the achievements."""
     where = "character.json"
+    choices = character.get("auto_potion_choices", [])
+    if not (isinstance(choices, list) and 0 in choices
+            and all(is_number(c) and 0 <= c < 100 for c in choices)):
+        error(f"{where}: 'auto_potion_choices' must be percents below 100, with 0 for off")
+    need_number(where, character, "auto_potion_seconds", 0.1)
     for key in ("stat_points_per_level", "stat_reset_gold_per_level"):
         value = need_number(where, character, key)
         if value is not None and value != int(value):
@@ -226,7 +231,8 @@ def check_progress(character: dict, items: dict, skills: dict, monsters: dict,
                     {k: v for k, v in rule.items() if k not in ("short", "text")})
     for item_id, item in items.items():
         if item.get("usable") and not any(k in item for k in
-                                          ("heal_fraction", "teaches", "resets_stats")):
+                                          ("heal_fraction", "stamina_fraction", "teaches",
+                                           "resets_stats")):
             error(f"items.json: '{item_id}' is usable but does nothing")
         if "teaches" in item:
             skill = skills.get(item["teaches"])
@@ -295,6 +301,33 @@ def check_gear(items_data: dict, monsters: dict, elite: dict) -> None:
                 error(f"{where}: '{item_id}' is not gear")
     need_number("combat.json elite", elite, "gear_chance", 0.0, 1.0)
     need_number("combat.json elite", elite, "rarity_rolls", 1, 5)
+    for item_id, item in items_data.get("items", {}).items():
+        if "stamina_fraction" in item:
+            need_number(f"items.json: '{item_id}'", item, "stamina_fraction", 0.01, 1.0)
+    check_upgrades(items_data)
+
+
+def check_upgrades(items_data: dict) -> None:
+    """+1..+15 upgrades: the steps, their stones and what each level adds."""
+    upgrades = items_data.get("upgrades", {})
+    where = "items.json upgrades"
+    max_plus = need_number(where, upgrades, "max_plus", 1, 99)
+    items = items_data.get("items", {})
+    last = 0
+    for step in upgrades.get("steps", []):
+        up_to = need_number(where, step, "up_to", last + 1, max_plus)
+        last = up_to if up_to is not None else last
+        if not items.get(step.get("stone"), {}).get("upgrade_stone"):
+            error(f"{where}: stone '{step.get('stone')}' is not an item with \"upgrade_stone\"")
+        need_number(where, step, "chance", 0.01, 1.0)
+        if step.get("on_fail", "stay") not in ("stay", "down"):
+            error(f"{where}: on_fail must be 'stay' or 'down'")
+    if max_plus is not None and last != max_plus:
+        error(f"{where}: the last step must reach max_plus ({max_plus})")
+    for slot, bonus in upgrades.get("per_plus", {}).items():
+        if slot not in items_data.get("gear_slots", []):
+            error(f"{where}: per_plus slot '{slot}' is not a gear slot")
+        check_bonus(f"{where} per_plus '{slot}'", bonus)
 
 
 def check_art(items: dict) -> None:

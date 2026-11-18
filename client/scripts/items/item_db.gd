@@ -90,6 +90,18 @@ static func stat_of(stack: Dictionary, stat: String) -> float:
 	return total
 
 
+## The upgrade rule for the next level of a piece ({"up_to", "stone", "chance",
+## "on_fail"}), or {} when it cannot go higher.
+static func upgrade_step(stack: Dictionary) -> Dictionary:
+	var plus: int = int(stack.get("plus", 0))
+	if not is_gear(stack.get("id", "")) or plus >= int(upgrades.get("max_plus", 0)):
+		return {}
+	for step in upgrades.get("steps", []):
+		if plus < int(step["up_to"]):
+			return step
+	return {}
+
+
 ## "Training Sword +3"; "Rare Training Sword +3" with_rarity, for gear above common.
 static func display_name(stack: Dictionary, with_rarity: bool = false) -> String:
 	var text: String = items[stack["id"]]["name"]

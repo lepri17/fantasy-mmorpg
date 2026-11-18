@@ -160,6 +160,76 @@
       "icon": "res://assets/items/icons/scroll.png",
       "world_icon": "res://assets/items/scroll.png",
       "text": "Gives back all your stat points, for free."
+    },
+    "blue_potion": {
+      "name": "Blue Potion",
+      "slot": "",
+      "usable": true,
+      "stamina_fraction": 0.5,
+      "icon": "res://assets/items/icons/blue_potion.png",
+      "world_icon": "res://assets/items/blue_potion.png",
+      "text": "Gives back half your stamina."
+    },
+    "ember_stone": {
+      "name": "Ember Stone",
+      "slot": "",
+      "upgrade_stone": true,
+      "icon": "res://assets/items/icons/ember_stone.png",
+      "world_icon": "res://assets/items/ember_stone.png",
+      "text": "Upgrades gear from +0 to +6. It never fails."
+    },
+    "moon_stone": {
+      "name": "Moon Stone",
+      "slot": "",
+      "upgrade_stone": true,
+      "icon": "res://assets/items/icons/moon_stone.png",
+      "world_icon": "res://assets/items/moon_stone.png",
+      "text": "Upgrades gear from +6 to +15. It can fail, and above +9 a failure costs a level."
+    }
+  },
+  "upgrades": {
+    "max_plus": 15,
+    "steps": [
+      {
+        "up_to": 6,
+        "stone": "ember_stone",
+        "chance": 1.0,
+        "on_fail": "stay"
+      },
+      {
+        "up_to": 9,
+        "stone": "moon_stone",
+        "chance": 0.6,
+        "on_fail": "stay"
+      },
+      {
+        "up_to": 15,
+        "stone": "moon_stone",
+        "chance": 0.35,
+        "on_fail": "down"
+      }
+    ],
+    "per_plus": {
+      "head": {
+        "defense": 1,
+        "max_hp": 2
+      },
+      "weapon": {
+        "attack": 2
+      },
+      "gloves": {
+        "attack": 1
+      },
+      "cape": {
+        "max_hp": 3
+      },
+      "armor": {
+        "defense": 1,
+        "max_hp": 4
+      },
+      "boots": {
+        "max_hp": 3
+      }
     }
   }
 }

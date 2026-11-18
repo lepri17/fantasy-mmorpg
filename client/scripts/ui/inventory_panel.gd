@@ -1,7 +1,8 @@
 extends PanelContainer
 ## Small inventory on the right side of the screen: the gear the warrior wears
-## around his portrait, the bag, gold, and the item last tapped with its
-## buttons (EQUIP / REMOVE / USE, and DROP). A double tap does the first button.
+## around his portrait, the bag, gold, auto-potion, and the item last tapped with
+## its buttons (EQUIP / REMOVE / USE, UPGRADE for gear, and DROP). A double tap
+## does the first button.
 ## It only shows state. What to do with an item is asked for with item_action,
 ## naming the player method to call and its argument.
 
@@ -44,7 +45,9 @@ var _stats_label: Label
 var _name_label: Label
 var _info_label: Label
 var _primary_button: Button
+var _upgrade_button: Button
 var _drop_button: Button
+var _auto_button: Button
 
 
 func _ready() -> void:
@@ -72,6 +75,7 @@ func refresh(stats, look: Texture2D = null) -> void:
 	for i in bag_slots.size():
 		bag_slots[i].show_stack(items[i] if i < items.size() else {})
 	_gold_label.text = str(stats.gold)
+	_auto_button.text = "AUTO OFF" if stats.auto_potion == 0 else "AUTO %d%%" % stats.auto_potion
 	var damage: Vector2i = CombatRules.damage_range(stats.attack_damage())
 	_stats_label.text = "ATK %d~%d  HP %d\nDEF %d  CRIT %d%%  EVA %d%%" % [
 		damage.x,
@@ -111,6 +115,7 @@ func _show_details() -> void:
 		_name_label.text = "Tap an item"
 		_info_label.text = "to see it. Double tap to wear, remove or use."
 		_primary_button.hide()
+		_upgrade_button.hide()
 		_drop_button.hide()
 		return
 	var stack: Dictionary = _selected.stack
@@ -121,13 +126,14 @@ func _show_details() -> void:
 		var worn: Dictionary = {}
 		if _selected.place == "bag" and _stats != null:
 			worn = _stats.equipment.get(item["slot"], {})
-		text = _gear_text(stack, worn) + " " + text
+		text = _gear_text(stack, worn) + " " + text + "\n" + _upgrade_text(stack)
 		name_color = ItemDb.rarity_color(stack)
 	_name_label.text = ItemDb.display_name(stack, true)
 	_name_label.add_theme_color_override("font_color", name_color)
 	_info_label.text = text
 	_primary_button.text = _primary_action()[0]
 	_primary_button.visible = _primary_button.text != ""
+	_upgrade_button.visible = not ItemDb.upgrade_step(stack).is_empty()
 	_drop_button.show()
 
 
@@ -149,6 +155,23 @@ func _gear_text(stack: Dictionary, worn: Dictionary) -> String:
 	if not worn.is_empty():
 		text = "Compared with your %s:\n%s" % [ItemDb.display_name(worn), text]
 	return text
+
+
+## "Next: +4 with an Ember Stone, 100% (you have 2)."
+func _upgrade_text(stack: Dictionary) -> String:
+	var step: Dictionary = ItemDb.upgrade_step(stack)
+	if step.is_empty():
+		return "Fully upgraded."
+	var stones: int = _stats.count_of(step["stone"]) if _stats != null else 0
+	return (
+		"Next: +%d with a %s, %d%% (you have %d)."
+		% [
+			int(stack.get("plus", 0)) + 1,
+			ItemDb.items[step["stone"]]["name"],
+			roundi(float(step["chance"]) * 100.0),
+			stones,
+		]
+	)
 
 
 static func _amount(stat: String, value: float) -> String:
@@ -177,6 +200,12 @@ func _primary_action() -> Array:
 func _on_primary_pressed() -> void:
 	if _selected != null and _selected.item_id != "":
 		item_action.emit(_primary_action()[1], _selected.key)
+
+
+func _on_upgrade_pressed() -> void:
+	if _selected != null and _selected.item_id != "":
+		var method: String = "upgrade_equipped" if _selected.place == "gear" else "upgrade_bag_item"
+		item_action.emit(method, _selected.key)
 
 
 func _on_drop_pressed() -> void:
@@ -247,6 +276,10 @@ func _bag_header() -> Control:
 	row.add_child(coin)
 	_gold_label = _label("0", 18, GOLD_TEXT)
 	row.add_child(_gold_label)
+	_auto_button = _button("AUTO OFF", Color(0.32, 0.2, 0.3), Vector2(104, 34))
+	_auto_button.add_theme_font_size_override("font_size", 14)
+	_auto_button.pressed.connect(func() -> void: item_action.emit("cycle_auto_potion", null))
+	row.add_child(_auto_button)
 	return row
 
 
@@ -282,6 +315,10 @@ func _actions_row() -> Control:
 	_primary_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_primary_button.pressed.connect(_on_primary_pressed)
 	row.add_child(_primary_button)
+	_upgrade_button = _button("UPGRADE", Color(0.42, 0.28, 0.55), Vector2(0, 44))
+	_upgrade_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_upgrade_button.pressed.connect(_on_upgrade_pressed)
+	row.add_child(_upgrade_button)
 	_drop_button = _button("DROP", Color(0.5, 0.3, 0.18), Vector2(0, 44))
 	_drop_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_drop_button.pressed.connect(_on_drop_pressed)

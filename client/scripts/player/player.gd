@@ -101,6 +101,8 @@ var _seconds_since_damage: float = 0.0
 var _regen_progress: float = 0.0
 var _spawn_position: Vector2 = Vector2.ZERO
 var _invincible_left: float = 0.0
+## Seconds before auto-potion may drink again.
+var _auto_potion_ready_in: float = 0.0
 var _combo_left: float = 0.0
 var _target_marker: Node2D = null
 # Tuning from res://data/character.json (see _load_tuning).
@@ -142,6 +144,7 @@ func _physics_process(delta: float) -> void:
 	_tick_statuses(delta)
 	if is_dead:
 		return
+	_auto_drink(delta)
 	var stunned: bool = statuses.is_active("stun")
 	var direction: Vector2 = Input.get_vector(ACTION_LEFT, ACTION_RIGHT, ACTION_UP, ACTION_DOWN)
 	if stunned:
@@ -320,10 +323,35 @@ func use_from_bag(index: int) -> void:
 	var item: Dictionary = ItemDb.items[item_id]
 	if item_id == PlayerStats.POTION_ID:
 		use_potion()
+	elif item.has("stamina_fraction"):
+		_drink_stamina_potion(index, item)
 	elif item.has("teaches"):
 		_read_book(index, item)
 	elif item.get("resets_stats", false):
 		_read_rebirth_scroll(index)
+
+
+## Upgrades the gear in a bag slot with a stone from the bag.
+func upgrade_bag_item(index: int) -> void:
+	if index >= 0 and index < stats.bag.size():
+		_upgrade(stats.bag[index])
+
+
+## Upgrades worn gear (by gear slot, such as "weapon") with a stone from the bag.
+func upgrade_equipped(slot: String) -> void:
+	if stats.equipment.has(slot):
+		_upgrade(stats.equipment[slot])
+
+
+## Off -> 30% -> 50% -> 70% -> off: below that much HP a red potion is drunk by itself.
+func cycle_auto_potion(_unused: Variant = null) -> void:
+	var choices: Array = PlayerStats.auto_potion_choices()
+	stats.auto_potion = choices[(choices.find(stats.auto_potion) + 1) % choices.size()]
+	if stats.auto_potion == 0:
+		_say("Auto potion is off.")
+	else:
+		_say("Auto potion: below %d%% HP." % stats.auto_potion)
+	_progress_changed()
 
 
 ## Called by a monster as it dies, just before it gives its XP (which saves).
@@ -775,6 +803,56 @@ func _read_book(index: int, item: Dictionary) -> void:
 		_say("You learned %s!" % skill["name"], LEVEL_COLOR)
 		_announce(_count("books_read"))
 		_progress_changed()
+
+
+func _upgrade(stack: Dictionary) -> void:
+	if is_dead:
+		return
+	var step: Dictionary = ItemDb.upgrade_step(stack)
+	if step.is_empty():
+		_say("%s cannot go any higher." % ItemDb.display_name(stack), WARNING_COLOR)
+		return
+	if stats.count_of(step["stone"]) <= 0:
+		_say("You need a %s." % _item_name(step["stone"]), WARNING_COLOR)
+		return
+	var item_name: String = _item_name(stack["id"])
+	match stats.upgrade(stack, randf()):
+		"up":
+			FloatingText.spawn(self, "+%d!" % int(stack["plus"]), LEVEL_COLOR, 120.0, 30)
+			_sfx("levelup")
+			_say("Success! %s." % ItemDb.display_name(stack), LEVEL_COLOR)
+		"down":
+			_sfx("hurt")
+			_say("It failed, and %s fell to +%d." % [item_name, stack["plus"]], WARNING_COLOR)
+		_:
+			_say("It failed. %s stays at +%d." % [item_name, stack["plus"]], WARNING_COLOR)
+	_limits_changed()
+	_progress_changed()
+
+
+## A Blue Potion gives back part of the stamina.
+func _drink_stamina_potion(index: int, item: Dictionary) -> void:
+	if stamina >= max_stamina:
+		_say("Your stamina is full.", WARNING_COLOR)
+		return
+	stats.take_from_bag(index)
+	stamina = minf(max_stamina, stamina + max_stamina * float(item["stamina_fraction"]))
+	stamina_changed.emit(stamina, max_stamina)
+	FloatingText.spawn(self, "STAMINA", Color(0.5, 0.75, 1.0), 100.0)
+	_sfx("potion")
+	_announce(_count("potions_used"))
+	_progress_changed()
+
+
+## Auto potion: below the chosen part of max HP, drink a red potion (with a
+## short wait between drinks so it does not empty the bag at once).
+func _auto_drink(delta: float) -> void:
+	_auto_potion_ready_in = maxf(0.0, _auto_potion_ready_in - delta)
+	if stats.auto_potion <= 0 or _auto_potion_ready_in > 0.0 or stats.potions <= 0:
+		return
+	if hp * 100 <= max_hp * stats.auto_potion:
+		_auto_potion_ready_in = float(PlayerStats.rules["auto_potion_seconds"])
+		use_potion()
 
 
 ## A Rebirth Scroll gives every stat point back for free.
