@@ -133,6 +133,13 @@ def test_same_numbers_as_godot():
     assert {item_id: items.required_level(item_id) for item_id in bag["levels"]} == {
         item_id: int(level) for item_id, level in bag["levels"].items()
     }
+    loot = fixture["loot"]
+    for level, pool in loot["pools"].items():
+        assert sorted(items.drop_pool(int(level))) == sorted(pool), level
+    for item_id, rarity, stat, low, high in loot["ranges"]:  # Godot's Vector2 is 32-bit: 1e-6
+        mine = items.option_range(stat, item_id, rarity)
+        assert math.isclose(mine[0], low, abs_tol=1e-6) and math.isclose(mine[1], high, abs_tol=1e-6), (
+            item_id, rarity, stat, mine, (low, high))
     for hero_level, monster_level, factor, xp in fixture["gap"]:
         hero_level, monster_level = int(hero_level), int(monster_level)
         assert math.isclose(level_gap_factor(hero_level, monster_level), factor, abs_tol=1e-9)

@@ -447,7 +447,7 @@ def check_progress(character: dict, items: dict, skills: dict, monsters: dict,
         check_bonus(place, achievement.get("bonus", {}))
 
 
-def check_gear(items_data: dict, monsters: dict, elite: dict) -> None:
+def check_gear(items_data: dict, monsters: dict, elite: dict, classes_data: dict) -> None:
     """Rarities, the random options on dropped gear, and the gear drop tables."""
     rarities = items_data.get("rarities", {})
     if not isinstance(rarities, dict) or not rarities:
@@ -462,25 +462,47 @@ def check_gear(items_data: dict, monsters: dict, elite: dict) -> None:
             error(f"{where}: 'color' must be [r, g, b, a]")
         need_number(where, rarity, "options", 0, len(items_data.get("random_options", {})))
         need_number(where, rarity, "weight", 0.0001)
+        need_number(where, rarity, "roll_floor", 0.0, 0.95)
+        need_number(where, rarity, "ground_seconds", 10, 600)
+    growth = items_data.get("option_growth", {})
+    for key in ("whole", "percent"):
+        need_number("items.json option_growth", growth, key, 0.0, 1.0)
+    window = items_data.get("drop_levels")
+    if not (isinstance(window, list) and len(window) == 2 and all(isinstance(v, int) for v in window)
+            and window[0] <= 0 <= window[1]):
+        error("items.json: 'drop_levels' must be [below, above] whole numbers round 0, such as [-6, 2]")
+        window = [-6, 2]
     for stat, span in items_data.get("random_options", {}).items():
         if stat not in BONUS_KEYS:
             error(f"items.json: random option '{stat}' is not one of {sorted(BONUS_KEYS)}")
         if not (isinstance(span, list) and len(span) == 2 and all(is_number(v) for v in span)
                 and 0 < span[0] <= span[1]):
             error(f"items.json: random option '{stat}' must be [low, high] with 0 < low <= high")
-    gear_ids = {i for i, item in items_data.get("items", {}).items() if item.get("slot")}
+    gear = {i: item for i, item in items_data.get("items", {}).items() if item.get("slot")}
+    for item_id, item in gear.items():
+        if not isinstance(item.get("no_drop", False), bool):
+            error(f"items.json: '{item_id}' 'no_drop' must be true or false")
+    playable = classes_data.get("playable", [])
     for monster_id, monster in monsters.items():
         table = monster.get("gear_drops")
         if table is None:
             continue
         where = f"monsters.json: '{monster_id}' gear_drops"
         need_number(where, table, "chance", 0.0, 1.0)
-        pool = table.get("items", [])
-        if not pool:
-            error(f"{where}: 'items' must list gear")
-        for item_id in pool:
-            if item_id not in gear_ids:
+        for item_id in table.get("items", []):  # an optional hand-picked pool instead of the level's
+            if item_id not in gear:
                 error(f"{where}: '{item_id}' is not gear")
+        level = int(monster.get("level", 1))
+        pool = [i for i, item in gear.items() if not item.get("no_drop", False)
+                and level + window[0] <= int(item.get("level", 1)) <= level + window[1]]
+        for class_id in [] if "items" in table else playable:  # else from its level (item_db.gd drop_pool)
+            if not any(class_id in gear[i].get("classes", [class_id]) for i in pool):
+                error(f"{where}: no gear of levels {level + window[0]}..{level + window[1]} for {class_id}")
+        boss = monster.get("boss", {})
+        if "gear_count" in boss:
+            need_number(where + " boss", boss, "gear_count", 1, 6)
+        if "min_rarity" in boss and boss["min_rarity"] not in rarities:
+            error(f"{where}: boss min_rarity '{boss['min_rarity']}' is not a rarity")
     need_number("combat.json elite", elite, "gear_chance", 0.0, 1.0)
     need_number("combat.json elite", elite, "rarity_rolls", 1, 5)
     for item_id, item in items_data.get("items", {}).items():
@@ -787,7 +809,7 @@ def main() -> int:
             error(f"combat.json elite: drop '{drop.get('item')}' is not an item")
     check_progress(load("character"), items, load("skills"), load("monsters"),
                    load("achievements"))
-    check_gear(items_data, load("monsters"), elite)
+    check_gear(items_data, load("monsters"), elite, load("classes"))
     check_npcs(load("npcs"), items_data.get("items", {}))
     check_quests(load("quests"), load("npcs"), items_data.get("items", {}), load("monsters"))
     check_maps(load("maps"), load("monsters"), load("npcs"))

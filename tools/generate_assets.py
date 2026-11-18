@@ -582,6 +582,36 @@ LOOK_VARIANTS = {
         [("hue", 20, 45)],
     ),
     "duelist_cape": ("red_cape", "cape", ["cape", "scarf"], [("hue", 355, 215)]),
+    # The Elderwood tier (level 12, Elder Grove): jade green on the same pieces.
+    "elderwood_blade": (
+        "training_sword", "sword", ["sword_back", "sword_body", "sword_front"],
+        [("steel", (120, 230, 190), 0.4), ("hue", 30, 160)],
+    ),
+    "elderwood_bow": (
+        "short_bow", "bow", ["sword_back", "sword_body", "sword_front", "quiver"], [("hue", 26, 160)]
+    ),
+    "elderwood_staff": (
+        "oak_staff", "staff", ["sword_back", "sword_body", "sword_front"], [("hue", 197, 150)]
+    ),
+    "elderwood_plate": (
+        "blue_plate", "armor", ["armor", "armor_arms", "armor_arm_far", "pauldrons"], [("hue", 220, 160)],
+    ),
+    "elderwood_vest": ("ranger_vest", "vest", ["vest"], [("hue", 26, 160)]),
+    "elderwood_robe": (
+        "violet_robe", "robe", ["robe", "robe_arms", "robe_arm_far"], [("hue", 261, 160)]
+    ),
+    "elderwood_band": ("red_headband", "headband", ["headband", "tails"], [("hue", 355, 160)]),
+    "elderwood_hood": ("green_hood", "hood", ["hood"], [("hue", 131, 165)]),
+    "elderwood_hat": ("sage_hat", "hat", ["hat"], [("hue", 261, 160)]),
+    "elderwood_gloves": (
+        "leather_gloves", "gloves",
+        ["gloves", "bracers", "glove_far", "bracer_far", "grip_glove_body", "grip_glove_front"],
+        [("hue", 20, 160)],
+    ),
+    "elderwood_boots": (
+        "leather_boots", "boots", ["boots", "boots_far", "boots_near"], [("hue", 20, 160)]
+    ),
+    "elderwood_cape": ("red_cape", "cape", ["cape", "scarf"], [("hue", 355, 160)]),
     "crimson_plate": (
         "blue_plate", "armor", ["armor", "armor_arms", "armor_arm_far", "pauldrons"],
         [("hue", 220, 355)],

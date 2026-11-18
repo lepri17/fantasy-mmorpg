@@ -35,6 +35,8 @@ REGULAR = ("green_slime", "blue_slime", "spore_shroom", "bramble_boar", "lantern
 BUILD_LEVEL = 10
 GEAR_TARGET = "blue_slime"  # the monster the gear table measures DPS and survival against
 BETWEEN_FIGHTS = 5.0  # seconds of walking, looting and waiting for respawns per kill (pace table)
+LOOT_LEVELS = (1, 3, 5, 8, 10, 13, 15)  # hero levels in the loot-per-hour table
+SHOWN_DROPS = ("red_potion", "blue_potion", "ember_stone", "moon_stone")
 
 
 def hero(class_id: str, level: int) -> Stats:
@@ -299,7 +301,7 @@ def gear_section() -> str:
     monster = table("monsters")[GEAR_TARGET]
     rows = []
     for class_id in ("warrior", "archer", "mage"):
-        for level in (1, 6, 10):
+        for level in (1, 6, 10, 12):
             start = hero(class_id, level)
             loadouts = [("התחלה", start), ("הכי טוב", best_gear(class_id, level))]
             if level > 1:
@@ -313,7 +315,8 @@ def gear_section() -> str:
     return "\n".join([
         f"## ציוד (נגד {monster['name']})", "",
         "\"הכי טוב\": בכל משבצת, הפריט הרגיל (Common) שהגיבור יכול ללבוש ברמה הזאת ונותן הכי הרבה "
-        "DPS כפול שניות חיים. כולל ציוד שדרוג המקצוע ברמה 10. \"+6\": אותו ציוד משודרג לכל +6 (אבני Ember, בלי סיכון). "
+        "DPS כפול שניות חיים. כולל ציוד שדרוג המקצוע ברמה 10 וציוד העץ הקדום (רק משלל) ברמה 12. "
+        "\"+6\": אותו ציוד משודרג לכל +6 (אבני Ember, בלי סיכון). "
         "נקודות הסטטים כולן בסטט הראשי.", "",
         md_table(["מקצוע", "רמה", "ציוד", "התקפה", "HP", "הגנה", "DPS", "DPS מול ההתחלה", "שנ' בחיים", "פריטים"],
                  rows), "",
@@ -349,11 +352,121 @@ def economy_section() -> str:
             gold = sum(monsters[monster_id]["gold"]) / 2
             cells.append(f"{price / gold:.0f}")
         rows.append(cells)
-    rarity_rows = [[name, info["weight"], info["options"]] for name, info in item_db.rarities().items()]
-    option_rows = [[stat, f"{low} ~ {high}"] for stat, (low, high) in item_db.random_options().items()]
     return "\n".join([
-        "## כלכלה ושלל", "", md_table(["פריט", "מחיר", "הריגות Slime", "הריגות Blue Slime"], rows), "",
-        md_table(["דרגה", "משקל", "בונוסים אקראיים"], rarity_rows), "", md_table(["בונוס אקראי", "טווח"], option_rows), "",
+        "## כלכלה", "", md_table(["פריט", "מחיר", "הריגות Slime", "הריגות Blue Slime"], rows), "",
+    ])
+
+
+def rarity_odds(rolls: int, min_rarity: str = "") -> dict:
+    """The chance of each rarity when the best of `rolls` rolls is kept, never
+    below min_rarity (item_db.roll_gear)."""
+    rarities = item_db.rarities()
+    total = sum(float(info["weight"]) for info in rarities.values())
+    odds, at_most, before = {}, 0.0, 0.0
+    for rarity, info in rarities.items():
+        at_most += float(info["weight"]) / total
+        odds[rarity] = at_most**rolls - before
+        before = at_most**rolls
+    for rarity in list(odds):
+        if item_db.rarity_rank(rarity) < item_db.rarity_rank(min_rarity):
+            odds[min_rarity] += odds[rarity]
+            odds[rarity] = 0.0
+    return odds
+
+
+def loot_per_kill(monster: dict) -> dict:
+    """What one kill drops on average, elites counted (combat.json "elite"):
+    gold, items {id: count}, gear pieces, rare-or-better pieces and epic pieces."""
+    elite = combat.settings()["elite"]
+    boss = monster.get("boss", {})
+    elite_share = 0.0 if boss else float(elite["chance"])
+    rare_rank = item_db.rarity_rank("rare")
+    out = {"gold": 0.0, "items": {}, "gear": 0.0, "rare": 0.0, "epic": 0.0}
+    for share, is_elite in ((1.0 - elite_share, False), (elite_share, True)):
+        out["gold"] += share * sum(monster["gold"]) / 2 * (float(elite["gold"]) if is_elite else 1.0)
+        for drop in monster.get("drops", []) + (elite.get("extra_drops", []) if is_elite else []):
+            out["items"][drop["item"]] = out["items"].get(drop["item"], 0.0) + share * float(drop["chance"])
+        if "gear_drops" not in monster:
+            continue
+        chance = float(monster["gear_drops"]["chance"]) + (float(elite["gear_chance"]) if is_elite else 0.0)
+        rolls = int(elite["rarity_rolls"]) if is_elite else int(boss.get("rarity_rolls", 1))
+        odds = rarity_odds(rolls, boss.get("min_rarity", ""))
+        pieces = share * min(chance, 1.0) * int(boss.get("gear_count", 1))
+        out["gear"] += pieces
+        out["rare"] += pieces * sum(p for r, p in odds.items() if item_db.rarity_rank(r) >= rare_rank)
+        out["epic"] += pieces * odds.get("epic", 0.0)
+    return out
+
+
+def _span(stat: str, low: float, high: float) -> str:
+    if stat in item_db.PERCENT_STATS:
+        return f"{low * 100:g}~{high * 100:g}%"
+    return f"{low:.0f}~{high:.0f}"
+
+
+def loot_section() -> str:
+    monsters = table("monsters")
+    names = item_db.items()
+    window = item_db.data()["drop_levels"]
+    rows = []
+    for monster in monsters.values():
+        loot = loot_per_kill(monster)
+        levels = sorted({item_db.required_level(i) for i in item_db.drop_pool(int(monster["level"]))})
+        gear_levels = f"{levels[0]}-{levels[-1]}" if "gear_drops" in monster and levels else "-"
+        rows.append([monster["name"], monster["level"], f"{loot['gold']:.0f}"]
+                    + [f"{loot['items'].get(item_id, 0.0) * 100:.0f}" for item_id in SHOWN_DROPS]
+                    + [f"{loot['gear'] * 100:.1f}", f"{loot['rare'] * 100:.1f}", f"{loot['epic'] * 100:.2f}",
+                       gear_levels])
+    hour_rows = []
+    elite_hp = 1.0 + float(combat.settings()["elite"]["chance"]) * (float(combat.settings()["elite"]["hp"]) - 1.0)
+    for level in LOOT_LEVELS:
+        stats = hero("warrior", level)
+        monster_id = best_hunt(stats)[0]
+        monster = monsters[monster_id]
+        seconds = monster["max_hp"] * elite_hp / basic_dps(stats, monster) + BETWEEN_FIGHTS
+        kills = 3600 / seconds
+        loot = loot_per_kill(monster)
+        hour_rows.append([level, monster["name"], f"{kills:.0f}", f"{loot['gold'] * kills:.0f}",
+                          f"{loot['gear'] * kills:.1f}", f"{loot['rare'] * kills:.1f}",
+                          f"{1 / (loot['epic'] * kills):.1f}" if loot["epic"] > 0 else "-"])
+    elite = combat.settings()["elite"]
+    king = monsters["slime_king"]["boss"]
+    boss_odds = rarity_odds(int(king.get("rarity_rolls", 1)), king.get("min_rarity", ""))
+    rarity_rows = []
+    for rarity, info in item_db.rarities().items():
+        rarity_rows.append([info["name"], info["options"], f"{float(info['roll_floor']) * 100:.0f}%",
+                            info["ground_seconds"], f"{rarity_odds(1)[rarity] * 100:.1f}%",
+                            f"{rarity_odds(int(elite['rarity_rolls']))[rarity] * 100:.1f}%",
+                            f"{boss_odds[rarity] * 100:.1f}%"])
+    sample = {}
+    for item_id in names:
+        if item_db.is_gear(item_id):
+            sample.setdefault(item_db.required_level(item_id), item_id)
+    columns = [(1, "common"), (6, "common"), (12, "common"), (12, "rare"), (12, "epic")]
+    option_rows = []
+    for stat in item_db.random_options():
+        option_rows.append([stat] + [_span(stat, *item_db.option_range(stat, sample[level], rarity))
+                                     for level, rarity in columns])
+    return "\n".join([
+        "## שלל", "",
+        f"כל מפלצת זורקת ציוד ברמות {window[0]} עד +{window[1]} מהרמה שלה (`drop_levels` ב-items.json), "
+        "רק ציוד שהמקצוע של הגיבור יכול ללבוש. ציוד שמקבלים רק במשימה (`no_drop`) לא נופל. "
+        "ל-100 הריגות, כולל מפלצות עילית. בוס זורק כמה פריטים (`gear_count`), כולם לפחות בדרגה `min_rarity`.", "",
+        md_table(["מפלצת", "רמה", "זהב להריגה"] + [names[i]["name"] for i in SHOWN_DROPS]
+                 + ["ציוד", "נדיר ומעלה", "אפי", "רמות הציוד"], rows), "",
+        "### שלל בשעה (לוחם, ציוד התחלה, אותה מפלצת כמו בקצב עליית הרמות)", "",
+        md_table(["רמה", "מפלצת", "הריגות בשעה", "זהב בשעה", "ציוד בשעה", "נדיר ומעלה בשעה", "שעות לפריט אפי"],
+                 hour_rows), "",
+        "### דרגות", "",
+        "רגיל: הטלה אחת. עילית: הטוב מבין "
+        f"{elite['rarity_rolls']} הטלות. בוס: הטוב מבין {king.get('rarity_rolls', 1)}, ולפחות {king.get('min_rarity')}. "
+        "\"התחלת הטווח\": כמה מהטווח של כל בונוס דרגה גבוהה מדלגת (פריט נדיר מקבל בונוסים גבוהים יותר).", "",
+        md_table(["דרגה", "בונוסים", "התחלת הטווח", "שניות על הרצפה", "רגיל", "עילית", "בוס"], rarity_rows), "",
+        "### טווחי הבונוסים האקראיים", "",
+        "הטווח גדל עם רמת הפריט: מספרים שלמים ב-"
+        f"{item_db.data()['option_growth']['whole'] * 100:g}% לכל רמה, אחוזים ב-"
+        f"{item_db.data()['option_growth']['percent'] * 100:g}% לכל רמה (`option_growth`).", "",
+        md_table(["בונוס", "רמה 1", "רמה 6", "רמה 12", "רמה 12 נדיר", "רמה 12 אפי"], option_rows), "",
     ])
 
 
@@ -365,7 +478,7 @@ def build() -> str:
     ])
     return "\n".join([head, heroes_section(), monsters_section(), pace_section(), points_section(), builds_section(),
                       skills_section(), crit_section(), gear_section(), upgrade_section(),
-                      economy_section()]).rstrip() + "\n"
+                      economy_section(), loot_section()]).rstrip() + "\n"
 
 
 def main() -> int:

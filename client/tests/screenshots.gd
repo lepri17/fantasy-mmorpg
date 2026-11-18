@@ -7,6 +7,7 @@ extends SceneTree
 
 const SaveFile = preload("res://scripts/player/save_file.gd")
 const ItemDb = preload("res://scripts/items/item_db.gd")
+const PICKUP_SCENE = preload("res://scenes/items/pickup.tscn")
 const GameScript = preload("res://scripts/game.gd")
 const SAVE_PATH := "user://screenshots_save.cfg"
 const Settings = preload("res://scripts/settings.gd")
@@ -97,6 +98,7 @@ func _initialize() -> void:
 	player.global_position = Vector2(1280, 640)
 	await _frames(30)
 	await _shot("32_grove")
+	await _boss_loot(player, hud)
 	GameScript.sky_seconds = -1.0
 	main.change_map("cellar")
 	await _frames(240)
@@ -235,6 +237,56 @@ func _shot(file_name: String) -> void:
 func _frames(count: int) -> void:
 	for i in count:
 		await process_frame
+
+
+## The Elder Treant's reward on the ground (rare pieces stand in a beam of
+## light), and an Elderwood piece's random bonuses and their ranges in the bag.
+func _boss_loot(player, hud) -> void:
+	var treant = get_nodes_in_group("enemies").filter(
+		func(enemy): return enemy.monster_id == "elder_treant"
+	)[0]
+	treant.set_physics_process(false)
+	treant.set("_player", player)
+	player.global_position = treant.global_position + Vector2(0, 330)
+	var before: Array = get_nodes_in_group("pickups")
+	treant.call("_maybe_drop_gear")
+	await _frames(2)
+	# Laid out on the open path in front of the hero (out of the magnet's reach),
+	# next to a common piece, which has no beam.
+	var spots: Array = [Vector2(-150, -40), Vector2(-100, 60), Vector2(130, -50)]
+	var dropped: Array = get_nodes_in_group("pickups").filter(func(p): return not p in before)
+	for i in dropped.size():
+		dropped[i].global_position = player.global_position + spots[i % spots.size()]
+	var plain: Node2D = PICKUP_SCENE.instantiate()
+	plain.set("kind", "item")
+	plain.set("item_id", "leather_boots")
+	plain.set("stack", ItemDb.gear("leather_boots"))
+	treant.get_parent().add_child(plain)
+	plain.global_position = player.global_position + Vector2(150, 70)
+	await _frames(40)
+	await _shot("33_boss_loot")
+	var saved_level: int = player.stats.level
+	var saved_gear: Dictionary = player.stats.equipment.duplicate(true)
+	player.stats.level = 12
+	for item_id in ["elderwood_plate", "elderwood_band", "elderwood_gloves", "elderwood_boots"]:
+		player.stats.equipment[ItemDb.items[item_id]["slot"]] = ItemDb.gear(item_id)
+	player.stats.equipment["cape"] = ItemDb.gear("elderwood_cape")
+	player.call("_gear_changed")  # the hero in jade Elderwood, five pieces of six
+	var options := {"attack": 6, "crit_chance": 0.035, "attack_speed": 0.1}
+	player.add_stack(ItemDb.gear("elderwood_blade", "epic", 0, options))
+	hud.toggle_inventory()
+	var inventory = hud.get_node("Inventory")
+	var index: int = 0
+	for i in player.stats.bag.size():
+		if player.stats.bag[i]["id"] == "elderwood_blade":
+			index = i
+	inventory.call("_on_slot_tapped", inventory.bag_slots[index])
+	await _shot("34_elderwood_bag")
+	hud.toggle_inventory()
+	player.stats.bag.remove_at(index)
+	player.stats.equipment = saved_gear
+	player.call("_gear_changed")
+	player.stats.level = saved_level
 
 
 ## Taps the first piece of gear in the bag, so its details show.

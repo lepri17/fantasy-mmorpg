@@ -699,7 +699,6 @@ func _wait(seconds: float) -> void:
 	timer.queue_free()
 
 
-## Gear drops now and then; elites drop it more often and roll better rarity.
 ## Loot is for the player's class: gear it cannot wear and other classes'
 ## skill books do not drop.
 func _for_player(item_id: String) -> bool:
@@ -712,24 +711,34 @@ func _for_player(item_id: String) -> bool:
 	return ItemDb.usable_by(item_id, class_id)
 
 
+## Gear drops now and then; elites drop it more often and roll better rarity.
+## The gear comes from the monster's level (ItemDb.drop_pool). A boss drops
+## "gear_count" pieces, none below its "min_rarity". Good pieces stay on the
+## ground longer (the rarity's "ground_seconds").
 func _maybe_drop_gear() -> void:
-	var pool: Array = gear_drops.get("items", []).filter(_for_player)
+	var pool: Array = gear_drops.get("items", ItemDb.drop_pool(level)).filter(_for_player)
 	var chance: float = float(gear_drops.get("chance", 0.0))
 	var rolls: int = int(boss.get("rarity_rolls", 1))
 	if is_elite:
 		var elite: Dictionary = CombatRules.settings["elite"]
 		chance += float(elite.get("gear_chance", 0.0))
 		rolls = int(elite.get("rarity_rolls", 1))
-	if pool.is_empty() or randf() >= chance:
+	if pool.is_empty():
 		return
-	var piece: Dictionary = ItemDb.roll_gear(pool.pick_random(), rolls)
-	var pickup: Node2D = PICKUP_SCENE.instantiate()
-	pickup.set("kind", "item")
-	pickup.set("item_id", piece["id"])
-	pickup.set("stack", piece)
-	pickup.set("lifetime", 60.0)
-	pickup.position = position + Vector2(randf_range(-24.0, 24.0), randf_range(-16.0, 16.0))
-	get_parent().call_deferred("add_child", pickup)
+	for i in int(boss.get("gear_count", 1)):
+		if randf() >= chance:
+			continue
+		var piece: Dictionary = ItemDb.roll_gear(
+			pool.pick_random(), rolls, boss.get("min_rarity", "")
+		)
+		var pickup: Node2D = PICKUP_SCENE.instantiate()
+		pickup.set("kind", "item")
+		pickup.set("item_id", piece["id"])
+		pickup.set("stack", piece)
+		pickup.set("lifetime", float(ItemDb.rarities[piece["rarity"]].get("ground_seconds", 60)))
+		var spread := Vector2(randf_range(-24.0, 24.0), randf_range(-16.0, 16.0))
+		pickup.position = position + spread + Vector2(i * 28.0, 0.0)
+		get_parent().call_deferred("add_child", pickup)
 
 
 func _drop(kind: String, amount: int, item_id: String = "") -> void:

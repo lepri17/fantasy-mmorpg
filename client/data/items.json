@@ -31,7 +31,9 @@
         1.0,
         1.0,
         1.0
-      ]
+      ],
+      "roll_floor": 0.0,
+      "ground_seconds": 60
     },
     "uncommon": {
       "name": "Uncommon",
@@ -48,7 +50,9 @@
         0.71,
         0.91,
         1.0
-      ]
+      ],
+      "roll_floor": 0.0,
+      "ground_seconds": 60
     },
     "rare": {
       "name": "Rare",
@@ -65,7 +69,9 @@
         0.62,
         0.0,
         1.0
-      ]
+      ],
+      "roll_floor": 0.3,
+      "ground_seconds": 90
     },
     "epic": {
       "name": "Epic",
@@ -82,7 +88,9 @@
         0.47,
         0.65,
         1.0
-      ]
+      ],
+      "roll_floor": 0.6,
+      "ground_seconds": 120
     }
   },
   "random_options": {
@@ -123,6 +131,14 @@
       0.08
     ]
   },
+  "option_growth": {
+    "whole": 0.12,
+    "percent": 0.04
+  },
+  "drop_levels": [
+    -6,
+    2
+  ],
   "items": {
     "red_headband": {
       "name": "Red Headband",
@@ -417,7 +433,8 @@
       "skill_damage": 0.05,
       "icon": "res://assets/items/icons/starlit_hat.png",
       "text": "Given to a Sorcerer. The star never dims.",
-      "price": 1500
+      "price": 1500,
+      "no_drop": true
     },
     "violet_robe": {
       "name": "Violet Robe",
@@ -498,7 +515,8 @@
       "crit_chance": 0.03,
       "icon": "res://assets/items/icons/azure_hood.png",
       "text": "Given to a Ranger.",
-      "price": 1500
+      "price": 1500,
+      "no_drop": true
     },
     "ranger_vest": {
       "name": "Ranger Vest",
@@ -540,7 +558,8 @@
       "attack": 3,
       "icon": "res://assets/items/icons/champion_cape.png",
       "text": "Given to a Champion.",
-      "price": 1500
+      "price": 1500,
+      "no_drop": true
     },
     "book_meteor": {
       "name": "Book: Meteor",
@@ -561,6 +580,183 @@
       "world_icon": "res://assets/items/book.png",
       "text": "Teaches Arrow Rain. Needs level 5.",
       "price": 800
+    },
+    "elderwood_blade": {
+      "name": "Elderwood Blade",
+      "slot": "weapon",
+      "level": 12,
+      "look": "training_sword",
+      "set": "elderwood",
+      "classes": [
+        "warrior"
+      ],
+      "attack": 13,
+      "icon": "res://assets/items/icons/elderwood_blade.png",
+      "text": "Heartwood bound in green steel.",
+      "price": 2600
+    },
+    "elderwood_bow": {
+      "name": "Elderwood Bow",
+      "slot": "weapon",
+      "level": 12,
+      "look": "short_bow",
+      "set": "elderwood",
+      "classes": [
+        "archer"
+      ],
+      "attack": 11,
+      "crit_chance": 0.05,
+      "icon": "res://assets/items/icons/elderwood_bow.png",
+      "text": "Strung with a living vine.",
+      "price": 2500
+    },
+    "elderwood_staff": {
+      "name": "Elderwood Staff",
+      "slot": "weapon",
+      "level": 12,
+      "look": "oak_staff",
+      "set": "elderwood",
+      "classes": [
+        "mage"
+      ],
+      "attack": 11,
+      "skill_damage": 0.15,
+      "icon": "res://assets/items/icons/elderwood_staff.png",
+      "text": "Still growing, a little.",
+      "price": 2500
+    },
+    "elderwood_plate": {
+      "name": "Elderwood Plate",
+      "slot": "armor",
+      "level": 12,
+      "look": "blue_plate",
+      "set": "elderwood",
+      "classes": [
+        "warrior"
+      ],
+      "max_hp": 45,
+      "defense": 8,
+      "icon": "res://assets/items/icons/elderwood_plate.png",
+      "text": "Bark-hard plates over moss.",
+      "price": 2400
+    },
+    "elderwood_vest": {
+      "name": "Elderwood Vest",
+      "slot": "armor",
+      "level": 12,
+      "look": "ranger_vest",
+      "set": "elderwood",
+      "classes": [
+        "archer"
+      ],
+      "max_hp": 40,
+      "defense": 5,
+      "evasion": 0.04,
+      "icon": "res://assets/items/icons/elderwood_vest.png",
+      "text": "Light as leaves, tough as roots.",
+      "price": 2300
+    },
+    "elderwood_robe": {
+      "name": "Elderwood Robe",
+      "slot": "armor",
+      "level": 12,
+      "look": "violet_robe",
+      "set": "elderwood",
+      "classes": [
+        "mage"
+      ],
+      "max_hp": 36,
+      "defense": 5,
+      "max_stamina": 30,
+      "icon": "res://assets/items/icons/elderwood_robe.png",
+      "text": "Woven from the grove's own light.",
+      "price": 2300
+    },
+    "elderwood_band": {
+      "name": "Elderwood Band",
+      "slot": "head",
+      "level": 12,
+      "look": "red_headband",
+      "set": "elderwood",
+      "classes": [
+        "warrior"
+      ],
+      "max_hp": 18,
+      "defense": 3,
+      "icon": "res://assets/items/icons/elderwood_band.png",
+      "text": "A circlet of old, bright wood.",
+      "price": 1800
+    },
+    "elderwood_hood": {
+      "name": "Elderwood Hood",
+      "slot": "head",
+      "level": 12,
+      "look": "green_hood",
+      "set": "elderwood",
+      "classes": [
+        "archer"
+      ],
+      "max_hp": 16,
+      "evasion": 0.03,
+      "crit_chance": 0.02,
+      "icon": "res://assets/items/icons/elderwood_hood.png",
+      "text": "The forest hides its hunters.",
+      "price": 1800
+    },
+    "elderwood_hat": {
+      "name": "Elderwood Hat",
+      "slot": "head",
+      "level": 12,
+      "look": "sage_hat",
+      "set": "elderwood",
+      "classes": [
+        "mage"
+      ],
+      "max_hp": 14,
+      "max_stamina": 25,
+      "skill_damage": 0.05,
+      "icon": "res://assets/items/icons/elderwood_hat.png",
+      "text": "Leaves still whisper in it.",
+      "price": 1800
+    },
+    "elderwood_gloves": {
+      "name": "Elderwood Gloves",
+      "slot": "gloves",
+      "level": 12,
+      "look": "leather_gloves",
+      "set": "elderwood",
+      "attack": 3,
+      "crit_chance": 0.03,
+      "accuracy": 0.03,
+      "icon": "res://assets/items/icons/elderwood_gloves.png",
+      "text": "They never slip.",
+      "price": 1900
+    },
+    "elderwood_boots": {
+      "name": "Elderwood Boots",
+      "slot": "boots",
+      "level": 12,
+      "look": "leather_boots",
+      "set": "elderwood",
+      "max_hp": 16,
+      "evasion": 0.03,
+      "attack_speed": 0.03,
+      "icon": "res://assets/items/icons/elderwood_boots.png",
+      "text": "Quiet as moss underfoot.",
+      "price": 1900
+    },
+    "elderwood_cape": {
+      "name": "Elderwood Cape",
+      "slot": "cape",
+      "level": 12,
+      "look": "red_cape",
+      "set": "elderwood",
+      "max_hp": 20,
+      "defense": 2,
+      "crit_damage": 0.1,
+      "icon": "res://assets/items/icons/elderwood_cape.png",
+      "text": "A cloak of a thousand leaves.",
+      "price": 2000
     }
   },
   "upgrades": {
@@ -627,6 +823,22 @@
         "2": {
           "attack": 4,
           "defense": 2
+        }
+      }
+    },
+    "elderwood": {
+      "name": "Elderwood Set",
+      "bonuses": {
+        "2": {
+          "max_hp": 20
+        },
+        "4": {
+          "attack": 4,
+          "crit_chance": 0.03
+        },
+        "6": {
+          "attack_speed": 0.08,
+          "crit_damage": 0.1
         }
       }
     }

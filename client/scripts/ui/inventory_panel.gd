@@ -126,7 +126,7 @@ func _show_details() -> void:
 	var text: String = item["text"]
 	var name_color := Color.WHITE
 	if ItemDb.is_gear(stack["id"]):
-		text = _gear_text(stack) + _set_text(item) + "\n" + _upgrade_text(stack)
+		text = _gear_text(stack) + _options_text(stack) + _set_text(item) + "\n" + _upgrade_text(stack)
 		name_color = ItemDb.rarity_color(stack)
 		if _stats != null and not ItemDb.usable_by(stack["id"], _stats.class_id):
 			var names := PackedStringArray()
@@ -153,6 +153,25 @@ func _gear_text(stack: Dictionary) -> String:
 		if not is_zero_approx(value):
 			parts.append("%s %s" % [_amount(stat, value), UiStyle.stat_name(stat, true)])
 	return "Gives: %s" % ", ".join(parts)
+
+
+## "Options: +5 ATK (4~7), +2% CRIT (1.5~4.5%)": the random bonuses this piece
+## rolled, each with the range it could have rolled in (ItemDb.option_range).
+func _options_text(stack: Dictionary) -> String:
+	var options: Dictionary = stack.get("options", {})
+	var parts := PackedStringArray()
+	for stat in UiStyle.BONUS_NAMES:
+		if options.has(stat):
+			var span: Vector2 = ItemDb.option_range(stat, stack["id"], stack.get("rarity", ""))
+			var name_text: String = UiStyle.stat_name(stat, true)
+			var low: String = _amount(stat, span.x).trim_prefix("+").trim_suffix("%")
+			var high: String = _amount(stat, span.y).trim_prefix("+")
+			parts.append("%s %s (%s~%s)" % [_amount(stat, options[stat]), name_text, low, high])
+	return "" if parts.is_empty() else "\nOptions: %s" % ", ".join(parts)
+
+
+func _class_id() -> String:
+	return _stats.class_id if _stats != null else ""
 
 
 ## For a bag piece: "If worn: +3 ATK, -2% EVA", what really changes for the
@@ -197,7 +216,7 @@ func _set_text(item: Dictionary) -> String:
 		steps.append("%s = %s" % [needed, UiStyle.bonus_text(bonuses[needed], true)])
 	return (
 		"\n%s %d/%d: %s"
-		% [ItemDb.sets[set_id]["name"], worn, ItemDb.set_size(set_id), "; ".join(steps)]
+		% [ItemDb.sets[set_id]["name"], worn, ItemDb.set_size(set_id, _class_id()), "; ".join(steps)]
 	)
 
 

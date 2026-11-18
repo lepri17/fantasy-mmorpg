@@ -41,25 +41,7 @@
     "defense": 0,
     "evasion": 0.05,
     "gear_drops": {
-      "chance": 0.03,
-      "items": [
-        "red_headband",
-        "training_sword",
-        "leather_gloves",
-        "red_cape",
-        "blue_plate",
-        "leather_boots",
-        "verdant_headband",
-        "verdant_cape",
-        "verdant_gloves",
-        "verdant_boots",
-        "oak_staff",
-        "sage_hat",
-        "violet_robe",
-        "short_bow",
-        "green_hood",
-        "ranger_vest"
-      ]
+      "chance": 0.03
     }
   },
   "blue_slime": {
@@ -132,33 +114,7 @@
       "damage_multiplier": 2.0
     },
     "gear_drops": {
-      "chance": 0.06,
-      "items": [
-        "red_headband",
-        "training_sword",
-        "leather_gloves",
-        "red_cape",
-        "blue_plate",
-        "leather_boots",
-        "verdant_headband",
-        "verdant_cape",
-        "verdant_gloves",
-        "verdant_boots",
-        "crimson_plate",
-        "crimson_sword",
-        "oak_staff",
-        "sage_hat",
-        "violet_robe",
-        "short_bow",
-        "green_hood",
-        "ranger_vest",
-        "ember_staff",
-        "midnight_robe",
-        "crimson_bow",
-        "shadow_vest",
-        "swift_boots",
-        "hawk_gloves"
-      ]
+      "chance": 0.06
     }
   },
   "spore_shroom": {
@@ -206,34 +162,7 @@
       }
     },
     "gear_drops": {
-      "chance": 0.05,
-      "items": [
-        "red_headband",
-        "training_sword",
-        "leather_gloves",
-        "red_cape",
-        "blue_plate",
-        "leather_boots",
-        "verdant_headband",
-        "verdant_cape",
-        "verdant_gloves",
-        "verdant_boots",
-        "crimson_plate",
-        "crimson_sword",
-        "oak_staff",
-        "sage_hat",
-        "violet_robe",
-        "short_bow",
-        "green_hood",
-        "ranger_vest",
-        "ember_staff",
-        "midnight_robe",
-        "crimson_bow",
-        "shadow_vest",
-        "swift_boots",
-        "hawk_gloves",
-        "duelist_cape"
-      ]
+      "chance": 0.05
     }
   },
   "slime_king": {
@@ -301,37 +230,12 @@
         "count": 2,
         "every": 12.0,
         "most": 4
-      }
+      },
+      "gear_count": 2,
+      "min_rarity": "rare"
     },
     "gear_drops": {
-      "chance": 1.0,
-      "items": [
-        "red_headband",
-        "training_sword",
-        "leather_gloves",
-        "red_cape",
-        "blue_plate",
-        "leather_boots",
-        "verdant_headband",
-        "verdant_cape",
-        "verdant_gloves",
-        "verdant_boots",
-        "crimson_plate",
-        "crimson_sword",
-        "oak_staff",
-        "sage_hat",
-        "violet_robe",
-        "short_bow",
-        "green_hood",
-        "ranger_vest",
-        "ember_staff",
-        "midnight_robe",
-        "crimson_bow",
-        "shadow_vest",
-        "swift_boots",
-        "hawk_gloves",
-        "duelist_cape"
-      ]
+      "chance": 1.0
     },
     "knockback_resist": 1.0
   },
@@ -387,11 +291,11 @@
     "drops": [
       {
         "item": "red_potion",
-        "chance": 0.4
+        "chance": 0.5
       },
       {
         "item": "blue_potion",
-        "chance": 0.15
+        "chance": 0.1
       },
       {
         "item": "ember_stone",
@@ -399,7 +303,7 @@
       },
       {
         "item": "moon_stone",
-        "chance": 0.04
+        "chance": 0.03
       }
     ],
     "defense": 6,
@@ -422,21 +326,7 @@
       "cooldown": 5.0
     },
     "gear_drops": {
-      "chance": 0.05,
-      "items": [
-        "verdant_headband",
-        "verdant_cape",
-        "verdant_gloves",
-        "verdant_boots",
-        "crimson_plate",
-        "crimson_sword",
-        "ember_staff",
-        "midnight_robe",
-        "crimson_bow",
-        "shadow_vest",
-        "swift_boots",
-        "hawk_gloves"
-      ]
+      "chance": 0.05
     }
   },
   "lantern_wisp": {
@@ -457,19 +347,19 @@
     "drops": [
       {
         "item": "red_potion",
-        "chance": 0.4
+        "chance": 0.25
       },
       {
         "item": "blue_potion",
-        "chance": 0.15
+        "chance": 0.35
       },
       {
         "item": "ember_stone",
-        "chance": 0.12
+        "chance": 0.08
       },
       {
         "item": "moon_stone",
-        "chance": 0.04
+        "chance": 0.08
       }
     ],
     "defense": 3,
@@ -492,21 +382,7 @@
     },
     "hover": 6,
     "gear_drops": {
-      "chance": 0.05,
-      "items": [
-        "verdant_headband",
-        "verdant_cape",
-        "verdant_gloves",
-        "verdant_boots",
-        "crimson_plate",
-        "crimson_sword",
-        "ember_staff",
-        "midnight_robe",
-        "crimson_bow",
-        "shadow_vest",
-        "swift_boots",
-        "hawk_gloves"
-      ]
+      "chance": 0.05
     }
   },
   "rootling": {
@@ -535,7 +411,7 @@
       },
       {
         "item": "ember_stone",
-        "chance": 0.12
+        "chance": 0.2
       },
       {
         "item": "moon_stone",
@@ -566,24 +442,7 @@
       "damage_multiplier": 1.5
     },
     "gear_drops": {
-      "chance": 0.06,
-      "items": [
-        "verdant_headband",
-        "verdant_cape",
-        "verdant_gloves",
-        "verdant_boots",
-        "crimson_plate",
-        "crimson_sword",
-        "ember_staff",
-        "midnight_robe",
-        "crimson_bow",
-        "shadow_vest",
-        "swift_boots",
-        "hawk_gloves",
-        "duelist_cape",
-        "starlit_hat",
-        "azure_hood"
-      ]
+      "chance": 0.06
     }
   },
   "moss_golem": {
@@ -604,19 +463,19 @@
     "drops": [
       {
         "item": "red_potion",
-        "chance": 0.4
+        "chance": 0.5
       },
       {
         "item": "blue_potion",
-        "chance": 0.15
+        "chance": 0.2
       },
       {
         "item": "ember_stone",
-        "chance": 0.12
+        "chance": 0.25
       },
       {
         "item": "moon_stone",
-        "chance": 0.04
+        "chance": 0.08
       }
     ],
     "defense": 14,
@@ -637,24 +496,7 @@
       "damage_multiplier": 1.8
     },
     "gear_drops": {
-      "chance": 0.07,
-      "items": [
-        "verdant_headband",
-        "verdant_cape",
-        "verdant_gloves",
-        "verdant_boots",
-        "crimson_plate",
-        "crimson_sword",
-        "ember_staff",
-        "midnight_robe",
-        "crimson_bow",
-        "shadow_vest",
-        "swift_boots",
-        "hawk_gloves",
-        "duelist_cape",
-        "starlit_hat",
-        "azure_hood"
-      ]
+      "chance": 0.07
     }
   },
   "elder_treant": {
@@ -720,27 +562,12 @@
         "count": 2,
         "every": 14.0,
         "most": 4
-      }
+      },
+      "gear_count": 3,
+      "min_rarity": "rare"
     },
     "gear_drops": {
-      "chance": 1.0,
-      "items": [
-        "verdant_headband",
-        "verdant_cape",
-        "verdant_gloves",
-        "verdant_boots",
-        "crimson_plate",
-        "crimson_sword",
-        "ember_staff",
-        "midnight_robe",
-        "crimson_bow",
-        "shadow_vest",
-        "swift_boots",
-        "hawk_gloves",
-        "duelist_cape",
-        "starlit_hat",
-        "azure_hood"
-      ]
+      "chance": 1.0
     },
     "crown": false
   }

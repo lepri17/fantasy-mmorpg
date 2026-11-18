@@ -12,6 +12,10 @@ const MAGNET_SPEED := 280.0
 const BLINK_SECONDS := 5.0
 ## Inventory icons are 64 px; on the ground they are shown at about half size.
 const ICON_SCALE_ON_GROUND := 0.55
+## Rare and better gear stands in a beam of light in its rarity colour.
+const BEAM_FROM_RANK := 2
+const BEAM_HEIGHT := 150.0
+const BEAM_WIDTH := 30.0
 
 var kind: String = "gold"
 var item_id: String = ""
@@ -58,8 +62,38 @@ func _ready() -> void:
 func _draw() -> void:
 	if not stack.is_empty() and ItemDb.is_special(stack):
 		var glow: Color = ItemDb.rarity_color(stack)
+		if has_beam():
+			_draw_beam(glow)
 		draw_circle(Vector2(0, 8), 18.0, Color(glow.r, glow.g, glow.b, 0.22))
 		draw_arc(Vector2(0, 8), 18.0, 0.0, TAU, 32, Color(glow.r, glow.g, glow.b, 0.7), 2.0)
+
+
+## A soft beam in the rarity colour with a bright core, fading upward and
+## pulsing, so a good drop shows from across the screen.
+func _draw_beam(glow: Color) -> void:
+	var pulse: float = 0.8 + sin(_age * 3.0) * 0.2
+	var core: Color = glow.lerp(Color.WHITE, 0.55)
+	for layer in [[BEAM_WIDTH, glow, 0.6], [BEAM_WIDTH * 0.3, core, 0.95]]:
+		var half: float = layer[0] * 0.5
+		var color: Color = layer[1]
+		var bottom := Color(color.r, color.g, color.b, layer[2] * pulse)
+		var top := Color(color.r, color.g, color.b, 0.0)
+		draw_polygon(
+			PackedVector2Array(
+				[
+					Vector2(-half, 8),
+					Vector2(half, 8),
+					Vector2(half * 0.5, 8 - BEAM_HEIGHT),
+					Vector2(-half * 0.5, 8 - BEAM_HEIGHT)
+				]
+			),
+			PackedColorArray([bottom, bottom, top, top])
+		)
+
+
+## True for rare and better gear: it stands in a beam of light.
+func has_beam() -> bool:
+	return not stack.is_empty() and ItemDb.rarity_rank(stack.get("rarity", "")) >= BEAM_FROM_RANK
 
 
 func _process(delta: float) -> void:
@@ -69,6 +103,8 @@ func _process(delta: float) -> void:
 		return
 	var left: float = lifetime - _age
 	visible = left > BLINK_SECONDS or int(left * 8.0) % 2 == 0
+	if has_beam():
+		queue_redraw()  # the beam pulses
 	if magnetic and _age >= pickup_delay:
 		var player: Node2D = get_tree().get_first_node_in_group("player") as Node2D
 		if player != null and not player.get("is_dead"):

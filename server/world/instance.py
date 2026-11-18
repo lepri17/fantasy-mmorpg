@@ -259,16 +259,21 @@ class Instance:
             self.broadcast({"t": "banner", "text": f"{monster.name} is defeated!", "sub": ""})
 
     def _maybe_drop_gear(self, monster: Monster, killer, owners) -> None:
-        pool = [i for i in monster.gear_drops.get("items", []) if _for_class(i, killer.stats.class_id)]
+        candidates = monster.gear_drops.get("items", item_db.drop_pool(monster.level))
+        pool = [i for i in candidates if _for_class(i, killer.stats.class_id)]
         chance = float(monster.gear_drops.get("chance", 0.0))
         rolls = int(monster.boss.get("rarity_rolls", 1))
         if monster.elite:
             elite = combat.settings()["elite"]
             chance += float(elite.get("gear_chance", 0.0))
             rolls = int(elite.get("rarity_rolls", 1))
-        if pool and self.rng.random() < chance:
-            piece = item_db.roll_gear(self.rng.choice(pool), rolls, self.rng)
-            self.drop(monster.x, monster.y, "item", amount=1, stack=piece, owners=owners, lifetime=GEAR_LOOT_SECONDS)
+        if not pool:
+            return
+        for _ in range(int(monster.boss.get("gear_count", 1))):
+            if self.rng.random() < chance:
+                piece = item_db.roll_gear(self.rng.choice(pool), rolls, self.rng, monster.boss.get("min_rarity", ""))
+                seconds = float(item_db.rarities()[piece["rarity"]].get("ground_seconds", GEAR_LOOT_SECONDS))
+                self.drop(monster.x, monster.y, "item", amount=1, stack=piece, owners=owners, lifetime=seconds)
 
     # --- loot on the ground
 

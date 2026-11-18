@@ -115,24 +115,51 @@ def roll_rarity(rng: random.Random = random) -> str:
     return next(iter(table_))
 
 
-def roll_gear(item_id: str, rolls: int = 1, rng: random.Random = random) -> dict:
-    """A dropped piece: a rarity by weight (rolled `rolls` times, the best kept),
-    then that many different random options."""
+def roll_gear(item_id: str, rolls: int = 1, rng: random.Random = random, min_rarity: str = "") -> dict:
+    """A dropped piece: a rarity by weight (rolled `rolls` times, the best kept,
+    never below min_rarity), then that many different random options, each in
+    its option_range (item_db.gd roll_gear)."""
     rarity = roll_rarity(rng)
     for _ in range(rolls - 1):
         other = roll_rarity(rng)
         if rarity_rank(other) > rarity_rank(rarity):
             rarity = other
+    if rarity_rank(min_rarity) > rarity_rank(rarity):
+        rarity = min_rarity
     stats_left = list(random_options())
     rng.shuffle(stats_left)
     options = {}
     for stat in stats_left[: int(rarities()[rarity]["options"])]:
-        low, high = (float(v) for v in random_options()[stat])
+        low, high = option_range(stat, item_id, rarity)
         if stat in PERCENT_STATS:
             options[stat] = snapped(rng.uniform(low, high), 0.005)
         else:
             options[stat] = rng.randint(int(low), int(high))
     return gear(item_id, rarity, 0, options)
+
+
+def option_range(stat: str, item_id: str, rarity: str) -> tuple[float, float]:
+    """What a random option can roll on this piece: the range grown with the
+    piece's level, starting higher for rarer pieces (item_db.gd option_range)."""
+    growth = data().get("option_growth", {})
+    per_level = float(growth.get("percent" if stat in PERCENT_STATS else "whole", 0.0))
+    grown = 1.0 + (required_level(item_id) - 1) * per_level
+    low = float(random_options()[stat][0]) * grown
+    high = float(random_options()[stat][1]) * grown
+    low += (high - low) * float(rarities().get(rarity, {}).get("roll_floor", 0.0))
+    if stat in PERCENT_STATS:
+        return snapped(low, 0.005), snapped(high, 0.005)
+    return float(roundi(low)), float(roundi(high))
+
+
+def drop_pool(monster_level: int) -> list:
+    """The gear a monster of this level can drop (item_db.gd drop_pool)."""
+    below, above = data().get("drop_levels", [-6, 2])
+    return [
+        item_id for item_id, item in items().items()
+        if is_gear(item_id) and not item.get("no_drop", False)
+        and monster_level + below <= required_level(item_id) <= monster_level + above
+    ]
 
 
 def stat_of(stack: dict, stat: str) -> float:

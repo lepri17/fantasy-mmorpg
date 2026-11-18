@@ -199,7 +199,7 @@ EXP לפי פער הרמות (רמת הגיבור פחות רמת המפלצת):
 
 ## ציוד (נגד Blue Slime)
 
-"הכי טוב": בכל משבצת, הפריט הרגיל (Common) שהגיבור יכול ללבוש ברמה הזאת ונותן הכי הרבה DPS כפול שניות חיים. כולל ציוד שדרוג המקצוע ברמה 10. "+6": אותו ציוד משודרג לכל +6 (אבני Ember, בלי סיכון). נקודות הסטטים כולן בסטט הראשי.
+"הכי טוב": בכל משבצת, הפריט הרגיל (Common) שהגיבור יכול ללבוש ברמה הזאת ונותן הכי הרבה DPS כפול שניות חיים. כולל ציוד שדרוג המקצוע ברמה 10 וציוד העץ הקדום (רק משלל) ברמה 12. "+6": אותו ציוד משודרג לכל +6 (אבני Ember, בלי סיכון). נקודות הסטטים כולן בסטט הראשי.
 
 | מקצוע | רמה | ציוד | התקפה | HP | הגנה | DPS | DPS מול ההתחלה | שנ' בחיים | פריטים |
 |---|---|---|---|---|---|---|---|---|---|
@@ -211,6 +211,9 @@ EXP לפי פער הרמות (רמת הגיבור פחות רמת המפלצת):
 | Warrior | 10 | התחלה | 64 | 235 | 4 | 164 | +0% | 21 | Red Headband, Training Sword, Leather Gloves, Red Cape, Blue Plate Armor, Leather Boots |
 | Warrior | 10 | הכי טוב | 76 | 293 | 8 | 207 | +26% | 36 | Verdant Headband, Crimson Sword, Verdant Gloves, Champion Cape, Crimson Plate, Swift Boots |
 | Warrior | 10 | הכי טוב +6 | 94 | 365 | 20 | 257 | +57% | 127 | Verdant Headband, Crimson Sword, Verdant Gloves, Champion Cape, Crimson Plate, Swift Boots |
+| Warrior | 12 | התחלה | 76 | 265 | 4 | 195 | +0% | 24 | Red Headband, Training Sword, Leather Gloves, Red Cape, Blue Plate Armor, Leather Boots |
+| Warrior | 12 | הכי טוב | 91 | 349 | 13 | 279 | +43% | 84 | Elderwood Band, Elderwood Blade, Elderwood Gloves, Elderwood Cape, Elderwood Plate, Elderwood Boots |
+| Warrior | 12 | הכי טוב +6 | 109 | 421 | 25 | 335 | +71% | 151 | Elderwood Band, Elderwood Blade, Elderwood Gloves, Elderwood Cape, Elderwood Plate, Elderwood Boots |
 | Archer | 1 | התחלה | 9 | 80 | 2 | 17 | +0% | 7 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots |
 | Archer | 1 | הכי טוב | 9 | 85 | 2 | 17 | +0% | 7 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots, Red Cape |
 | Archer | 6 | התחלה | 31 | 145 | 2 | 91 | +0% | 12 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots |
@@ -219,6 +222,9 @@ EXP לפי פער הרמות (רמת הגיבור פחות רמת המפלצת):
 | Archer | 10 | התחלה | 49 | 197 | 2 | 170 | +0% | 16 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots |
 | Archer | 10 | הכי טוב | 53 | 236 | 3 | 213 | +25% | 21 | Azure Hood, Crimson Bow, Hawk Gloves, Shadow Vest, Swift Boots, Duelist Cape |
 | Archer | 10 | הכי טוב +6 | 71 | 308 | 15 | 288 | +69% | 97 | Azure Hood, Crimson Bow, Hawk Gloves, Shadow Vest, Swift Boots, Duelist Cape |
+| Archer | 12 | התחלה | 58 | 223 | 2 | 217 | +0% | 18 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots |
+| Archer | 12 | הכי טוב | 71 | 311 | 7 | 322 | +49% | 40 | Elderwood Hood, Elderwood Bow, Elderwood Gloves, Elderwood Vest, Elderwood Boots, Elderwood Cape |
+| Archer | 12 | הכי טוב +6 | 89 | 383 | 19 | 405 | +87% | 152 | Elderwood Hood, Elderwood Bow, Elderwood Gloves, Elderwood Vest, Elderwood Boots, Elderwood Cape |
 | Mage | 1 | התחלה | 9 | 70 | 1 | 14 | +0% | 5 | Sage Hat, Oak Staff, Violet Robe, Leather Boots |
 | Mage | 1 | הכי טוב | 10 | 75 | 1 | 16 | +16% | 6 | Sage Hat, Oak Staff, Violet Robe, Leather Boots, Leather Gloves, Red Cape |
 | Mage | 6 | התחלה | 39 | 125 | 1 | 72 | +0% | 9 | Sage Hat, Oak Staff, Violet Robe, Leather Boots |
@@ -227,6 +233,9 @@ EXP לפי פער הרמות (רמת הגיבור פחות רמת המפלצת):
 | Mage | 10 | התחלה | 63 | 169 | 1 | 119 | +0% | 12 | Sage Hat, Oak Staff, Violet Robe, Leather Boots |
 | Mage | 10 | הכי טוב | 68 | 209 | 3 | 148 | +24% | 17 | Starlit Hat, Ember Staff, Midnight Robe, Swift Boots, Hawk Gloves, Duelist Cape |
 | Mage | 10 | הכי טוב +6 | 86 | 281 | 15 | 188 | +58% | 81 | Starlit Hat, Ember Staff, Midnight Robe, Swift Boots, Hawk Gloves, Duelist Cape |
+| Mage | 12 | התחלה | 75 | 191 | 1 | 142 | +0% | 14 | Sage Hat, Oak Staff, Violet Robe, Leather Boots |
+| Mage | 12 | הכי טוב | 89 | 277 | 7 | 204 | +44% | 32 | Elderwood Hat, Elderwood Staff, Elderwood Robe, Elderwood Boots, Elderwood Gloves, Elderwood Cape |
+| Mage | 12 | הכי טוב +6 | 107 | 349 | 19 | 246 | +73% | 124 | Elderwood Hat, Elderwood Staff, Elderwood Robe, Elderwood Boots, Elderwood Gloves, Elderwood Cape |
 
 ## שדרוג ציוד
 
@@ -257,7 +266,7 @@ EXP לפי פער הרמות (רמת הגיבור פחות רמת המפלצת):
 | armor | +1 defense, +4 max_hp |
 | boots | +3 max_hp |
 
-## כלכלה ושלל
+## כלכלה
 
 | פריט | מחיר | הריגות Slime | הריגות Blue Slime |
 |---|---|---|---|
@@ -269,21 +278,58 @@ EXP לפי פער הרמות (רמת הגיבור פחות רמת המפלצת):
 | Book: Ground Slam | 800 | 267 | 80 |
 | Rebirth Scroll | 1500 | 500 | 150 |
 
-| דרגה | משקל | בונוסים אקראיים |
-|---|---|---|
-| common | 60 | 0 |
-| uncommon | 28 | 1 |
-| rare | 10 | 2 |
-| epic | 2 | 3 |
+## שלל
 
-| בונוס אקראי | טווח |
-|---|---|
-| attack | 1 ~ 3 |
-| max_hp | 5 ~ 15 |
-| defense | 1 ~ 2 |
-| crit_chance | 0.01 ~ 0.03 |
-| evasion | 0.01 ~ 0.02 |
-| max_stamina | 5 ~ 15 |
-| crit_damage | 0.05 ~ 0.15 |
-| accuracy | 0.02 ~ 0.05 |
-| attack_speed | 0.03 ~ 0.08 |
+כל מפלצת זורקת ציוד ברמות -6 עד +2 מהרמה שלה (`drop_levels` ב-items.json), רק ציוד שהמקצוע של הגיבור יכול ללבוש. ציוד שמקבלים רק במשימה (`no_drop`) לא נופל. ל-100 הריגות, כולל מפלצות עילית. בוס זורק כמה פריטים (`gear_count`), כולם לפחות בדרגה `min_rarity`.
+
+| מפלצת | רמה | זהב להריגה | Red Potion | Blue Potion | Ember Stone | Moon Stone | ציוד | נדיר ומעלה | אפי | רמות הציוד |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Slime | 1 | 3 | 38 | 8 | 10 | 2 | 7.0 | 1.3 | 0.22 | 1-3 |
+| Blue Slime | 3 | 12 | 58 | 15 | 15 | 6 | 10.0 | 1.7 | 0.29 | 1-5 |
+| Spore Shroom | 4 | 8 | 8 | 20 | 11 | 2 | 9.0 | 1.5 | 0.27 | 1-6 |
+| Slime King | 8 | 225 | 0 | 0 | 100 | 100 | 200.0 | 200.0 | 11.76 | 3-8 |
+| Golden Slime | 3 | 44 | 8 | 0 | 30 | 2 | 0.0 | 0.0 | 0.00 | - |
+| Bramble Boar | 9 | 21 | 58 | 10 | 17 | 5 | 9.0 | 1.5 | 0.27 | 3-8 |
+| Lantern Wisp | 10 | 19 | 33 | 35 | 13 | 10 | 9.0 | 1.5 | 0.27 | 5-12 |
+| Rootling | 13 | 28 | 48 | 15 | 25 | 6 | 10.0 | 1.7 | 0.29 | 8-12 |
+| Moss Golem | 15 | 42 | 58 | 20 | 30 | 10 | 11.0 | 1.8 | 0.31 | 12-12 |
+| Elder Treant | 18 | 600 | 100 | 60 | 100 | 100 | 300.0 | 300.0 | 17.64 | 12-12 |
+
+### שלל בשעה (לוחם, ציוד התחלה, אותה מפלצת כמו בקצב עליית הרמות)
+
+| רמה | מפלצת | הריגות בשעה | זהב בשעה | ציוד בשעה | נדיר ומעלה בשעה | שעות לפריט אפי |
+|---|---|---|---|---|---|---|
+| 1 | Slime | 533 | 1854 | 37.3 | 6.9 | 0.8 |
+| 3 | Blue Slime | 486 | 5635 | 48.6 | 8.1 | 0.7 |
+| 5 | Blue Slime | 553 | 6416 | 55.3 | 9.3 | 0.6 |
+| 8 | Bramble Boar | 400 | 8354 | 36.0 | 6.2 | 0.9 |
+| 10 | Lantern Wisp | 502 | 9320 | 45.2 | 7.8 | 0.7 |
+| 13 | Rootling | 403 | 11208 | 40.3 | 6.7 | 0.9 |
+| 15 | Moss Golem | 306 | 12795 | 33.7 | 5.5 | 1.1 |
+
+### דרגות
+
+רגיל: הטלה אחת. עילית: הטוב מבין 2 הטלות. בוס: הטוב מבין 3, ולפחות rare. "התחלת הטווח": כמה מהטווח של כל בונוס דרגה גבוהה מדלגת (פריט נדיר מקבל בונוסים גבוהים יותר).
+
+| דרגה | בונוסים | התחלת הטווח | שניות על הרצפה | רגיל | עילית | בוס |
+|---|---|---|---|---|---|---|
+| Common | 0 | 0% | 60 | 60.0% | 36.0% | 0.0% |
+| Uncommon | 1 | 0% | 60 | 28.0% | 41.4% | 0.0% |
+| Rare | 2 | 30% | 90 | 10.0% | 18.6% | 94.1% |
+| Epic | 3 | 60% | 120 | 2.0% | 4.0% | 5.9% |
+
+### טווחי הבונוסים האקראיים
+
+הטווח גדל עם רמת הפריט: מספרים שלמים ב-12% לכל רמה, אחוזים ב-4% לכל רמה (`option_growth`).
+
+| בונוס | רמה 1 | רמה 6 | רמה 12 | רמה 12 נדיר | רמה 12 אפי |
+|---|---|---|---|---|---|
+| attack | 1~3 | 2~5 | 2~7 | 4~7 | 5~7 |
+| max_hp | 5~15 | 8~24 | 12~35 | 19~35 | 26~35 |
+| defense | 1~2 | 2~3 | 2~5 | 3~5 | 4~5 |
+| crit_chance | 1~3% | 1~3.5% | 1.5~4.5% | 2.5~4.5% | 3~4.5% |
+| evasion | 1~2% | 1~2.5% | 1.5~3% | 2~3% | 2.5~3% |
+| max_stamina | 5~15 | 8~24 | 12~35 | 19~35 | 26~35 |
+| crit_damage | 5~15% | 6~18% | 7~21.5% | 11.5~21.5% | 16~21.5% |
+| accuracy | 2~5% | 2.5~6% | 3~7% | 4~7% | 5.5~7% |
+| attack_speed | 3~8% | 3.5~9.5% | 4.5~11.5% | 6.5~11.5% | 8.5~11.5% |

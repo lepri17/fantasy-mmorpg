@@ -52,7 +52,7 @@ func _initialize() -> void:
 				Leveling.kill_xp(37, pair[0], pair[1]),
 			]
 		)
-	var out := {"heroes": heroes, "xp_for_level": curve, "gap": gaps, "bag": _bag()}
+	var out := {"heroes": heroes, "xp_for_level": curve, "gap": gaps, "bag": _bag(), "loot": _loot()}
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	var path: String = args[0] if not args.is_empty() else "user://stats.json"
 	var file := FileAccess.open(path, FileAccess.WRITE)
@@ -132,3 +132,18 @@ func _bag() -> Dictionary:
 		"archer": ItemDb.sorted_bag(mixed, "archer"),
 		"levels": levels,
 	}
+
+
+## Loot (item_db.gd): the gear pool of every monster level, and the range of
+## every random option on pieces of different levels and rarities.
+func _loot() -> Dictionary:
+	var pools := {}
+	for level in range(1, 21):
+		pools[str(level)] = ItemDb.drop_pool(level)
+	var ranges: Array = []
+	for item_id in ["training_sword", "crimson_sword", "duelist_cape", "elderwood_blade"]:
+		for rarity in ItemDb.rarities:
+			for stat in ItemDb.random_options:
+				var span: Vector2 = ItemDb.option_range(stat, item_id, rarity)
+				ranges.append([item_id, rarity, stat, span.x, span.y])
+	return {"pools": pools, "ranges": ranges}

@@ -51,12 +51,13 @@ static func sell_price(stack: Dictionary) -> int:
 	return maxi(1, floori(value))
 
 
-## How many items belong to a set.
-static func set_size(set_id: String) -> int:
+## How many items belong to a set: those a class can wear when one is given.
+static func set_size(set_id: String, class_id: String = "") -> int:
 	var total: int = 0
 	for item_id in items:
 		if items[item_id].get("set", "") == set_id:
-			total += 1
+			if class_id == "" or usable_by(item_id, class_id):
+				total += 1
 	return total
 
 
@@ -87,25 +88,57 @@ static func gear(
 	return {"id": item_id, "count": 1, "rarity": rarity, "plus": plus, "options": options.duplicate()}
 
 
-## A dropped piece: a rarity by weight (rolled `rolls` times, the best kept),
-## then that many different random options.
-static func roll_gear(item_id: String, rolls: int = 1) -> Dictionary:
+## A dropped piece: a rarity by weight (rolled `rolls` times, the best kept,
+## never below min_rarity), then that many different random options, each in
+## its option_range.
+static func roll_gear(item_id: String, rolls: int = 1, min_rarity: String = "") -> Dictionary:
 	var rarity: String = _roll_rarity()
 	for _i in rolls - 1:
 		var other: String = _roll_rarity()
 		if rarity_rank(other) > rarity_rank(rarity):
 			rarity = other
+	if rarity_rank(min_rarity) > rarity_rank(rarity):
+		rarity = min_rarity
 	var stats_left: Array = random_options.keys()
 	stats_left.shuffle()
 	var options: Dictionary = {}
 	for stat in stats_left.slice(0, int(rarities[rarity]["options"])):
-		var low: float = float(random_options[stat][0])
-		var high: float = float(random_options[stat][1])
+		var span: Vector2 = option_range(stat, item_id, rarity)
 		if stat in PERCENT_STATS:
-			options[stat] = snappedf(randf_range(low, high), 0.005)
+			options[stat] = snappedf(randf_range(span.x, span.y), 0.005)
 		else:
-			options[stat] = randi_range(int(low), int(high))
+			options[stat] = randi_range(int(span.x), int(span.y))
 	return gear(item_id, rarity, 0, options)
+
+
+## What a random option can roll on this piece: the items.json range, grown
+## with the piece's level ("option_growth"), and starting higher up the range
+## for rarer pieces (the rarity's "roll_floor").
+static func option_range(stat: String, item_id: String, rarity: String) -> Vector2:
+	var growth: Dictionary = GameData.table("items").get("option_growth", {})
+	var per_level: float = float(growth.get("percent" if stat in PERCENT_STATS else "whole", 0.0))
+	var grown: float = 1.0 + (required_level(item_id) - 1) * per_level
+	var low: float = float(random_options[stat][0]) * grown
+	var high: float = float(random_options[stat][1]) * grown
+	low += (high - low) * float(rarities.get(rarity, {}).get("roll_floor", 0.0))
+	if stat in PERCENT_STATS:
+		return Vector2(snappedf(low, 0.005), snappedf(high, 0.005))
+	return Vector2(roundi(low), roundi(high))
+
+
+## The gear a monster of this level can drop: every piece whose level is in
+## the items.json "drop_levels" window round it, except gear that is only
+## ever given ("no_drop", such as job gear).
+static func drop_pool(monster_level: int) -> Array:
+	var window: Array = GameData.table("items").get("drop_levels", [-6, 2])
+	var pool: Array = []
+	for item_id in items:
+		if not is_gear(item_id) or items[item_id].get("no_drop", false):
+			continue
+		var level: int = required_level(item_id)
+		if level >= monster_level + int(window[0]) and level <= monster_level + int(window[1]):
+			pool.append(item_id)
+	return pool
 
 
 ## 0 for the most common rarity, then 1, 2, ...
