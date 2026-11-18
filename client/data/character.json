@@ -4,6 +4,33 @@
   "base_damage": 5,
   "damage_per_level": 3,
   "xp_per_level": 50,
+  "stat_points_per_level": 5,
+  "stat_reset_gold_per_level": 20,
+  "stats": {
+    "strength": {
+      "short": "STR",
+      "text": "+1 Attack for every 2 points.",
+      "attack": 0.5
+    },
+    "agility": {
+      "short": "AGI",
+      "text": "+1 Defense for every 4 points. +0.2% Evasion and +0.1% Crit each.",
+      "defense": 0.25,
+      "evasion": 0.002,
+      "crit_chance": 0.001
+    },
+    "vitality": {
+      "short": "VIT",
+      "text": "+3 Max HP for every point.",
+      "max_hp": 3
+    },
+    "energy": {
+      "short": "ENE",
+      "text": "+1 Max Stamina and +1% skill damage for every point.",
+      "max_stamina": 1,
+      "skill_damage": 0.01
+    }
+  },
   "bag_size": 15,
   "starting_gear": {
     "head": "red_headband",

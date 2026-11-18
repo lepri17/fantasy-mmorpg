@@ -963,6 +963,44 @@ def build_potion(out_size: int = 32, shadow: bool = True) -> Image.Image:
     return c.finish(out_size)
 
 
+BOOK_COVER = (196, 72, 52, 255)
+BOOK_SPINE = (150, 50, 40, 255)
+PAGES = (250, 242, 222, 255)
+PARCHMENT = (246, 230, 190, 255)
+PARCHMENT_DARK = (220, 190, 140, 255)
+INK = (176, 140, 100, 255)
+
+
+def build_book(out_size: int = 32, shadow: bool = True) -> Image.Image:
+    """A skill book: red cover, gold emblem, a ribbon bookmark."""
+    c = Canvas(32)
+    if shadow:
+        c.ellipse(16, 28, 10, 3, SHADOW, outline=False)
+    c.rect(9.5, 7, 25, 26, PAGES, radius=1.5)
+    c.rect(7, 5, 23, 24, BOOK_COVER, radius=2)
+    c.rect(7, 5, 10.5, 24, BOOK_SPINE, radius=1.5)
+    c.ellipse(16.5, 14.5, 4, 4, GOLD)
+    c.ellipse(16.5, 14.5, 1.8, 1.8, (255, 236, 160, 255), outline=False)
+    c.polygon([(18.5, 23.5), (21, 23.5), (21, 29), (19.75, 27.6), (18.5, 29)], GEM)
+    c.ellipse(13, 8.5, 1.4, 1, WHITE, outline=False)
+    return c.finish(out_size)
+
+
+def build_scroll(out_size: int = 32, shadow: bool = True) -> Image.Image:
+    """A rolled scroll with lines of writing and a red wax seal."""
+    c = Canvas(32)
+    if shadow:
+        c.ellipse(16, 28.5, 10, 3, SHADOW, outline=False)
+    c.rect(9, 7, 23, 25, PARCHMENT, radius=1)
+    for y in (11.5, 14.5, 17.5):
+        c.line([(12, y), (20, y)], fill=INK, width=1)
+    c.rect(6.5, 4.5, 25.5, 9, PARCHMENT_DARK, radius=2.2)
+    c.rect(6.5, 23, 25.5, 27.5, PARCHMENT_DARK, radius=2.2)
+    c.ellipse(16, 21, 3.2, 3.2, CAPE)
+    c.ellipse(15.2, 20.2, 1, 1, (255, 160, 160, 255), outline=False)
+    return c.finish(out_size)
+
+
 # ---------------------------------------------------------------- inventory icons
 # Drawn on a 48 grid, saved at ICON px. Same palette as the warrior's gear.
 
@@ -1049,6 +1087,8 @@ def build_item_icons() -> dict[str, Image.Image]:
         icons[name] = c.finish(ICON)
     icons["potion"] = build_potion(ICON, shadow=False)
     icons["coin"] = build_coin(ICON, shadow=False)
+    icons["book"] = build_book(ICON, shadow=False)
+    icons["scroll"] = build_scroll(ICON, shadow=False)
     return icons
 
 
@@ -1221,6 +1261,8 @@ def main() -> None:
     items_dir.mkdir(parents=True, exist_ok=True)
     build_coin().save(items_dir / "coin.png")
     build_potion().save(items_dir / "potion.png")
+    build_book().save(items_dir / "book.png")
+    build_scroll().save(items_dir / "scroll.png")
     icons_dir = items_dir / "icons"
     icons_dir.mkdir(parents=True, exist_ok=True)
     for name, image in build_item_icons().items():

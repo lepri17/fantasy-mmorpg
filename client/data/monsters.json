@@ -48,6 +48,10 @@
       {
         "item": "red_potion",
         "chance": 0.5
+      },
+      {
+        "item": "book_ground_slam",
+        "chance": 0.05
       }
     ],
     "tint": [

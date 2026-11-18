@@ -25,6 +25,7 @@ const HitSpark = preload("res://scripts/combat/hit_spark.gd")
 const TargetMarker = preload("res://scripts/combat/target_marker.gd")
 const StatusEffects = preload("res://scripts/combat/status_effects.gd")
 const GameData = preload("res://scripts/data/game_data.gd")
+const AchievementRecord = preload("res://scripts/player/achievement_record.gd")
 const PICKUP_SCENE = preload("res://scenes/items/pickup.tscn")
 
 const ACTION_LEFT := "move_left"
@@ -58,6 +59,7 @@ const MISS_COLOR := Color(0.8, 0.85, 0.95)
 const TARGET_MARKER_REACH := 1.6
 const HURT_ANIMATION_SECONDS := 0.2
 const STATUS_COLOR := Color(0.75, 0.9, 1.0)
+const ACHIEVEMENT_COLOR := Color(1.0, 0.72, 0.95)
 
 ## Walking speed in pixels per second.
 @export var move_speed: float = 220.0
@@ -118,8 +120,10 @@ func _ready() -> void:
 	add_to_group("player")
 	_load_tuning()
 	stats.from_dict(SaveFile.load_data())
+	stats.record.check(stats.level)
 	max_hp = stats.max_hp()
 	hp = max_hp
+	max_stamina = stats.max_stamina()
 	stamina = max_stamina
 	_spawn_position = global_position
 	_apply_camera_limits()
@@ -179,7 +183,8 @@ func _physics_process(delta: float) -> void:
 		_attack()
 	for skill_id in skills_data():
 		if Input.is_action_just_pressed(skills_data()[skill_id]["action"]):
-			use_skill(skill_id)
+			if not use_skill(skill_id):
+				_explain_lock(skill_id)
 	if Input.is_action_just_pressed(ACTION_DASH):
 		dash(direction)
 	if Input.is_action_just_pressed(ACTION_POTION):
@@ -218,6 +223,8 @@ func gain_xp(amount: int) -> void:
 		FloatingText.spawn(self, "LEVEL UP!", LEVEL_COLOR, 120.0, 32)
 		_sfx("levelup")
 		_say("Level up! You are now level %d." % stats.level, LEVEL_COLOR)
+		_say("%d stat points to spend: open STATS (C)." % stats.free_points(), LEVEL_COLOR)
+		_announce(stats.record.check(stats.level))
 	_progress_changed()
 
 
@@ -227,6 +234,7 @@ func add_gold(amount: int) -> void:
 	FloatingText.spawn(self, "+%d G" % amount, Color(1.0, 0.85, 0.3), 100.0, 22)
 	_sfx("coin")
 	_say("+%d gold" % amount, GOLD_COLOR)
+	_announce(_count("gold_earned", amount))
 	_progress_changed()
 
 
@@ -290,9 +298,51 @@ func drop_equipped(slot: String) -> void:
 
 ## Uses the item in a bag slot. Potions are the only usable item so far.
 func use_from_bag(index: int) -> void:
-	if index >= 0 and index < stats.bag.size():
-		if stats.bag[index]["id"] == PlayerStats.POTION_ID:
-			use_potion()
+	if index < 0 or index >= stats.bag.size():
+		return
+	var item_id: String = stats.bag[index]["id"]
+	var item: Dictionary = ItemDb.items[item_id]
+	if item_id == PlayerStats.POTION_ID:
+		use_potion()
+	elif item.has("teaches"):
+		_read_book(index, item)
+	elif item.get("resets_stats", false):
+		_read_rebirth_scroll(index)
+
+
+## Called by a monster as it dies, just before it gives its XP (which saves).
+func record_kill(monster_id: String, elite: bool) -> void:
+	var earned: Array = _count("kills")
+	earned += _count("kills:" + monster_id)
+	if elite:
+		earned += _count("elite_kills")
+	_announce(earned)
+
+
+## Puts one free stat point into "strength", "agility", "vitality" or "energy".
+func add_stat_point(stat_id: String) -> void:
+	if stats.add_stat_point(stat_id):
+		_limits_changed()
+		_progress_changed()
+
+
+## Gives every stat point back, for gold (STATS window).
+func reset_stats(_unused: Variant = null) -> void:
+	if stats.spent_points() == 0:
+		_say("There are no stat points to give back.", WARNING_COLOR)
+	elif not stats.reset_stats(true):
+		_say("A stat reset costs %d gold." % stats.reset_cost(), WARNING_COLOR)
+	else:
+		_limits_changed()
+		_say("All stat points are free again.", LEVEL_COLOR)
+		_progress_changed()
+
+
+## Shows an earned title, or none for "".
+func choose_title(achievement_id: String) -> void:
+	if stats.record.set_title(achievement_id):
+		_limits_changed()
+		_progress_changed()
 
 
 ## Called by monsters whose hits poison, slow or stun.
@@ -312,7 +362,18 @@ func skill_for_action(action: String) -> String:
 
 
 func skill_unlocked(skill_id: String) -> bool:
-	return stats.level >= int(skills_data()[skill_id]["unlock_level"])
+	return skill_lock(skill_id) == ""
+
+
+## Why a skill cannot be used yet: "Lv5" (level too low), "BOOK" (not learned
+## from its book yet), or "" when it is open.
+func skill_lock(skill_id: String) -> String:
+	var skill: Dictionary = skills_data()[skill_id]
+	if stats.level < int(skill["unlock_level"]):
+		return "Lv%d" % int(skill["unlock_level"])
+	if skill.has("book") and not stats.knows_skill(skill_id):
+		return "BOOK"
+	return ""
 
 
 ## True when the skill would work right now: unlocked, ready, enough stamina.
@@ -383,6 +444,7 @@ func use_potion() -> void:
 	hp_changed.emit(hp, max_hp)
 	FloatingText.spawn(self, "+%d" % healed, Color(0.5, 1.0, 0.55), 100.0)
 	_sfx("potion")
+	_announce(_count("potions_used"))
 	_progress_changed()
 
 
@@ -477,7 +539,8 @@ func _skill_slam(skill: Dictionary) -> void:
 
 
 func _skill_damage(skill: Dictionary) -> int:
-	return roundi(stats.attack_damage() * float(skill["damage_multiplier"]))
+	var multiplier: float = float(skill["damage_multiplier"]) * (1.0 + stats.skill_damage_bonus())
+	return roundi(stats.attack_damage() * multiplier)
 
 
 ## One hit on one enemy. Miss, crit and the enemy's defense are worked out by
@@ -608,6 +671,8 @@ func _respawn() -> void:
 	hp_changed.emit(hp, max_hp)
 	stamina_changed.emit(stamina, max_stamina)
 	respawned.emit()
+	_announce(_count("deaths"))
+	_progress_changed()
 
 
 func _progress_changed() -> void:
@@ -617,9 +682,7 @@ func _progress_changed() -> void:
 
 ## After the gear changed: health limits, look, save.
 func _gear_changed() -> void:
-	max_hp = stats.max_hp()
-	hp = mini(hp, max_hp)
-	hp_changed.emit(hp, max_hp)
+	_limits_changed()
 	_apply_look()
 	_progress_changed()
 
@@ -648,6 +711,76 @@ func _load_tuning() -> void:
 	_regen_per_second = float(rules["regen_hp_per_second"])
 	_respawn_seconds = float(rules["respawn_seconds"])
 	_hit_invincible_seconds = float(rules["hit_invincible_seconds"])
+
+
+## After gear, stat points or the title changed: the health and stamina limits.
+func _limits_changed() -> void:
+	max_hp = stats.max_hp()
+	hp = mini(hp, max_hp)
+	max_stamina = stats.max_stamina()
+	stamina = minf(stamina, max_stamina)
+	hp_changed.emit(hp, max_hp)
+	stamina_changed.emit(stamina, max_stamina)
+
+
+func _count(counter: String, amount: int = 1) -> Array:
+	return stats.record.count(counter, amount, stats.level)
+
+
+## Tells the player about achievements just earned.
+func _announce(earned: Array) -> void:
+	if earned.is_empty():
+		return
+	for achievement_id in earned:
+		var achievement: Dictionary = AchievementRecord.list[achievement_id]
+		_say(
+			'Achievement: %s! Title "%s".' % [achievement["name"], achievement["title"]],
+			ACHIEVEMENT_COLOR
+		)
+	FloatingText.spawn(self, "ACHIEVEMENT!", ACHIEVEMENT_COLOR, 140.0, 28)
+	_sfx("levelup")
+	_limits_changed()
+
+
+## A skill book teaches its skill once the level is high enough.
+func _read_book(index: int, item: Dictionary) -> void:
+	var skill_id: String = item["teaches"]
+	var skill: Dictionary = skills_data()[skill_id]
+	var needed_level: int = int(skill["unlock_level"])
+	if stats.knows_skill(skill_id):
+		_say("You already know %s." % skill["name"], WARNING_COLOR)
+	elif stats.level < needed_level:
+		_say("Reach level %d to learn %s." % [needed_level, skill["name"]], WARNING_COLOR)
+	else:
+		stats.take_from_bag(index)
+		stats.learn_skill(skill_id)
+		FloatingText.spawn(self, "NEW SKILL!", LEVEL_COLOR, 120.0, 30)
+		_sfx("levelup")
+		_say("You learned %s!" % skill["name"], LEVEL_COLOR)
+		_announce(_count("books_read"))
+		_progress_changed()
+
+
+## A Rebirth Scroll gives every stat point back for free.
+func _read_rebirth_scroll(index: int) -> void:
+	if stats.spent_points() == 0:
+		_say("There are no stat points to give back.", WARNING_COLOR)
+		return
+	stats.take_from_bag(index)
+	stats.reset_stats(false)
+	_limits_changed()
+	_say("All stat points are free again.", LEVEL_COLOR)
+	_progress_changed()
+
+
+## Pressing a locked skill says what opens it.
+func _explain_lock(skill_id: String) -> void:
+	var lock: String = skill_lock(skill_id)
+	var skill_name: String = skills_data()[skill_id]["name"]
+	if lock == "BOOK":
+		_say("Learn %s from its book first." % skill_name, WARNING_COLOR)
+	elif lock != "":
+		_say("%s opens at level %s." % [skill_name, lock.trim_prefix("Lv")], WARNING_COLOR)
 
 
 func _drop_on_ground(item_id: String) -> void:

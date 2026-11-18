@@ -61,7 +61,7 @@ def check_script(script: Path, actions: set[str]) -> None:
     name = script.relative_to(CLIENT)
     res_path = "res://" + name.as_posix()
 
-    for action in set(re.findall(r'"(move_(?:left|right|up|down)|attack|skill(?:_[2-4])?|dash|use_potion|inventory)"', text)) - actions:
+    for action in set(re.findall(r'"(move_(?:left|right|up|down)|attack|skill(?:_[2-4])?|dash|use_potion|inventory|character)"', text)) - actions:
         errors.append(f"{name}: input action '{action}' is not in project.godot")
 
     scenes = [s for s in CLIENT.rglob("*.tscn") if res_path in s.read_text(encoding="utf-8")]
@@ -72,7 +72,8 @@ def check_script(script: Path, actions: set[str]) -> None:
             errors.append(f"{name}: ${node} not found in {scene.relative_to(CLIENT)}")
 
         prefixes = set(re.findall(r'play\("(\w+_)" \+ facing\)', text))
-        facings = set(re.findall(r'return "(\w+)"', text))
+        facing_table = re.search(r"FACING_VECTORS := \{(.*?)\}", text, flags=re.DOTALL)
+        facings = set(re.findall(r'"(\w+)":', facing_table.group(1))) if facing_table else set()
         for frames_path in re.findall(r'type="SpriteFrames" path="(res://[^"]+)"', scene_text):
             frames_file = res_to_path(frames_path)
             if not frames_file.exists():

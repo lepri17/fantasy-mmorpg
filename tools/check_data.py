@@ -187,6 +187,78 @@ def check_skills(skills: dict) -> None:
             need_number(where, skill, key)
 
 
+# What stat points and titles may add (player_stats.gd extra_bonus()).
+BONUS_KEYS = {"attack", "max_hp", "defense", "crit_chance", "evasion", "max_stamina",
+              "skill_damage"}
+# Counters the game adds to (player.gd), plus "kills:<monster id>".
+COUNTERS = {"level", "kills", "elite_kills", "gold_earned", "potions_used", "deaths",
+            "books_read"}
+
+
+def check_bonus(where: str, bonus: dict) -> None:
+    if not isinstance(bonus, dict):
+        error(f"{where}: bonus must be an object")
+        return
+    for key in bonus:
+        if key not in BONUS_KEYS:
+            error(f"{where}: '{key}' is not one of {sorted(BONUS_KEYS)}")
+        else:
+            need_number(where, bonus, key)
+
+
+def check_progress(character: dict, items: dict, skills: dict, monsters: dict,
+                   achievements: dict) -> None:
+    """Stat points, skill books, the Rebirth Scroll and the achievements."""
+    where = "character.json"
+    for key in ("stat_points_per_level", "stat_reset_gold_per_level"):
+        value = need_number(where, character, key)
+        if value is not None and value != int(value):
+            error(f"{where}: '{key}' must be a whole number")
+    stats = character.get("stats", {})
+    if not isinstance(stats, dict) or not stats:
+        error(f"{where}: 'stats' must be a non-empty object")
+        stats = {}
+    for stat_id, rule in stats.items():
+        for key in ("short", "text"):
+            if not isinstance(rule.get(key), str):
+                error(f"{where}: stat '{stat_id}' needs a '{key}'")
+        check_bonus(f"{where}: stat '{stat_id}'",
+                    {k: v for k, v in rule.items() if k not in ("short", "text")})
+    for item_id, item in items.items():
+        if item.get("usable") and not any(k in item for k in
+                                          ("heal_fraction", "teaches", "resets_stats")):
+            error(f"items.json: '{item_id}' is usable but does nothing")
+        if "teaches" in item:
+            skill = skills.get(item["teaches"])
+            if skill is None:
+                error(f"items.json: '{item_id}' teaches unknown skill '{item['teaches']}'")
+            elif skill.get("book") != item_id:
+                error(f"items.json: '{item_id}' teaches '{item['teaches']}', "
+                      "but that skill does not name it as its book")
+    for skill_id, skill in skills.items():
+        book = skill.get("book")
+        if book is not None and items.get(book, {}).get("teaches") != skill_id:
+            error(f"skills.json: '{skill_id}' book '{book}' is not an item that teaches it")
+    if not isinstance(achievements, dict) or not achievements:
+        error("achievements.json: must be a non-empty object")
+        return
+    for achievement_id, achievement in achievements.items():
+        place = f"achievements.json: '{achievement_id}'"
+        for key in ("name", "text", "title"):
+            if not isinstance(achievement.get(key), str) or not achievement[key]:
+                error(f"{place}: needs a '{key}'")
+        counter = achievement.get("counter", "")
+        if counter.startswith("kills:"):
+            if counter[len("kills:"):] not in monsters:
+                error(f"{place}: '{counter}' names an unknown monster")
+        elif counter not in COUNTERS:
+            error(f"{place}: counter '{counter}' is not one of {sorted(COUNTERS)}")
+        goal = need_number(place, achievement, "goal", 1)
+        if goal is not None and goal != int(goal):
+            error(f"{place}: 'goal' must be a whole number")
+        check_bonus(place, achievement.get("bonus", {}))
+
+
 def check_art(items: dict) -> None:
     """The warrior's gear parts must name real items."""
     sys.path.insert(0, str(ROOT / "tools"))
@@ -224,6 +296,8 @@ def main() -> int:
     for drop in elite.get("extra_drops", []):
         if drop.get("item") not in check_items_cache:
             error(f"combat.json elite: drop '{drop.get('item')}' is not an item")
+    check_progress(load("character"), items, load("skills"), load("monsters"),
+                   load("achievements"))
     check_art(items)
     if errors:
         print("DATA PROBLEMS:")

@@ -1,0 +1,109 @@
+{
+  "first_hunt": {
+    "name": "First Hunt",
+    "text": "Defeat your first monster.",
+    "counter": "kills",
+    "goal": 1,
+    "title": "Rookie",
+    "bonus": {}
+  },
+  "slime_hunter": {
+    "name": "Slime Hunter",
+    "text": "Defeat 30 green slimes.",
+    "counter": "kills:green_slime",
+    "goal": 30,
+    "title": "Slime Hunter",
+    "bonus": {
+      "attack": 1
+    }
+  },
+  "blue_breaker": {
+    "name": "Blue Breaker",
+    "text": "Defeat 10 blue slimes.",
+    "counter": "kills:blue_slime",
+    "goal": 10,
+    "title": "Blue Breaker",
+    "bonus": {
+      "defense": 1
+    }
+  },
+  "elite_slayer": {
+    "name": "Elite Slayer",
+    "text": "Defeat 3 glowing elite monsters.",
+    "counter": "elite_kills",
+    "goal": 3,
+    "title": "Elite Slayer",
+    "bonus": {
+      "crit_chance": 0.02
+    }
+  },
+  "hundred_down": {
+    "name": "Hundred Down",
+    "text": "Defeat 100 monsters.",
+    "counter": "kills",
+    "goal": 100,
+    "title": "Hunter",
+    "bonus": {
+      "attack": 2
+    }
+  },
+  "rising_star": {
+    "name": "Rising Star",
+    "text": "Reach level 5.",
+    "counter": "level",
+    "goal": 5,
+    "title": "Rising Star",
+    "bonus": {
+      "max_hp": 10
+    }
+  },
+  "veteran": {
+    "name": "Veteran",
+    "text": "Reach level 10.",
+    "counter": "level",
+    "goal": 10,
+    "title": "Veteran",
+    "bonus": {
+      "max_hp": 25,
+      "defense": 1
+    }
+  },
+  "collector": {
+    "name": "Coin Collector",
+    "text": "Pick up 500 gold.",
+    "counter": "gold_earned",
+    "goal": 500,
+    "title": "Collector",
+    "bonus": {
+      "evasion": 0.01
+    }
+  },
+  "thirsty": {
+    "name": "Thirsty",
+    "text": "Drink 20 potions.",
+    "counter": "potions_used",
+    "goal": 20,
+    "title": "Thirsty",
+    "bonus": {
+      "max_stamina": 10
+    }
+  },
+  "back_again": {
+    "name": "Back Again",
+    "text": "Get back up after falling.",
+    "counter": "deaths",
+    "goal": 1,
+    "title": "Survivor",
+    "bonus": {}
+  },
+  "scholar": {
+    "name": "Scholar",
+    "text": "Learn a skill from a book.",
+    "counter": "books_read",
+    "goal": 1,
+    "title": "Scholar",
+    "bonus": {
+      "skill_damage": 0.05
+    }
+  }
+}

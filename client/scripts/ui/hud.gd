@@ -3,12 +3,15 @@ extends CanvasLayer
 ## requests from the inventory are passed on to the player.
 
 const ACTION_INVENTORY := "inventory"
+const ACTION_CHARACTER := "character"
 ## The round touch buttons on the right (ATK, SPIN, POT) are in this group.
 const ACTION_BUTTONS_GROUP := "action_buttons"
 ## Player methods the inventory may ask for.
 const ITEM_ACTIONS := [
 	"equip_from_bag", "unequip", "use_from_bag", "drop_from_bag", "drop_equipped"
 ]
+## Player methods the character window may ask for.
+const CHARACTER_ACTIONS := ["add_stat_point", "reset_stats", "choose_title"]
 
 var _player: Node = null
 
@@ -16,15 +19,22 @@ var _player: Node = null
 @onready var _message: Label = $Message
 @onready var _bag_button: Button = $BagButton
 @onready var _inventory = $Inventory
+@onready var _stats_button: Button = $StatsButton
+@onready var _character = $Character
 @onready var _log = $MessageLog
 
 
 func _ready() -> void:
 	_message.hide()
-	_style_bag_button()
+	_style_round_button(_bag_button)
+	_style_round_button(_stats_button)
+	_stats_button.add_theme_font_size_override("font_size", 18)
 	_bag_button.pressed.connect(toggle_inventory)
+	_stats_button.pressed.connect(toggle_character)
 	_inventory.connect("close_requested", toggle_inventory)
 	_inventory.connect("item_action", _on_item_action)
+	_character.connect("close_requested", toggle_character)
+	_character.connect("request", _on_character_request)
 	_player = get_tree().get_first_node_in_group("player")
 	if _player == null:
 		push_warning("Hud: no node in group 'player'")
@@ -44,17 +54,37 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if Input.is_action_just_pressed(ACTION_INVENTORY):
 		toggle_inventory()
+	if Input.is_action_just_pressed(ACTION_CHARACTER):
+		toggle_character()
 	if _player != null:
 		_update_action_buttons()
 
 
-## Opens or closes the inventory. While it is open the round action buttons
-## are hidden, because the panel covers them.
 func toggle_inventory() -> void:
-	_inventory.visible = not _inventory.visible
-	if _inventory.visible and _player != null:
-		_inventory.refresh(_player.get("stats"), _player.get("look_texture"))
-	get_tree().call_group(ACTION_BUTTONS_GROUP, "set_visible", not _inventory.visible)
+	_show_window(_inventory, not _inventory.visible)
+
+
+func toggle_character() -> void:
+	_show_window(_character, not _character.visible)
+
+
+## Opens one window (inventory or character) and closes the other. While a
+## window is open the round action buttons are hidden, because it covers them.
+func _show_window(window: Control, open: bool) -> void:
+	_inventory.visible = open and window == _inventory
+	_character.visible = open and window == _character
+	_refresh_windows()
+	get_tree().call_group(ACTION_BUTTONS_GROUP, "set_visible", not open)
+
+
+func _refresh_windows() -> void:
+	if _player == null:
+		return
+	var stats = _player.get("stats")
+	if _inventory.visible:
+		_inventory.refresh(stats, _player.get("look_texture"))
+	if _character.visible:
+		_character.refresh(stats)
 
 
 func _on_item_action(method: String, argument: Variant) -> void:
@@ -62,8 +92,13 @@ func _on_item_action(method: String, argument: Variant) -> void:
 		_player.call(method, argument)
 
 
+func _on_character_request(method: String, argument: Variant) -> void:
+	if _player != null and method in CHARACTER_ACTIONS:
+		_player.call(method, argument)
+
+
 ## POT shows how many potions are left. Skill buttons show their cooldown, fade
-## when they would do nothing, and show the level that unlocks them ("Lv3").
+## when they would do nothing, and show what opens them ("Lv3", "BOOK").
 func _update_action_buttons() -> void:
 	var stats = _player.get("stats")
 	for button in get_tree().get_nodes_in_group(ACTION_BUTTONS_GROUP):
@@ -76,20 +111,19 @@ func _update_action_buttons() -> void:
 		var skill_id: String = _player.call("skill_for_action", action)
 		if skill_id == "":
 			continue
-		var unlocked: bool = _player.call("skill_unlocked", skill_id)
-		var unlock_level: int = int(_player.call("skills_data")[skill_id]["unlock_level"])
-		button.set("badge", "" if unlocked else "Lv%d" % unlock_level)
+		button.set("badge", _player.call("skill_lock", skill_id))
 		button.set("dimmed", not _player.call("can_use", skill_id))
 
 
 func _refresh_progress() -> void:
 	var stats = _player.get("stats")
 	_panel.set_progress(stats.level, stats.xp, stats.xp_to_next(), stats.gold, stats.potions)
-	if _inventory.visible:
-		_inventory.refresh(stats, _player.get("look_texture"))
+	var free: int = stats.free_points()
+	_stats_button.text = "STATS" if free == 0 else "STATS\n+%d" % free
+	_refresh_windows()
 
 
-func _style_bag_button() -> void:
+func _style_round_button(button: Button) -> void:
 	for state in ["normal", "hover", "pressed"]:
 		var box := StyleBoxFlat.new()
 		box.bg_color = Color(0.1, 0.06, 0.1, 0.55 if state == "normal" else 0.8)
@@ -97,7 +131,7 @@ func _style_bag_button() -> void:
 		box.set_border_width_all(2)
 		box.set_corner_radius_all(18)
 		box.set_content_margin_all(8)
-		_bag_button.add_theme_stylebox_override(state, box)
+		button.add_theme_stylebox_override(state, box)
 
 
 func _on_player_died() -> void:

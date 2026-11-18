@@ -46,6 +46,7 @@
     "radius": 150,
     "damage_multiplier": 1.5,
     "stun_seconds": 1.2,
-    "text": "Hits all around and stuns for a moment."
+    "text": "Hits all around and stuns for a moment. Learned from a book.",
+    "book": "book_ground_slam"
   }
 }

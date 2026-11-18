@@ -280,6 +280,7 @@ func _die() -> void:
 	fade.tween_interval(0.4)
 	fade.tween_property(_sprite, "modulate:a", 0.0, 0.35)
 	if _player != null:
+		_player.call("record_kill", monster_id, is_elite)
 		_player.call("gain_xp", xp_reward)
 	_drop("gold", randi_range(gold_min, gold_max))
 	for drop in drops:

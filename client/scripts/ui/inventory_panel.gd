@@ -11,6 +11,7 @@ signal item_action(method: String, argument: Variant)
 const ItemDb := preload("res://scripts/items/item_db.gd")
 const CombatRules := preload("res://scripts/combat/combat_rules.gd")
 const InventorySlot := preload("res://scripts/ui/inventory_slot.gd")
+const UiStyle := preload("res://scripts/ui/ui_style.gd")
 
 const SLOT_SIZE := Vector2(52, 52)
 const BAG_COLUMNS := 5
@@ -260,38 +261,12 @@ func _new_slot(place: String, key: Variant):
 
 
 func _label(text: String, font_size: int, color: Color) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
-	return label
+	return UiStyle.label(text, font_size, color)
 
 
 func _button(text: String, color: Color, min_size: Vector2) -> Button:
-	var button := Button.new()
-	button.text = text
-	button.custom_minimum_size = min_size
-	button.focus_mode = Control.FOCUS_NONE
-	button.add_theme_font_size_override("font_size", 18)
-	for state in ["normal", "hover", "pressed", "disabled"]:
-		var box := StyleBoxFlat.new()
-		box.bg_color = color
-		if state == "hover":
-			box.bg_color = color.lightened(0.15)
-		elif state == "pressed":
-			box.bg_color = color.darkened(0.25)
-		box.border_color = FRAME_BORDER
-		box.set_border_width_all(2)
-		box.set_corner_radius_all(10)
-		button.add_theme_stylebox_override(state, box)
-	return button
+	return UiStyle.button(text, color, min_size)
 
 
 func _frame_style() -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = Color(0.1, 0.06, 0.1, 0.9)
-	box.border_color = FRAME_BORDER
-	box.set_border_width_all(3)
-	box.set_corner_radius_all(14)
-	box.set_content_margin_all(14)
-	return box
+	return UiStyle.frame_style()

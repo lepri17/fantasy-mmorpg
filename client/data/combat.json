@@ -17,6 +17,14 @@
       {
         "item": "red_potion",
         "chance": 1.0
+      },
+      {
+        "item": "book_ground_slam",
+        "chance": 0.25
+      },
+      {
+        "item": "rebirth_scroll",
+        "chance": 0.15
       }
     ]
   }

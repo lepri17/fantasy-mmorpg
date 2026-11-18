@@ -12,6 +12,7 @@ const PlayerStats = preload("res://scripts/player/player_stats.gd")
 const SaveFile = preload("res://scripts/player/save_file.gd")
 const CombatRules = preload("res://scripts/combat/combat_rules.gd")
 const SlimeScript = preload("res://scripts/enemies/slime.gd")
+const AchievementRecord = preload("res://scripts/player/achievement_record.gd")
 
 var _failures: int = 0
 
@@ -108,6 +109,11 @@ func _run() -> void:
 	Input.action_release("attack")
 	_check(slime.is_dead, "slime dies under repeated attacks (after %d frames)" % waited)
 	_check(slime.get_node("Sprite").animation == "die", "a dead slime plays its death animation")
+	_check(int(player.stats.record.counters.get("kills", 0)) >= 1, "kills are counted")
+	_check(
+		player.stats.record.earned.has("first_hunt") and player.stats.record.title == "first_hunt",
+		"the first kill earns an achievement and shows its title"
+	)
 	_check(player.hp < player.max_hp, "slime hurt the warrior (hp %d/%d)" % [player.hp, player.max_hp])
 	_check(player.stats.xp == 20, "killing a slime gives 20 XP (xp %d)" % player.stats.xp)
 
@@ -237,6 +243,95 @@ func _run() -> void:
 		old_save.potions == 4 and old_save.equipment.size() == 6,
 		"an old save keeps its potions and gets the starting gear"
 	)
+	# --- stat points (MU style), a stat reset, titles, save version 3
+	var trainee = PlayerStats.new()
+	_check(trainee.free_points() == 0, "a new warrior has no stat points")
+	trainee.level = 3
+	_check(trainee.free_points() == 10, "every level gives 5 stat points")
+	var base_attack: int = trainee.attack_damage()
+	var base_hp: int = trainee.max_hp()
+	var base_defense: int = trainee.defense()
+	for stat_id in ["strength", "strength", "strength", "strength", "vitality", "vitality"]:
+		trainee.add_stat_point(stat_id)
+	for _i in 4:
+		trainee.add_stat_point("agility")
+	_check(trainee.attack_damage() == base_attack + 2, "4 STR add 2 attack")
+	_check(trainee.max_hp() == base_hp + 6, "2 VIT add 6 max HP")
+	_check(trainee.defense() == base_defense + 1, "4 AGI add 1 defense")
+	_check(not trainee.add_stat_point("energy"), "no point can be spent when none is left")
+	_check(not trainee.reset_stats(true), "a stat reset costs gold")
+	trainee.gold = 100
+	_check(
+		trainee.reset_stats(true) and trainee.gold == 40 and trainee.free_points() == 10,
+		"a stat reset gives every point back for 60 gold at level 3"
+	)
+	trainee.add_stat_point("energy")
+	_check(
+		is_equal_approx(trainee.max_stamina(), 101.0)
+		and is_equal_approx(trainee.skill_damage_bonus(), 0.01),
+		"ENE adds stamina and skill damage"
+	)
+	var no_title_attack: int = trainee.attack_damage()
+	_check(
+		trainee.record.count("kills:green_slime", 30, trainee.level).has("slime_hunter"),
+		"30 green slimes earn Slime Hunter"
+	)
+	_check(
+		trainee.record.title == "slime_hunter" and trainee.attack_damage() == no_title_attack + 1,
+		"the first title is shown at once and its bonus counts"
+	)
+	_check(not trainee.record.set_title("veteran"), "a title not earned cannot be shown")
+	trainee.level = 5
+	_check(trainee.record.check(trainee.level).has("rising_star"), "level 5 earns Rising Star")
+	trainee.learn_skill("ground_slam")
+	var reloaded = PlayerStats.new()
+	reloaded.from_dict(trainee.to_dict())
+	_check(
+		(
+			reloaded.stat_points == trainee.stat_points
+			and reloaded.knows_skill("ground_slam")
+			and reloaded.record.earned == trainee.record.earned
+			and reloaded.record.title == "slime_hunter"
+			and trainee.to_dict()["version"] == 3
+		),
+		"stat points, learned skills and titles survive saving (version 3)"
+	)
+
+	# --- the character window: C opens it, + spends a point, titles change
+	var character = hud.get_node("Character")
+	var free_before: int = player.stats.free_points()
+	_check(
+		free_before > 0 and "+%d" % free_before in hud.get_node("StatsButton").text,
+		"the STATS button shows the free points (%d)" % free_before
+	)
+	await _hold("character", 2)
+	_check(character.visible and not inventory.visible, "C opens the character window")
+	var hp_limit: int = player.max_hp
+	character.get("_plus_buttons")["vitality"].pressed.emit()
+	await _frames(1)
+	_check(
+		player.stats.free_points() == free_before - 1 and player.max_hp == hp_limit + 3,
+		"+ on VIT spends a point and adds 3 max HP (%d)" % player.max_hp
+	)
+	_check(character.get("_stat_values")["vitality"].text == "1", "the window shows VIT 1")
+	character.show_page("titles")
+	_check(
+		character.get("_achievement_rows").get_child_count() == AchievementRecord.list.size(),
+		"the titles page lists every achievement"
+	)
+	character.call("_step_title", 1)
+	_check(player.stats.record.title == "", "> can hide the title")
+	character.call("_step_title", 1)
+	_check(player.stats.record.title == "first_hunt", "> shows it again")
+	player.add_item("rebirth_scroll")
+	player.use_from_bag(_bag_index(player, "rebirth_scroll"))
+	_check(
+		player.stats.spent_points() == 0 and player.stats.count_of("rebirth_scroll") == 0,
+		"a Rebirth Scroll gives the stat points back"
+	)
+	hud.toggle_character()
+	_check(not character.visible, "the character window closes")
+
 	await _hold("inventory", 2)
 	_check(not inventory.visible, "the inventory key closes it")
 	_check(attack_button.visible, "action buttons come back after closing")
@@ -316,7 +411,23 @@ func _run() -> void:
 	_check(struck.hp < struck_hp, "Power Strike hits the nearest enemy (hp %d)" % struck.hp)
 	_check(player.cooldown_left("skill_2") > 0.9, "STRIKE starts its cooldown")
 	_check(not player.use_skill("war_cry"), "War Cry is locked below level 3")
+	while player.stats.bag.size() >= 15:
+		player.stats.bag.pop_back()
+	player.add_item("book_ground_slam")
+	player.use_from_bag(_bag_index(player, "book_ground_slam"))
+	_check(
+		not player.stats.knows_skill("ground_slam") and player.stats.count_of("book_ground_slam") == 1,
+		"a skill book waits until the level is high enough"
+	)
 	player.stats.level = 5
+	_check(player.skill_lock("ground_slam") == "BOOK", "Ground Slam waits for its book")
+	_check(not player.use_skill("ground_slam"), "Ground Slam cannot be used before reading it")
+	player.use_from_bag(_bag_index(player, "book_ground_slam"))
+	_check(
+		player.stats.knows_skill("ground_slam") and player.stats.count_of("book_ground_slam") == 0,
+		"reading the book teaches Ground Slam and uses the book up"
+	)
+	_check(player.stats.record.earned.has("scholar"), "learning from a book earns Scholar")
 	player.stamina = player.max_stamina
 	_check(
 		player.use_skill("war_cry") and player.has_damage_bonus(), "War Cry gives a damage boost"
@@ -390,6 +501,7 @@ func _run() -> void:
 	await _frames(200)
 	_check(not player.is_dead and player.hp == player.max_hp, "respawns with full HP")
 	_check(player.global_position.distance_to(Vector2(1280, 768)) < 5.0, "respawns at the start")
+	_check(player.stats.record.earned.has("back_again"), "getting back up earns Back Again")
 
 	_remove_test_save()
 	print("SMOKE TEST: %s" % ("PASSED" if _failures == 0 else "%d FAILED" % _failures))

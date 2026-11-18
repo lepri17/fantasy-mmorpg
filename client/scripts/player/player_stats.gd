@@ -5,10 +5,12 @@ extends RefCounted
 
 const ItemDb := preload("res://scripts/items/item_db.gd")
 const GameData := preload("res://scripts/data/game_data.gd")
+const AchievementRecord := preload("res://scripts/player/achievement_record.gd")
 
 ## Version of what to_dict() writes. 1 = level, xp, gold, potions.
 ## 2 = adds the bag and the gear; potions live in the bag.
-const SAVE_VERSION := 2
+## 3 = adds stat points, skills learned from books, achievements and the title.
+const SAVE_VERSION := 3
 const POTION_ID := "red_potion"
 
 ## The numbers from res://data/character.json: health and damage without gear
@@ -17,6 +19,8 @@ const POTION_ID := "red_potion"
 ## bag, and the tuning the player scene reads (speed, skill, regeneration).
 static var rules: Dictionary = GameData.table("character")
 static var bag_size: int = int(rules["bag_size"])
+## STR, AGI, VIT, ENE: what one point in each adds ("attack", "max_hp", ...).
+static var stat_rules: Dictionary = rules["stats"]
 
 var level: int = 1
 var xp: int = 0
@@ -32,6 +36,12 @@ var potions: int:
 		return count_of(POTION_ID)
 	set(value):
 		_set_count(POTION_ID, maxi(value, 0))
+## Points put into each stat ("strength", "agility", "vitality", "energy").
+var stat_points: Dictionary = {}
+## Skills learned from books (skills.json entries with a "book").
+var learned_skills: Array = []
+## Achievements, their counters and the title shown (achievement_record.gd).
+var record = AchievementRecord.new()
 
 
 func _init() -> void:
@@ -40,27 +50,115 @@ func _init() -> void:
 
 func max_hp() -> int:
 	var per_level: int = int(rules["hp_per_level"])
-	return int(rules["base_max_hp"]) + per_level * (level - 1) + gear_bonus("max_hp")
+	return (
+		int(rules["base_max_hp"])
+		+ per_level * (level - 1)
+		+ gear_bonus("max_hp")
+		+ int(extra_bonus("max_hp"))
+	)
 
 
 func attack_damage() -> int:
 	var per_level: int = int(rules["damage_per_level"])
-	return int(rules["base_damage"]) + per_level * (level - 1) + gear_bonus("attack")
+	return (
+		int(rules["base_damage"])
+		+ per_level * (level - 1)
+		+ gear_bonus("attack")
+		+ int(extra_bonus("attack"))
+	)
 
 
 ## Damage taken from each hit goes down by this much (never below 1).
 func defense() -> int:
-	return int(rules.get("defense", 0)) + gear_bonus("defense")
+	return int(rules.get("defense", 0)) + gear_bonus("defense") + int(extra_bonus("defense"))
 
 
 ## Chance (0..1) that a hit is critical.
 func crit_chance() -> float:
-	return float(rules.get("crit_chance", 0.0)) + gear_bonus_fraction("crit_chance")
+	return (
+		float(rules.get("crit_chance", 0.0))
+		+ gear_bonus_fraction("crit_chance")
+		+ extra_bonus("crit_chance")
+	)
 
 
 ## Chance (0..1) that a monster's hit misses.
 func evasion() -> float:
-	return float(rules.get("evasion", 0.0)) + gear_bonus_fraction("evasion")
+	return float(rules.get("evasion", 0.0)) + gear_bonus_fraction("evasion") + extra_bonus("evasion")
+
+
+func max_stamina() -> float:
+	return float(rules["max_stamina"]) + extra_bonus("max_stamina")
+
+
+## Extra skill damage as a fraction (0.1 = +10%).
+func skill_damage_bonus() -> float:
+	return extra_bonus("skill_damage")
+
+
+## What the stat points and the title add to one number ("attack", "max_hp",
+## "defense", "crit_chance", "evasion", "max_stamina", "skill_damage").
+func extra_bonus(stat: String) -> float:
+	var total: float = 0.0
+	for stat_id in stat_points:
+		total += float(stat_points[stat_id]) * float(stat_rules[stat_id].get(stat, 0.0))
+	return total + record.title_bonus(stat)
+
+
+# --- stat points (MU style: every level gives points to put into STR, AGI, VIT, ENE)
+
+
+## Points earned so far that are not in a stat yet.
+func free_points() -> int:
+	return (level - 1) * int(rules["stat_points_per_level"]) - spent_points()
+
+
+func spent_points() -> int:
+	var total: int = 0
+	for stat_id in stat_points:
+		total += int(stat_points[stat_id])
+	return total
+
+
+func points_in(stat_id: String) -> int:
+	return int(stat_points.get(stat_id, 0))
+
+
+## Puts one free point into a stat. Returns false when there is none to spend.
+func add_stat_point(stat_id: String) -> bool:
+	if free_points() <= 0 or not stat_rules.has(stat_id):
+		return false
+	stat_points[stat_id] = points_in(stat_id) + 1
+	return true
+
+
+func reset_cost() -> int:
+	return int(rules["stat_reset_gold_per_level"]) * level
+
+
+## Gives every point back. With pay_gold it costs reset_cost() gold (a Rebirth
+## Scroll resets for free). Returns false when nothing changed.
+func reset_stats(pay_gold: bool) -> bool:
+	if spent_points() == 0 or (pay_gold and gold < reset_cost()):
+		return false
+	if pay_gold:
+		gold -= reset_cost()
+	stat_points = {}
+	return true
+
+
+# --- skills from books
+
+
+func knows_skill(skill_id: String) -> bool:
+	return learned_skills.has(skill_id)
+
+
+func learn_skill(skill_id: String) -> bool:
+	if knows_skill(skill_id):
+		return false
+	learned_skills.append(skill_id)
+	return true
 
 
 ## Sum of one whole-number bonus ("attack", "max_hp", "defense") over the gear worn.
@@ -186,13 +284,16 @@ func to_dict() -> Dictionary:
 		"gold": gold,
 		"bag": bag.duplicate(true),
 		"equipment": equipment.duplicate(),
-	}
+		"stat_points": stat_points.duplicate(),
+		"learned_skills": learned_skills.duplicate(),
+	}.merged(record.to_dict())
 
 
 func from_dict(data: Dictionary) -> void:
 	level = maxi(1, int(data.get("level", 1)))
 	xp = maxi(0, int(data.get("xp", 0)))
 	gold = maxi(0, int(data.get("gold", 0)))
+	_load_progress(data)
 	if int(data.get("version", 1)) < 2:
 		# Version 1 kept only a potion count, and the gear could not change yet.
 		_start_fresh()
@@ -211,6 +312,26 @@ func from_dict(data: Dictionary) -> void:
 		for stack in saved_bag:
 			if stack is Dictionary and ItemDb.items.has(stack.get("id", "")):
 				add_item(stack["id"], int(stack.get("count", 1)))
+
+
+## Version 3 parts. Anything unknown or out of range is left out.
+func _load_progress(data: Dictionary) -> void:
+	stat_points = {}
+	var saved_points = data.get("stat_points", {})
+	if saved_points is Dictionary:
+		for stat_id in saved_points:
+			if stat_rules.has(stat_id) and int(saved_points[stat_id]) > 0:
+				stat_points[stat_id] = int(saved_points[stat_id])
+	if free_points() < 0:
+		stat_points = {}
+	var skills: Dictionary = GameData.table("skills")
+	learned_skills = []
+	var saved_skills = data.get("learned_skills", [])
+	if saved_skills is Array:
+		for skill_id in saved_skills:
+			if skills.has(skill_id) and not learned_skills.has(skill_id):
+				learned_skills.append(skill_id)
+	record.from_dict(data)
 
 
 ## Starting gear and bag from the data.

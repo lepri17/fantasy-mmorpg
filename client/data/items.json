@@ -70,6 +70,24 @@
       "icon": "res://assets/items/icons/potion.png",
       "world_icon": "res://assets/items/potion.png",
       "text": "Heals 40% of max HP."
+    },
+    "book_ground_slam": {
+      "name": "Book: Ground Slam",
+      "slot": "",
+      "usable": true,
+      "teaches": "ground_slam",
+      "icon": "res://assets/items/icons/book.png",
+      "world_icon": "res://assets/items/book.png",
+      "text": "Teaches Ground Slam. Needs level 5."
+    },
+    "rebirth_scroll": {
+      "name": "Rebirth Scroll",
+      "slot": "",
+      "usable": true,
+      "resets_stats": true,
+      "icon": "res://assets/items/icons/scroll.png",
+      "world_icon": "res://assets/items/scroll.png",
+      "text": "Gives back all your stat points, for free."
     }
   }
 }
