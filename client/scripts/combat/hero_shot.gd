@@ -25,6 +25,9 @@ var radius: float = 8.0
 var pierce: bool = false
 ## Above 0: bursts there and hits every enemy this close (Fireball).
 var blast_radius: float = 0.0
+## The hero's cast it belongs to: shots of one cast (Multi Shot's arrows) hit
+## each enemy only once between them (player.gd _strike).
+var cast: int = 0
 
 var _travelled: float = 0.0
 var _hit: Array = []

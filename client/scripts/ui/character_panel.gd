@@ -84,8 +84,12 @@ func refresh(stats) -> void:
 		_stat_values[stat_id].text = str(stats.points_in(stat_id))
 		UiStyle.set_enabled(_plus_buttons[stat_id], free > 0)
 	var damage: Vector2i = CombatRules.damage_range(stats.attack_damage())
+	var crit_power: float = CombatRules.crit_multiplier + stats.total("crit_damage")
 	_numbers_label.text = (
-		"ATK %d~%d   HP %d   %s %d\nDEF %d   CRIT %d%%   EVA %d%%   SKILL +%d%%"
+		(
+			"ATK %d~%d   HP %d   %s %d\nDEF %d   CRIT %d%% (x%.2f)   EVA %d%%"
+			+ "\nACC %d%%   SPD +%d%%   SKILL +%d%%"
+		)
 		% [
 			damage.x,
 			damage.y,
@@ -94,7 +98,10 @@ func refresh(stats) -> void:
 			roundi(stats.max_stamina()),
 			stats.defense(),
 			roundi(stats.crit_chance() * 100.0),
+			crit_power,
 			roundi(stats.evasion() * 100.0),
+			roundi(stats.total("accuracy") * 100.0),
+			roundi(stats.total("attack_speed") * 100.0),
 			roundi(stats.skill_damage_bonus() * 100.0),
 		]
 	)

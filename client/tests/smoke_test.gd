@@ -19,6 +19,7 @@ const GameScript = preload("res://scripts/game.gd")
 const SmokeWorld = preload("res://tests/smoke_world.gd")
 const SmokeClasses = preload("res://tests/smoke_classes.gd")
 const SmokeUi = preload("res://tests/smoke_ui.gd")
+const SmokeCombat = preload("res://tests/smoke_combat.gd")
 const Settings = preload("res://scripts/settings.gd")
 const SETTINGS_PATH := "user://smoke_test_settings.cfg"
 
@@ -744,6 +745,7 @@ func _run() -> void:
 	await SmokeWorld.new().run(self, main, player, hud)
 	await SmokeClasses.new().run(self, main, player, hud)
 	await SmokeUi.new().run(self, main, player, hud)
+	await SmokeCombat.new().run(self, main, player, hud)
 
 	_remove_test_save()
 	root.remove_child(main)

@@ -47,8 +47,9 @@
     }
   ],
   "move_speed": 220,
-  "attack_range": 90,
+  "attack_range": 75,
   "attack_cooldown": 0.45,
+  "attack_speed": 0.0,
   "max_stamina": 100,
   "stamina_regen_per_second": 12,
   "regen_delay_seconds": 5,
@@ -56,8 +57,10 @@
   "respawn_seconds": 2.5,
   "hit_invincible_seconds": 1.0,
   "crit_chance": 0.05,
+  "crit_damage": 0.0,
   "defense": 0,
   "evasion": 0.03,
+  "accuracy": 0.0,
   "dash": {
     "stamina": 20,
     "cooldown": 0.6,

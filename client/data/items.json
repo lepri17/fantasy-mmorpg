@@ -109,6 +109,18 @@
     "max_stamina": [
       5,
       15
+    ],
+    "crit_damage": [
+      0.05,
+      0.15
+    ],
+    "accuracy": [
+      0.02,
+      0.05
+    ],
+    "attack_speed": [
+      0.03,
+      0.08
     ]
   },
   "items": {

@@ -29,6 +29,9 @@ jobs:
       - name: Check game data
         run: .venv/bin/python tools/check_data.py
 
+      - name: Check the balance tables are up to date
+        run: .venv/bin/python tools/balance.py --check
+
       - name: Check project wiring
         run: .venv/bin/python tools/check_project.py
 

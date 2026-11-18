@@ -348,7 +348,8 @@ def check_skills(skills: dict) -> None:
 
 # What stat points and titles may add (player_stats.gd extra_bonus()).
 BONUS_KEYS = {"attack", "max_hp", "defense", "crit_chance", "evasion", "max_stamina",
-              "skill_damage"}
+              "skill_damage", "crit_damage",
+              "accuracy", "attack_speed"}
 # Counters the game adds to (player.gd), plus "kills:<monster id>".
 COUNTERS = {"level", "kills", "elite_kills", "gold_earned", "potions_used", "deaths",
             "books_read"}

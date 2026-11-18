@@ -28,6 +28,7 @@ const ClassDb := preload("res://scripts/player/class_db.gd")
 const GameMenu := preload("res://scripts/ui/game_menu.gd")
 const Tutorial := preload("res://scripts/ui/tutorial.gd")
 const SafeArea := preload("res://scripts/ui/safe_area.gd")
+const Settings := preload("res://scripts/settings.gd")
 const SELECT_SCENE := "res://scenes/ui/character_select.tscn"
 ## The fifth skill button opens with the job advancement.
 const JOB_ACTION := "skill_5"
@@ -59,6 +60,8 @@ var _menu: PanelContainer
 var _menu_button: Button
 var _tutorial: PanelContainer
 var _tutorial_check: float = 0.0
+var _dps_label: Label
+var _dps_check: float = 0.0
 ## The quests in the tracker, top to bottom (for tapping one).
 var _tracker_quests: Array = []
 var _dialog
@@ -117,6 +120,13 @@ func _ready() -> void:
 	_tutorial.hero = _player
 	_tutorial.hud = self
 	add_child(_tutorial)
+	_dps_label = UiStyle.label("", 16, UiStyle.GOLD_TEXT)
+	_dps_label.name = "DpsMeter"
+	_dps_label.position = Vector2(28, 122)
+	_dps_label.add_theme_constant_override("outline_size", 5)
+	_dps_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	_dps_label.hide()
+	add_child(_dps_label)
 	_panel.set_hp(_player.get("hp"), _player.get("max_hp"))
 	_panel.set_stamina(_player.get("stamina"), _player.get("max_stamina"))
 	_refresh_progress()
@@ -149,6 +159,10 @@ func _physics_process(delta: float) -> void:
 	if _tutorial != null and _tutorial_check >= 0.25:
 		_tutorial.update(_tutorial_check)
 		_tutorial_check = 0.0
+	_dps_check += delta
+	if _dps_check >= 0.5:
+		_dps_check = 0.0
+		_update_dps()
 	if Input.is_action_just_pressed(ACTION_INVENTORY):
 		toggle_inventory()
 	if Input.is_action_just_pressed(ACTION_CHARACTER):
@@ -234,6 +248,16 @@ func _on_menu_request(method: String) -> void:
 			_show_window(null, false)
 			if leaves_game:
 				get_tree().change_scene_to_file(SELECT_SCENE)
+
+
+## The DPS meter (settings: Show DPS): damage a second over the last 5 seconds,
+## hits and crits, for checking the balance while playing.
+func _update_dps() -> void:
+	_dps_label.visible = Settings.get_value("show_dps") == true
+	var meter = _player.get("combat_log") if _dps_label.visible else null
+	if meter != null:
+		var crit_part: int = roundi(100.0 * meter.crits / maxi(meter.hits, 1))
+		_dps_label.text = "DPS %.1f   hits %d   crit %d%%" % [meter.dps(5.0), meter.hits, crit_part]
 
 
 ## The phone's back button: ends the button editor, closes the open window,

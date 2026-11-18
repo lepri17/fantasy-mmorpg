@@ -86,6 +86,7 @@ static func _arrow(hero: Node2D, skill: Dictionary, extra: Dictionary = {}) -> D
 		"color": ARROW,
 		"radius": 7.0,
 		"knockback": 0.8,
+		"cast": hero.current_cast,
 	}
 	return settings.merged(extra, true)
 
@@ -102,6 +103,7 @@ static func _fireball(hero: Node2D, skill: Dictionary) -> void:
 		"radius": 11.0,
 		"color": FIRE,
 		"knockback": 1.5,
+		"cast": hero.current_cast,
 	}
 	shoot(hero, direction, settings)
 	hero.play_sound("skill")
@@ -138,10 +140,11 @@ static func _meteor(hero: Node2D, skill: Dictionary) -> void:
 	var point: Vector2 = hero.target_point(float(skill["range"]))
 	mark(hero, point, float(skill["radius"]), float(skill["delay"]), FIRE)
 	hero.play_sound("skill")
-	later(hero, float(skill["delay"]), func() -> void: _meteor_lands(hero, skill, point))
+	var cast: int = hero.current_cast
+	later(hero, float(skill["delay"]), func() -> void: _meteor_lands(hero, skill, point, cast))
 
 
-static func _meteor_lands(hero: Node2D, skill: Dictionary, point: Vector2) -> void:
+static func _meteor_lands(hero: Node2D, skill: Dictionary, point: Vector2, cast: int) -> void:
 	if not is_instance_valid(hero) or hero.get_parent() == null:
 		return
 	var world: Node2D = hero.get_parent()
@@ -149,7 +152,7 @@ static func _meteor_lands(hero: Node2D, skill: Dictionary, point: Vector2) -> vo
 	hero.shake()
 	var stun := {"effect": "stun", "seconds": skill["stun_seconds"]}
 	var enemies: Array = hero.enemies_near(point, float(skill["radius"]))
-	hero.hit_all(enemies, hero.skill_damage(skill), 2.0, stun, true)
+	hero.hit_all(enemies, hero.skill_damage(skill), 2.0, stun, true, cast)
 
 
 ## Multi Shot: arrows in a fan towards the nearest enemy.
@@ -202,7 +205,8 @@ static func _rain_wave(hero: Node2D, skill: Dictionary, point: Vector2) -> void:
 		var spot := Vector2(randf_range(-radius, radius), randf_range(-radius, radius) * 0.5) * 0.7
 		Burst.spawn(world, world.to_local(point) + spot, ARROW, 8, 140.0)
 	var enemies: Array = hero.enemies_near(point, radius)
-	hero.hit_all(enemies, hero.skill_damage(skill), 0.4, {}, true)
+	# Every wave may hit again: no cast (each enemy is in the list once).
+	hero.hit_all(enemies, hero.skill_damage(skill), 0.4, {}, true, 0)
 
 
 ## Great Cleave (Champion): one huge swing at everything in front.

@@ -10,7 +10,10 @@ const BONUS_NAMES := {
 	"defense": "Defense",
 	"max_stamina": "Max Stamina",
 	"crit_chance": "Crit",
+	"crit_damage": "Crit damage",
 	"evasion": "Evasion",
+	"accuracy": "Accuracy",
+	"attack_speed": "Attack speed",
 	"skill_damage": "Skill damage",
 }
 const SHORT_NAMES := {
@@ -19,10 +22,15 @@ const SHORT_NAMES := {
 	"defense": "DEF",
 	"max_stamina": "STA",
 	"crit_chance": "CRIT",
+	"crit_damage": "CRIT DMG",
 	"evasion": "EVA",
+	"accuracy": "ACC",
+	"attack_speed": "SPD",
 	"skill_damage": "SKILL",
 }
-const PERCENT_BONUSES := ["crit_chance", "evasion", "skill_damage"]
+const PERCENT_BONUSES := [
+	"crit_chance", "crit_damage", "evasion", "accuracy", "attack_speed", "skill_damage"
+]
 const Settings := preload("res://scripts/settings.gd")
 
 ## The second bar's name for the class played ("Stamina", or "Mana" for the mage).

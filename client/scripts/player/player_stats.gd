@@ -123,6 +123,14 @@ func evasion() -> float:
 	return float(rule("evasion")) + gear_total("evasion") + extra_bonus("evasion")
 
 
+## A number from the class rules, the gear, the stat points and the title,
+## such as "crit_damage" (extra crit multiplier: 0.2 = crits do +20%),
+## "accuracy" (taken off a monster's evasion) or "attack_speed" (0.25 = basic
+## attacks 25% faster; player.gd keeps it under combat.json's limit).
+func total(stat: String) -> float:
+	return float(rule(stat)) + gear_total(stat) + extra_bonus(stat)
+
+
 func max_stamina() -> float:
 	return float(rule("max_stamina")) + gear_total("max_stamina") + extra_bonus("max_stamina")
 
@@ -133,8 +141,9 @@ func skill_damage_bonus() -> float:
 
 
 ## What the stat points, the title and the job advancement add to one number
-## ("attack", "max_hp", "defense", "crit_chance", "evasion", "max_stamina",
-## "skill_damage"). What a stat point gives depends on the class.
+## ("attack", "max_hp", "defense", "crit_chance", "crit_damage", "evasion",
+## "accuracy", "attack_speed", "max_stamina", "skill_damage"). What a stat
+## point gives depends on the class.
 func extra_bonus(stat: String) -> float:
 	var total: float = 0.0
 	for stat_id in stat_points:

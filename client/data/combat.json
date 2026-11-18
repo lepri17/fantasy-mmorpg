@@ -1,6 +1,11 @@
 {
   "damage_spread": 0.2,
   "crit_multiplier": 1.5,
+  "defense_floor": 0.2,
+  "max_evasion": 0.6,
+  "max_attack_speed": 1.0,
+  "knockback_speed": 240.0,
+  "knockback_max_distance": 48.0,
   "combo_window_seconds": 0.7,
   "combo_finisher_multiplier": 1.6,
   "combo_finisher_knockback": 2.0,
@@ -36,6 +41,7 @@
       }
     ],
     "gear_chance": 0.5,
-    "rarity_rolls": 2
+    "rarity_rolls": 2,
+    "knockback_resist": 0.5
   }
 }

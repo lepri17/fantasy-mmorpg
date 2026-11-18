@@ -86,6 +86,8 @@ def test_same_numbers_as_godot():
             "max_hp": hero.max_hp(), "attack": hero.attack_damage(), "defense": hero.defense(),
             "crit": hero.crit_chance(), "evasion": hero.evasion(), "stamina": hero.max_stamina(),
             "skill": hero.skill_damage_bonus(), "free": hero.free_points(),
+            "crit_damage": hero.total("crit_damage"), "accuracy": hero.total("accuracy"),
+            "attack_speed": hero.total("attack_speed"),
         }
         for key, value in mine.items():
             assert math.isclose(float(value), float(case[key]), abs_tol=1e-9), (case["class"], key)

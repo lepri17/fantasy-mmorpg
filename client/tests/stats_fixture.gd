@@ -26,6 +26,9 @@ func _initialize() -> void:
 					"stamina": hero.max_stamina(),
 					"skill": hero.skill_damage_bonus(),
 					"free": hero.free_points(),
+					"crit_damage": hero.total("crit_damage"),
+					"accuracy": hero.total("accuracy"),
+					"attack_speed": hero.total("attack_speed"),
 					"dict": hero.to_dict(),
 				}
 			)
@@ -49,9 +52,15 @@ func _case_dict(class_id: String, case: int) -> Dictionary:
 			"id": WEAPONS[class_id],
 			"rarity": "rare",
 			"plus": 5,
-			"options": {"attack": 2, "crit_chance": 0.02}
+			"options": {"attack": 2, "crit_chance": 0.02, "crit_damage": 0.1}
 		},
-		"head": {"id": "verdant_headband", "rarity": "uncommon", "plus": 2, "options": {"max_hp": 7}},
+		"head":
+		{
+			"id": "verdant_headband",
+			"rarity": "uncommon",
+			"plus": 2,
+			"options": {"max_hp": 7, "attack_speed": 0.05}
+		},
 		"cape": {"id": "verdant_cape"},
 		"gloves": {"id": "verdant_gloves"},
 		"boots": {"id": "verdant_boots"},

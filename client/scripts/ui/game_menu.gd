@@ -26,6 +26,7 @@ const SLIDERS := [
 ## [page, setting, name]
 const TOGGLES := [
 	["settings", "colorblind", "Colour-blind colours"],
+	["settings", "show_dps", "Show DPS"],
 	["controls", "floating_joystick", "Floating joystick"],
 	["controls", "left_handed", "Left-handed"],
 ]

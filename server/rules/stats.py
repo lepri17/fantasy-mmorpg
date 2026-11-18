@@ -288,6 +288,15 @@ class Stats:
     def evasion(self) -> float:
         return float(self.rule("evasion")) + self.gear_total("evasion") + self.extra_bonus("evasion")
 
+    def total(self, stat: str) -> float:
+        """crit_damage, accuracy, attack_speed...: rules + gear + bonuses."""
+        return float(self.rule(stat)) + self.gear_total(stat) + self.extra_bonus(stat)
+
+    def attack_interval(self) -> float:
+        limit = float(table("combat").get("max_attack_speed", 1.0))
+        speed = min(max(self.total("attack_speed"), 0.0), limit)
+        return float(self.rule("attack_cooldown")) / (1.0 + speed)
+
     def max_stamina(self) -> float:
         return float(self.rule("max_stamina")) + self.gear_total("max_stamina") + self.extra_bonus("max_stamina")
 

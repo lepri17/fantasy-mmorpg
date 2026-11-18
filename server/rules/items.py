@@ -10,7 +10,7 @@ import random
 from ..data import roundi, snapped, table
 
 # Bonuses written as fractions (0.03 = 3%); the rest are whole numbers.
-PERCENT_STATS = ("crit_chance", "evasion", "skill_damage")
+PERCENT_STATS = ("crit_chance", "crit_damage", "evasion", "accuracy", "attack_speed", "skill_damage")
 
 
 def data() -> dict:

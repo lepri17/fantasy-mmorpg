@@ -15,7 +15,9 @@ const Settings := preload("res://scripts/settings.gd")
 const GameData := preload("res://scripts/data/game_data.gd")
 
 ## Bonuses written as fractions (0.03 = 3%); the rest are whole numbers.
-const PERCENT_STATS := ["crit_chance", "evasion", "skill_damage"]
+const PERCENT_STATS := [
+	"crit_chance", "crit_damage", "evasion", "accuracy", "attack_speed", "skill_damage"
+]
 
 ## Item id -> its fields.
 static var items: Dictionary = GameData.table("items")["items"]

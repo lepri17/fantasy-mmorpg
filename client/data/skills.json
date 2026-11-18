@@ -48,7 +48,7 @@
     "cooldown": 8.0,
     "unlock_level": 5,
     "radius": 150,
-    "damage_multiplier": 1.5,
+    "damage_multiplier": 2.2,
     "stun_seconds": 1.2,
     "text": "Hits all around and stuns for a moment. Learned from a book.",
     "book": "book_ground_slam"
@@ -126,7 +126,7 @@
     "spread_degrees": 44,
     "range": 400,
     "speed": 640,
-    "damage_multiplier": 1.1,
+    "damage_multiplier": 1.4,
     "text": "Five arrows in a fan."
   },
   "piercing_arrow": {

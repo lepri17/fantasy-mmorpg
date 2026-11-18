@@ -17,6 +17,7 @@ const DEFAULTS := {
 	"colorblind": false,
 	"button_offsets": {},
 	"button_scale": 1.0,
+	"show_dps": false,
 }
 ## The two sound buses and the setting each one follows.
 const BUSES := {"Music": "music", "Sounds": "sounds"}

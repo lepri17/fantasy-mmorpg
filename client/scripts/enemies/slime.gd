@@ -68,6 +68,8 @@ var size_scale: float = 1.0
 var respawns: bool = true
 ## Status put on the warrior by a landed hit, or {}: {"status", "chance", "seconds", "value"}.
 var on_hit: Dictionary = {}
+## How much of a push it shrugs off: 0 = all of it moves it, 1 = none (bosses).
+var knockback_resist: float = 0.0
 ## A telegraphed slam instead of every Nth attack, or {}:
 ## {"every", "radius", "warning_seconds", "damage_multiplier"}.
 var special: Dictionary = {}
@@ -178,8 +180,7 @@ func take_damage(
 	if attacker != null:
 		_threat[attacker] = int(_threat.get(attacker, 0)) + amount
 	if from_position != Vector2.ZERO:
-		var away: Vector2 = (global_position - from_position).normalized()
-		_knockback = away * KNOCKBACK_SPEED * knockback
+		_knockback = _push(from_position, knockback)
 	if hp == 0:
 		_die()
 		return
@@ -187,6 +188,23 @@ func take_damage(
 		_enrage()
 	_sprite.modulate = Color(1.0, 0.35, 0.35)
 	create_tween().tween_property(_sprite, "modulate", tint, 0.2)
+
+
+## The radius of its body (bigger for bosses), for reaching it with a swing.
+func body_radius() -> float:
+	var circle := _collision.shape as CircleShape2D
+	return circle.radius if circle != null else 16.0 * size_scale
+
+
+## A gentle push away from a hit: less on elites, none on bosses, and never
+## farther than combat.json's knockback_max_distance.
+func _push(from_position: Vector2, knockback: float) -> Vector2:
+	var settings: Dictionary = CombatRules.settings
+	var speed: float = float(settings.get("knockback_speed", KNOCKBACK_SPEED)) * knockback
+	speed *= 1.0 - clampf(knockback_resist, 0.0, 1.0)
+	var farthest: float = float(settings.get("knockback_max_distance", 48.0))
+	var limit: float = sqrt(2.0 * KNOCKBACK_DECAY * farthest)
+	return (global_position - from_position).normalized() * minf(speed, limit)
 
 
 ## The warrior, if the slime should be chasing him right now. Otherwise null.
@@ -386,6 +404,7 @@ func make_elite() -> void:
 	gold_min = roundi(gold_min * float(elite["gold"]))
 	gold_max = roundi(gold_max * float(elite["gold"]))
 	drops = drops + elite.get("extra_drops", [])
+	knockback_resist = maxf(knockback_resist, float(elite.get("knockback_resist", 0.0)))
 	display_name = "Elite " + display_name
 	_sprite_scale = Vector2.ONE * size_scale * float(elite["scale"])
 	if is_node_ready():
@@ -442,6 +461,7 @@ func _load_monster_data() -> void:
 	if data.has("frames"):
 		_sprite.sprite_frames = load(data["frames"])
 	on_hit = data.get("on_hit", {})
+	knockback_resist = float(data.get("knockback_resist", 0.0))
 	special = data.get("special", {})
 	var rgba: Array = data.get("tint", [1, 1, 1, 1])
 	tint = Color(rgba[0], rgba[1], rgba[2], rgba[3])

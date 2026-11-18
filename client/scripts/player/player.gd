@@ -12,6 +12,9 @@ extends "res://scripts/player/player_base.gd"
 const SkyClock = preload("res://scripts/world/sky.gd")
 const Spells = preload("res://scripts/player/spells.gd")
 const AutoPilot = preload("res://scripts/player/auto_pilot.gd")
+const CombatLog = preload("res://scripts/combat/combat_log.gd")
+## Casts whose targets are remembered (one hit per target per cast).
+const CAST_MEMORY := 24
 const ACTION_AUTO := "auto_hunt"
 ## A tree hides the warrior when its trunk is this close below him (Q12).
 const TREE_COVER := Vector2(70, 150)
@@ -24,6 +27,12 @@ void fragment() {
 
 ## Auto hunt and walking to a quest's target (auto_pilot.gd).
 var auto = AutoPilot.new()
+## Damage dealt lately, for the DPS meter and the tests.
+var combat_log = CombatLog.new()
+## The attack or skill being used now: hits carry its number, and each target
+## takes at most one hit from it (Multi Shot's arrows, a blast and its arrow).
+var current_cast: int = 0
+var _cast_targets: Dictionary = {}  # cast number -> targets it hit
 var _light: PointLight2D
 var _silhouette: AnimatedSprite2D
 var _silhouette_check: float = 0.0
@@ -67,6 +76,7 @@ func _draw() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	combat_log.advance(delta)
 	if stats.advanced:
 		_aura_time += delta
 		queue_redraw()
@@ -246,7 +256,9 @@ func can_use_skill() -> bool:
 func use_skill(skill_id: String) -> bool:
 	if not can_use(skill_id):
 		return false
-	var skill: Dictionary = skills_data()[skill_id]
+	var skill: Dictionary = skills_data()[skill_id].duplicate()
+	skill["id"] = skill_id
+	begin_cast()
 	_skill_cooldowns[skill_id] = float(skill["cooldown"])
 	stamina -= float(skill["stamina"])
 	stamina_changed.emit(stamina, max_stamina)
@@ -281,7 +293,8 @@ func dash(direction: Vector2 = Vector2.ZERO) -> bool:
 
 
 func _attack() -> void:
-	_attack_ready_in = attack_cooldown
+	_attack_ready_in = attack_interval()
+	var cast: int = begin_cast()
 	combo_step = combo_step % 3 + 1 if _combo_left > 0.0 else 1
 	_combo_left = float(CombatRules.settings["combo_window_seconds"])
 	var finisher: bool = combo_step == 3
@@ -314,8 +327,8 @@ func _attack() -> void:
 		knockback = float(CombatRules.settings["combo_finisher_knockback"])
 	var hits: Array[Dictionary] = []
 	for enemy in _alive_enemies():
-		if _can_hit(enemy.global_position, aim):
-			hits.append(_strike(enemy, base_damage, knockback))
+		if _can_hit(enemy, aim):
+			hits.append(_strike(enemy, base_damage, knockback, cast))
 	_after_strikes(hits)
 
 
@@ -328,7 +341,7 @@ func _skill_spin(skill: Dictionary) -> void:
 	var hits: Array[Dictionary] = []
 	for enemy in _alive_enemies():
 		if enemy.global_position.distance_to(global_position) <= float(skill["radius"]):
-			hits.append(_strike(enemy, base_damage))
+			hits.append(_strike(enemy, base_damage, 1.0, current_cast))
 	_after_strikes(hits, false)
 
 
@@ -346,7 +359,7 @@ func _skill_strike(skill: Dictionary) -> void:
 	_sfx("skill")
 	var hits: Array[Dictionary] = []
 	if target != null:
-		hits.append(_strike(target, skill_damage(skill), 2.5))
+		hits.append(_strike(target, skill_damage(skill), 2.5, current_cast))
 		_shake_camera()
 	_after_strikes(hits, false)
 
@@ -372,6 +385,7 @@ func _shoot_attack(aim_direction: Vector2, finisher: bool, basic: Dictionary) ->
 			"radius": float(basic["radius"]),
 			"color": Color(rgb[0], rgb[1], rgb[2]),
 			"knockback": 1.6 if finisher else 0.6,
+			"cast": current_cast,
 		}
 	)
 	_sfx("swing")
@@ -399,7 +413,7 @@ func _skill_slam(skill: Dictionary) -> void:
 	var hits: Array[Dictionary] = []
 	for enemy in _alive_enemies():
 		if enemy.global_position.distance_to(global_position) <= float(skill["radius"]):
-			var hit: Dictionary = _strike(enemy, base_damage, 1.5)
+			var hit: Dictionary = _strike(enemy, base_damage, 1.5, current_cast)
 			hits.append(hit)
 			if not hit["miss"]:
 				enemy.call("apply_status", "stun", float(skill["stun_seconds"]))
@@ -411,16 +425,39 @@ func skill_damage(skill: Dictionary) -> int:
 	return roundi(stats.attack_damage() * multiplier)
 
 
+## Starts a new attack or skill (see current_cast) and returns its number.
+func begin_cast() -> int:
+	current_cast += 1
+	_cast_targets[current_cast] = []
+	_cast_targets.erase(current_cast - CAST_MEMORY)
+	return current_cast
+
+
+## Seconds between basic attacks: the class's cooldown, shortened by attack speed.
+func attack_interval() -> float:
+	var limit: float = float(CombatRules.settings.get("max_attack_speed", 1.0))
+	var speed: float = clampf(stats.total("attack_speed"), 0.0, limit)
+	return float(stats.rule("attack_cooldown")) / (1.0 + speed)
+
+
 ## One hit on one enemy. Miss, crit and the enemy's defense are worked out by
-## CombatRules; the enemy only takes the result.
-func _strike(enemy: Node2D, base_damage: int, knockback: float = 1.0) -> Dictionary:
+## CombatRules; the enemy only takes the result. A target already hit by the
+## same cast is left alone (returns a miss marked "repeat").
+func _strike(enemy: Node2D, base_damage: int, knockback: float = 1.0, cast: int = 0) -> Dictionary:
+	if cast > 0 and _cast_targets.has(cast):
+		if _cast_targets[cast].has(enemy):
+			return {"damage": 0, "crit": false, "miss": true, "repeat": true}
+		_cast_targets[cast].append(enemy)
 	var boosted: int = roundi(base_damage * (1.0 + _damage_bonus))
 	var hit: Dictionary = CombatRules.resolve_hit(
 		boosted,
 		stats.crit_chance() + _crit_bonus,
 		int(enemy.get("defense")),
-		float(enemy.get("evasion"))
+		float(enemy.get("evasion")),
+		stats.total("crit_damage"),
+		stats.total("accuracy")
 	)
+	combat_log.record(hit)
 	if hit["miss"]:
 		FloatingText.spawn(enemy, "MISS", MISS_COLOR, 80.0, 22)
 		return hit
@@ -452,7 +489,7 @@ func _after_strikes(hits: Array[Dictionary], swing_sound: bool = true) -> void:
 ## For the buttons: how much of an action's cooldown is left, from 1 down to 0.
 func cooldown_left(action: String) -> float:
 	if action == ACTION_ATTACK:
-		return _attack_ready_in / maxf(attack_cooldown, 0.01)
+		return _attack_ready_in / maxf(attack_interval(), 0.01)
 	if action == ACTION_DASH:
 		return _dash_ready_in / maxf(float(_dash["cooldown"]), 0.01)
 	var skill_id: String = skill_for_action(action)
@@ -524,13 +561,18 @@ func enemies_near(point: Vector2, radius: float) -> Array[Node2D]:
 ## One hit on each enemy (status: {"effect", "seconds", "value"} on the ones
 ## hit), then the hit sound and hit stop. Returns the hits.
 func hit_all(
-	enemies: Array, damage: int, knockback: float = 1.0, status: Dictionary = {}, sound := false
+	enemies: Array,
+	damage: int,
+	knockback: float = 1.0,
+	status: Dictionary = {},
+	sound := false,
+	cast: int = -1
 ) -> Array[Dictionary]:
 	var hits: Array[Dictionary] = []
 	for enemy in enemies:
 		if not is_instance_valid(enemy) or enemy.get("is_dead"):
 			continue
-		var hit: Dictionary = _strike(enemy, damage, knockback)
+		var hit: Dictionary = _strike(enemy, damage, knockback, current_cast if cast < 0 else cast)
 		hits.append(hit)
 		if not hit["miss"] and not status.is_empty() and not enemy.get("is_dead"):
 			var value: float = float(status.get("value", 0.0))
@@ -546,7 +588,8 @@ func shot_hit(shot: Node2D, enemy: Node2D) -> void:
 	if blast > 0.0:
 		targets = enemies_near(enemy.global_position, blast)
 		Burst.spawn(get_parent(), enemy.position + Vector2(0, -20), Color(1.0, 0.55, 0.2), 26, 220.0)
-	hit_all(targets, int(shot.get("damage")), float(shot.get("knockback")), {}, true)
+	var cast: int = int(shot.get("cast"))
+	hit_all(targets, int(shot.get("damage")), float(shot.get("knockback")), {}, true, cast)
 
 
 ## Mana Shield: cut is the part of each hit's damage taken away (0..1).
@@ -584,18 +627,26 @@ func _nearest_enemy(max_distance: float) -> Node2D:
 	var nearest: Node2D = null
 	var nearest_distance: float = max_distance
 	for enemy in _alive_enemies():
-		var distance: float = enemy.global_position.distance_to(global_position)
+		var distance: float = _reach_to(enemy)
 		if distance <= nearest_distance:
 			nearest = enemy
 			nearest_distance = distance
 	return nearest
 
 
-## True when the target is within range and roughly in the direction of the swing.
-func _can_hit(target_position: Vector2, aim: Vector2) -> bool:
-	var to_target: Vector2 = target_position - global_position
+## How far away an enemy is, to the edge of its body (a big boss is reached
+## sooner than its middle).
+func _reach_to(enemy: Node2D) -> float:
+	var radius: float = float(enemy.call("body_radius")) if enemy.has_method("body_radius") else 0.0
+	return maxf(0.0, enemy.global_position.distance_to(global_position) - radius)
+
+
+## True when the target's body is within range and roughly in the direction
+## of the swing (a wide arc in front).
+func _can_hit(enemy: Node2D, aim: Vector2) -> bool:
+	var to_target: Vector2 = enemy.global_position - global_position
 	var distance: float = to_target.length()
-	if distance > attack_range:
+	if _reach_to(enemy) > attack_range:
 		return false
 	if distance < 1.0:
 		return true
