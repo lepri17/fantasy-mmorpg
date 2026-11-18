@@ -9,6 +9,7 @@ const AchievementRecord := preload("res://scripts/player/achievement_record.gd")
 const QuestLog := preload("res://scripts/player/quest_log.gd")
 const DungeonLog := preload("res://scripts/player/dungeon_log.gd")
 const ClassDb := preload("res://scripts/player/class_db.gd")
+const Leveling := preload("res://scripts/player/leveling.gd")
 
 ## Version of what to_dict() writes. 1 = level, xp, gold, potions.
 ## 2 = adds the bag and the gear; potions live in the bag.
@@ -18,17 +19,22 @@ const ClassDb := preload("res://scripts/player/class_db.gd")
 ## 6 = adds the storage in town.
 ## 7 = adds quests.
 ## 8 = adds dungeon entries per day.
-const SAVE_VERSION := 10
+## 11 = the stats were reworked (AGI became DEX): older saves get their points back.
+const SAVE_VERSION := 11
+const STATS_REWORK_VERSION := 11
+const STATS_REWORK_NOTICE := (
+	"The stats were reworked: all your stat points are free to spend again."
+)
 const POTION_ID := "red_potion"
 
 ## The numbers from res://data/character.json: health and damage without gear
 ## (the starting gear adds 35 HP and 5 damage, so a new warrior has 100 HP and
-## 10 damage), what each level adds, XP per level, bag size, starting gear and
+## 10 damage), what each level adds, the XP curve, bag size, starting gear and
 ## bag, and the tuning the player scene reads (speed, skill, regeneration).
 static var rules: Dictionary = GameData.table("character")
 static var bag_size: int = int(rules["bag_size"])
 static var storage_size: int = int(rules["storage_size"])
-## STR, AGI, VIT, ENE: what one point in each adds ("attack", "max_hp", ...).
+## STR, DEX, VIT, ENE: what one point in each adds ("attack", "max_hp", ...).
 static var stat_rules: Dictionary = rules["stats"]
 
 ## The class (classes.json) and whether it made its job advancement (version 9).
@@ -52,8 +58,10 @@ var potions: int:
 		return count_of(POTION_ID)
 	set(value):
 		_set_count(POTION_ID, maxi(value, 0))
-## Points put into each stat ("strength", "agility", "vitality", "energy").
+## Points put into each stat ("strength", "dexterity", "vitality", "energy").
 var stat_points: Dictionary = {}
+## A message for the player after loading an older save, or "".
+var notice: String = ""
 ## Skills learned from books (skills.json entries with a "book").
 var learned_skills: Array = []
 ## Stacks left with the storage keeper in town, like the bag but bigger.
@@ -154,7 +162,7 @@ func extra_bonus(stat: String) -> float:
 	return total + record.title_bonus(stat)
 
 
-# --- stat points (MU style: every level gives points to put into STR, AGI, VIT, ENE)
+# --- stat points (MU style: every level gives points to put into STR, DEX, VIT, ENE)
 
 
 ## Points earned so far that are not in a stat yet.
@@ -181,7 +189,11 @@ func add_stat_point(stat_id: String) -> bool:
 	return true
 
 
+## Gold for a stat reset: free below "stat_reset_free_below_level", so a new
+## player can try builds, then "stat_reset_gold_per_level" for every level.
 func reset_cost() -> int:
+	if level < int(rules["stat_reset_free_below_level"]):
+		return 0
 	return int(rules["stat_reset_gold_per_level"]) * level
 
 
@@ -412,9 +424,9 @@ func take_stored(index: int) -> bool:
 	return true
 
 
-## XP needed to finish the current level.
+## XP needed to finish the current level (character.json "xp_curve").
 func xp_to_next() -> int:
-	return int(rules["xp_per_level"]) * level
+	return Leveling.xp_for_level(level)
 
 
 ## Adds XP and returns how many levels were gained.
@@ -490,13 +502,20 @@ func from_dict(data: Dictionary) -> void:
 ## Version 3 parts. Anything unknown or out of range is left out.
 func _load_progress(data: Dictionary) -> void:
 	stat_points = {}
+	notice = ""
 	var saved_points = data.get("stat_points", {})
 	if saved_points is Dictionary:
-		for stat_id in saved_points:
-			if stat_rules.has(stat_id) and int(saved_points[stat_id]) > 0:
-				stat_points[stat_id] = int(saved_points[stat_id])
+		for saved_id in saved_points:
+			# Before version 11 DEX was called AGI ("agility").
+			var stat_id: String = "dexterity" if saved_id == "agility" else str(saved_id)
+			if stat_rules.has(stat_id) and int(saved_points[saved_id]) > 0:
+				stat_points[stat_id] = points_in(stat_id) + int(saved_points[saved_id])
 	if free_points() < 0:
 		stat_points = {}
+	if not stat_points.is_empty() and int(data.get("version", 1)) < STATS_REWORK_VERSION:
+		# The points do other things now, so the player chooses again for free.
+		stat_points = {}
+		notice = STATS_REWORK_NOTICE
 	var skills: Dictionary = GameData.table("skills")
 	learned_skills = []
 	var saved_skills = data.get("learned_skills", [])

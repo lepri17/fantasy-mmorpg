@@ -239,7 +239,7 @@ func _check_tutorial(player, hud) -> void:
 	t._check(PlayerStats.new().tutorial == 0, "a new hero starts with the hints")
 	var saved: Dictionary = player.stats.to_dict()
 	t._check(
-		int(saved["version"]) == 10 and saved.has("tutorial"), "the save keeps the hint step (v10)"
+		int(saved["version"]) >= 10 and saved.has("tutorial"), "the save keeps the hint step (v10+)"
 	)
 	saved.erase("tutorial")
 	var older := PlayerStats.new()

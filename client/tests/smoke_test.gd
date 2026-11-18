@@ -20,6 +20,7 @@ const SmokeWorld = preload("res://tests/smoke_world.gd")
 const SmokeClasses = preload("res://tests/smoke_classes.gd")
 const SmokeUi = preload("res://tests/smoke_ui.gd")
 const SmokeCombat = preload("res://tests/smoke_combat.gd")
+const SmokeProgress = preload("res://tests/smoke_progress.gd")
 const Settings = preload("res://scripts/settings.gd")
 const SETTINGS_PATH := "user://smoke_test_settings.cfg"
 
@@ -280,23 +281,47 @@ func _run() -> void:
 	var base_attack: int = trainee.attack_damage()
 	var base_hp: int = trainee.max_hp()
 	var base_defense: int = trainee.defense()
-	for stat_id in ["strength", "strength", "strength", "strength", "vitality", "vitality"]:
+	var base_crit: float = trainee.crit_chance()
+	var base_accuracy: float = trainee.total("accuracy")
+	var base_speed: float = trainee.total("attack_speed")
+	for stat_id in ["strength", "strength", "strength", "strength"]:
 		trainee.add_stat_point(stat_id)
-	for _i in 4:
-		trainee.add_stat_point("agility")
-	_check(trainee.attack_damage() == base_attack + 2, "4 STR add 2 attack")
-	_check(trainee.max_hp() == base_hp + 6, "2 VIT add 6 max HP")
-	_check(trainee.defense() == base_defense + 1, "4 AGI add 1 defense")
-	_check(not trainee.add_stat_point("energy"), "no point can be spent when none is left")
-	_check(not trainee.reset_stats(true), "a stat reset costs gold")
-	trainee.gold = 100
+	for stat_id in ["vitality", "vitality", "vitality"]:
+		trainee.add_stat_point(stat_id)
+	_check(trainee.attack_damage() == base_attack + 4, "4 STR add 4 attack")
 	_check(
-		trainee.reset_stats(true) and trainee.gold == 40 and trainee.free_points() == 10,
-		"a stat reset gives every point back for 60 gold at level 3"
+		trainee.max_hp() == base_hp + 15 and trainee.defense() == base_defense + 1,
+		"3 VIT add 15 max HP and 1 defense"
 	)
+	for _i in 3:
+		trainee.add_stat_point("dexterity")
+	_check(
+		(
+			trainee.attack_damage() == base_attack + 5
+			and is_equal_approx(trainee.crit_chance(), base_crit + 0.015)
+			and is_equal_approx(trainee.total("accuracy"), base_accuracy + 0.03)
+			and is_equal_approx(trainee.total("attack_speed"), base_speed + 0.018)
+		),
+		"3 DEX add 1 attack, 1.5% crit, 3% accuracy and 1.8% attack speed"
+	)
+	_check(not trainee.add_stat_point("energy"), "no point can be spent when none is left")
+	trainee.gold = 0
+	_check(
+		trainee.reset_cost() == 0 and trainee.reset_stats(true) and trainee.free_points() == 10,
+		"below level 10 a stat reset is free and gives every point back"
+	)
+	trainee.level = 10
+	trainee.add_stat_point("strength")
+	_check(not trainee.reset_stats(true), "from level 10 a stat reset costs gold")
+	trainee.gold = 250
+	_check(
+		trainee.reset_stats(true) and trainee.gold == 50 and trainee.spent_points() == 0,
+		"a stat reset at level 10 costs 200 gold"
+	)
+	trainee.level = 3
 	trainee.add_stat_point("energy")
 	_check(
-		is_equal_approx(trainee.max_stamina(), 101.0)
+		is_equal_approx(trainee.max_stamina(), 102.0)
 		and is_equal_approx(trainee.skill_damage_bonus(), 0.01),
 		"ENE adds stamina and skill damage"
 	)
@@ -518,8 +543,8 @@ func _run() -> void:
 	character.get("_plus_buttons")["vitality"].pressed.emit()
 	await _frames(1)
 	_check(
-		player.stats.free_points() == free_before - 1 and player.max_hp == hp_limit + 3,
-		"+ on VIT spends a point and adds 3 max HP (%d)" % player.max_hp
+		player.stats.free_points() == free_before - 1 and player.max_hp == hp_limit + 5,
+		"+ on VIT spends a point and adds 5 max HP (%d)" % player.max_hp
 	)
 	_check(character.get("_stat_values")["vitality"].text == "1", "the window shows VIT 1")
 	character.show_page("titles")
@@ -746,6 +771,7 @@ func _run() -> void:
 	await SmokeClasses.new().run(self, main, player, hud)
 	await SmokeUi.new().run(self, main, player, hud)
 	await SmokeCombat.new().run(self, main, player, hud)
+	await SmokeProgress.new().run(self, main, player, hud)
 
 	_remove_test_save()
 	root.remove_child(main)

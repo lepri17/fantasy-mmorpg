@@ -63,9 +63,9 @@
       },
       "rules": {
         "base_max_hp": 50,
-        "hp_per_level": 15,
+        "hp_per_level": 11,
         "base_damage": 5,
-        "damage_per_level": 3,
+        "damage_per_level": 1,
         "attack_range": 300,
         "attack_cooldown": 0.6,
         "max_stamina": 120,
@@ -86,12 +86,13 @@
       },
       "stats": {
         "strength": {
-          "text": "+1 Attack for every 4 points.",
-          "attack": 0.25
+          "text": "+1 Attack for every 2 points and +2 Max HP for every point.",
+          "attack": 0.5,
+          "max_hp": 2
         },
         "energy": {
-          "text": "+1 Attack for every 2 points. +2 Max Mana and +1% spell damage for every point.",
-          "attack": 0.5,
+          "text": "+1 Attack, +2 Max Mana and +1% spell damage for every point.",
+          "attack": 1,
           "max_stamina": 2
         }
       },
@@ -134,9 +135,9 @@
       },
       "rules": {
         "base_max_hp": 56,
-        "hp_per_level": 17,
+        "hp_per_level": 13,
         "base_damage": 4,
-        "damage_per_level": 3,
+        "damage_per_level": 1,
         "attack_range": 340,
         "attack_cooldown": 0.5,
         "crit_chance": 0.08,
@@ -151,12 +152,13 @@
       },
       "stats": {
         "strength": {
-          "text": "+1 Attack for every 4 points.",
-          "attack": 0.25
+          "text": "+1 Attack for every 2 points and +2 Max HP for every point.",
+          "attack": 0.5,
+          "max_hp": 2
         },
-        "agility": {
-          "text": "+1 Attack for every 3 points, +1 Defense for every 4. +0.2% Evasion and +0.1% Crit each.",
-          "attack": 0.34
+        "dexterity": {
+          "text": "+7 Attack for every 10 points. +0.5% Crit, +0.6% Attack speed and +1% Accuracy for every point.",
+          "attack": 0.7
         }
       },
       "advanced": {

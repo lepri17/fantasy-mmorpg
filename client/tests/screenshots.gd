@@ -41,6 +41,11 @@ func _initialize() -> void:
 	hud.toggle_inventory()
 	hud.get_node("Inventory").call("_on_slot_tapped", hud.get_node("Inventory").bag_slots[2])
 	await _shot("02_inventory")
+	player.stats.stat_points = {"strength": 10, "dexterity": 5, "vitality": 5}
+	player.max_hp = player.stats.max_hp()
+	player.hp = player.max_hp
+	player.hp_changed.emit(player.hp, player.max_hp)
+	hud.call("_refresh_progress")
 	hud.toggle_character()
 	await _shot("03_character")
 	hud.get_node("Character").show_page("quests")

@@ -1,33 +1,46 @@
 {
   "base_max_hp": 65,
-  "hp_per_level": 20,
+  "hp_per_level": 15,
   "base_damage": 5,
-  "damage_per_level": 3,
-  "xp_per_level": 50,
+  "damage_per_level": 1,
+  "xp_curve": {
+    "base": 80,
+    "exponent": 2.2
+  },
+  "xp_level_gap": {
+    "free_levels": 2,
+    "loss_per_level": 0.15,
+    "lowest": 0.1,
+    "gain_per_level": 0.05,
+    "highest": 1.25
+  },
   "stat_points_per_level": 5,
   "stat_reset_gold_per_level": 20,
+  "stat_reset_free_below_level": 10,
   "stats": {
     "strength": {
       "short": "STR",
-      "text": "+1 Attack for every 2 points.",
-      "attack": 0.5
+      "text": "+1 Attack for every point.",
+      "attack": 1
     },
-    "agility": {
-      "short": "AGI",
-      "text": "+1 Defense for every 4 points. +0.2% Evasion and +0.1% Crit each.",
-      "defense": 0.25,
-      "evasion": 0.002,
-      "crit_chance": 0.001
+    "dexterity": {
+      "short": "DEX",
+      "text": "+1 Attack for every 3 points. +0.5% Crit, +0.6% Attack speed and +1% Accuracy for every point.",
+      "attack": 0.34,
+      "crit_chance": 0.005,
+      "attack_speed": 0.006,
+      "accuracy": 0.01
     },
     "vitality": {
       "short": "VIT",
-      "text": "+3 Max HP for every point.",
-      "max_hp": 3
+      "text": "+5 Max HP for every point, and +1 Defense for every 3.",
+      "max_hp": 5,
+      "defense": 0.3334
     },
     "energy": {
       "short": "ENE",
-      "text": "+1 Max Stamina and +1% skill damage for every point.",
-      "max_stamina": 1,
+      "text": "+2 Max Stamina and +1% skill damage for every point.",
+      "max_stamina": 2,
       "skill_damage": 0.01
     }
   },

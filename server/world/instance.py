@@ -11,7 +11,7 @@ import math
 from ..data import roundi, table
 from ..rules import combat
 from ..rules import items as item_db
-from ..rules.stats import character_rules
+from ..rules.stats import character_rules, kill_xp
 from .monster import Monster
 
 PICK_REACH = 150.0  # loot magnet (90) plus the network delay
@@ -246,7 +246,7 @@ class Instance:
             sharers.append(killer)
         share = monster.xp if len(sharers) == 1 else roundi(monster.xp * (1.0 + 0.1 * (len(sharers) - 1)) / len(sharers))
         for hero in sharers:
-            hero.gain_xp(share)
+            hero.gain_xp(kill_xp(share, hero.stats.level, monster.level))
         killer.record_kill(monster.monster_id, monster.elite)
         owners = frozenset(h.id for h in sharers)
         low, high = monster.gold

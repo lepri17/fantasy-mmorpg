@@ -162,6 +162,7 @@ func _check_mage(player, hud) -> void:
 	)
 
 	t._check(player.skill_lock("chain_lightning") == "JOB", "Chain Lightning needs the advancement")
+	player.stats.level = maxi(player.stats.level, 10)  # the job skills open at level 10
 	player.stats.advanced = true
 	hud.call("_refresh_progress")
 	t._check(
@@ -243,6 +244,7 @@ func _check_archer(player, hud) -> void:
 	t._check(player.use_skill("arrow_rain"), "the archer learns Arrow Rain from its book and uses it")
 	await t._frames(110)
 	t._check(dummy.hp < hp_before, "Arrow Rain falls on the slime (%d -> %d)" % [hp_before, dummy.hp])
+	player.stats.level = maxi(player.stats.level, 10)
 	player.stats.advanced = true
 	line = _line_up(player, [Vector2(150, 0), Vector2(300, 0)])
 	before = line.map(func(enemy): return enemy.hp)

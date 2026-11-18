@@ -20,14 +20,19 @@ sys.path.insert(0, str(ROOT))
 from server.data import roundi, table  # noqa: E402
 from server.rules import combat  # noqa: E402
 from server.rules import items as item_db  # noqa: E402
-from server.rules.stats import Stats, class_name, class_skills  # noqa: E402
+from server.rules.stats import (  # noqa: E402
+    Stats, class_name, class_skills, kill_xp, level_gap_factor, stat_rule,
+)
 
 OUT = ROOT / "docs" / "BALANCE.md"
 LEVELS = (1, 2, 3, 4, 5, 6, 8, 10, 12, 15)
 # Where a hero of each level hunts (the monster used for "time to kill").
 HUNT = [(1, "green_slime"), (3, "blue_slime"), (4, "spore_shroom"), (8, "slime_king")]
-MAIN_STAT = {"warrior": "strength", "archer": "agility", "mage": "energy"}
-BETWEEN_FIGHTS = 3.0  # seconds of walking and looting per kill, for the pace table
+MAIN_STAT = {"warrior": "strength", "archer": "dexterity", "mage": "energy"}
+# Monsters a hero hunts for XP (not the boss nor the event's golden slimes).
+REGULAR = ("green_slime", "blue_slime", "spore_shroom")
+BUILD_LEVEL = 10
+BETWEEN_FIGHTS = 5.0  # seconds of walking, looting and waiting for respawns per kill (pace table)
 
 
 def hero(class_id: str, level: int) -> Stats:
@@ -72,7 +77,7 @@ def md_table(headers: list, rows: list) -> str:
 def heroes_section() -> str:
     monsters = table("monsters")
     parts = ["## הגיבור לפי רמה", "",
-             "ציוד ההתחלה, וכל נקודות הסטטים במאפיין הראשי של המקצוע (STR ללוחם, AGI לקשת, ENE לקוסם). "
+             "ציוד ההתחלה, וכל נקודות הסטטים במאפיין הראשי של המקצוע (STR ללוחם, DEX לקשת, ENE לקוסם). "
              "DPS = נזק לשנייה בתקיפה רגילה נגד המפלצת של אותה רמה, כולל קומבו, קריטי, החטאות והגנה.", ""]
     for class_id in ("warrior", "archer", "mage"):
         rows = []
@@ -115,22 +120,97 @@ def monsters_section() -> str:
     ])
 
 
+def best_hunt(stats: Stats) -> tuple:
+    """The regular monster that gives the most XP a second: (id, XP a kill, seconds a kill)."""
+    monsters = table("monsters")
+    best = None
+    for monster_id in REGULAR:
+        monster = monsters[monster_id]
+        if int(monster["level"]) > stats.level + 1:
+            continue  # too dangerous to farm
+        xp = kill_xp(int(monster["xp"]), stats.level, int(monster["level"]))
+        seconds = monster["max_hp"] / basic_dps(stats, monster) + BETWEEN_FIGHTS
+        if best is None or xp / seconds > best[1] / best[2]:
+            best = (monster_id, xp, seconds)
+    return best
+
+
 def pace_section() -> str:
     monsters = table("monsters")
     rows = []
     total_minutes = 0.0
     for level in range(1, 16):
         stats = hero("warrior", level)
-        monster_id = prey(level)
-        monster = monsters[monster_id]
-        kills = stats.xp_to_next() / int(monster["xp"])
-        seconds = kills * (monster["max_hp"] / basic_dps(stats, monster) + BETWEEN_FIGHTS)
-        total_minutes += seconds / 60
-        rows.append([level, stats.xp_to_next(), monster["name"], f"{kills:.1f}", f"{seconds / 60:.1f}", f"{total_minutes:.0f}"])
+        monster_id, xp, seconds_each = best_hunt(stats)
+        kills = stats.xp_to_next() / xp
+        minutes = kills * seconds_each / 60
+        total_minutes += minutes
+        factor = level_gap_factor(level, int(monsters[monster_id]["level"]))
+        rows.append([level, stats.xp_to_next(), monsters[monster_id]["name"], f"{xp} ({factor * 100:.0f}%)",
+                     f"{kills:.0f}", f"{minutes:.1f}", f"{total_minutes:.0f}"])
     return "\n".join([
         "## קצב עליית רמות (לוחם)", "",
-        f"הריגות עד הרמה הבאה, וזמן משוער: זמן ההריגה ועוד {BETWEEN_FIGHTS:.0f} שנ' הליכה ואיסוף לכל מפלצת.", "",
-        md_table(["רמה", "EXP לרמה הבאה", "מפלצת", "הריגות", "דקות", "דקות מההתחלה"], rows), "",
+        f"EXP לרמה: {table('character')['xp_curve']['base']} x רמה^{table('character')['xp_curve']['exponent']}. "
+        "מפלצת שרמתה נמוכה בהרבה נותנת פחות EXP (באחוזים בטבלה). בכל רמה נבחרה המפלצת שנותנת הכי הרבה EXP לדקה, "
+        "מבין המפלצות שרמתן לכל היותר רמה אחת מעל הגיבור. "
+        f"זמן לכל מפלצת: זמן ההריגה ועוד {BETWEEN_FIGHTS:.0f} שנ' הליכה ואיסוף. בלי משימות, בוס ומבוך.", "",
+        md_table(["רמה", "EXP לרמה הבאה", "מפלצת", "EXP להריגה", "הריגות", "דקות", "דקות מההתחלה"], rows), "",
+        gap_table(),
+    ])
+
+
+def gap_table() -> str:
+    rows = [[f"{d:+d}", f"{level_gap_factor(10, 10 - d) * 100:.0f}%"] for d in (-5, -3, -1, 0, 2, 3, 4, 5, 6, 8, 10)]
+    return "\n".join(["", "EXP לפי פער הרמות (רמת הגיבור פחות רמת המפלצת):", "",
+                      md_table(["פער", "EXP"], rows), ""])
+
+
+def points_section() -> str:
+    monster = table("monsters")["blue_slime"]
+    stat_names = {"strength": "STR", "dexterity": "DEX", "vitality": "VIT", "energy": "ENE"}
+    rows = []
+    for class_id in ("warrior", "archer", "mage"):
+        for stat_id, short in stat_names.items():
+            gives = {k: v for k, v in stat_rule(class_id, stat_id).items() if k not in ("short", "text")}
+            base = hero(class_id, BUILD_LEVEL)
+            base.stat_points = {}
+            plus = hero(class_id, BUILD_LEVEL)
+            plus.stat_points = {stat_id: 10}
+            change = basic_dps(plus, monster) / basic_dps(base, monster) - 1
+            rows.append([class_name(class_id), short, ", ".join(f"{k} {v:g}" for k, v in gives.items()),
+                         f"{plus.max_hp() - base.max_hp():+d}", f"{plus.defense() - base.defense():+d}",
+                         f"{change * 100:+.0f}%"])
+    return "\n".join([
+        "## מה נותנת כל נקודה", "",
+        f"לכל נקודה (מתוך 5 בכל רמה). העמודות האחרונות: מה משנות 10 נקודות לגיבור ברמה {BUILD_LEVEL}.", "",
+        md_table(["מקצוע", "סטט", "לכל נקודה", "HP (10 נק')", "הגנה (10 נק')", "DPS (10 נק')"], rows), "",
+    ])
+
+
+def builds_section() -> str:
+    monster = table("monsters")["blue_slime"]
+    rows = []
+    for class_id in ("warrior", "archer", "mage"):
+        main = MAIN_STAT[class_id]
+        points = (BUILD_LEVEL - 1) * int(table("character")["stat_points_per_level"])
+        builds = {
+            "הכול בסטט הראשי": {main: points},
+            "מאוזן": {main: points * 6 // 10, "vitality": points * 2 // 10,
+                      "dexterity" if main != "dexterity" else "strength": points - points * 6 // 10 - points * 2 // 10},
+            "הכול ב-VIT": {"vitality": points},
+        }
+        for name, spread in builds.items():
+            stats = hero(class_id, BUILD_LEVEL)
+            stats.stat_points = spread
+            hit = monster_hit(monster, stats)
+            survive = stats.max_hp() / max(hit, 0.1) * float(monster["attack_cooldown"])
+            rows.append([class_name(class_id), name, stats.max_hp(), stats.attack_damage(), stats.defense(),
+                         f"{stats.crit_chance() * 100:.0f}%", f"{stats.attack_interval():.2f}",
+                         f"{basic_dps(stats, monster):.0f}", f"{survive:.0f}"])
+    return "\n".join([
+        f"## בניות לדוגמה (רמה {BUILD_LEVEL}, נגד Blue Slime)", "",
+        "\"מאוזן\": 60% בסטט הראשי, 20% ב-VIT, והשאר ב-DEX (לקשת: ב-STR).", "",
+        md_table(["מקצוע", "בנייה", "HP", "התקפה", "הגנה", "קריטי", "שנ' בין מכות", "DPS", "שנ' עד שהיא הורגת"], rows), "",
     ])
 
 
@@ -230,8 +310,8 @@ def build() -> str:
         "נוצר אוטומטית מקובצי הנתונים (`client/data/*.json`) על ידי `tools/balance.py`. לא לערוך ידנית: "
         "משנים את הנתונים ומריצים את הכלי מחדש. המספרים הם ממוצעים לפי חוקי המשחק.", "",
     ])
-    return "\n".join([head, heroes_section(), monsters_section(), pace_section(), skills_section(),
-                      crit_section(), upgrade_section(), economy_section()]).rstrip() + "\n"
+    return "\n".join([head, heroes_section(), monsters_section(), pace_section(), points_section(), builds_section(),
+                      skills_section(), crit_section(), upgrade_section(), economy_section()]).rstrip() + "\n"
 
 
 def main() -> int:

@@ -44,6 +44,8 @@ func _ready() -> void:
 	add_to_group("player")
 	auto.hero = self
 	stats.from_dict(SaveFile.load_data())
+	if stats.notice != "":
+		_say.call_deferred(stats.notice, LEVEL_COLOR)
 	_load_tuning()
 	stats.record.check(stats.level)
 	max_hp = stats.max_hp()

@@ -1,6 +1,6 @@
 extends PanelContainer
 ## The character window (STATS button or C). STATS page: level, free points,
-## a + button for each of STR, AGI, VIT and ENE, the numbers that follow from
+## a + button for each of STR, DEX, VIT and ENE, the numbers that follow from
 ## them, and a stat reset for gold. TITLES page: the title shown (with < and >
 ## to change it) and every achievement with its progress. QUESTS page: the
 ## quest journal, active quests first. Only shows state:
@@ -105,7 +105,8 @@ func refresh(stats) -> void:
 			roundi(stats.skill_damage_bonus() * 100.0),
 		]
 	)
-	_reset_button.text = "RESET STATS  (%d G)" % stats.reset_cost()
+	var cost: int = stats.reset_cost()
+	_reset_button.text = "RESET STATS  (%d G)" % cost if cost > 0 else "RESET STATS  (FREE)"
 	UiStyle.set_enabled(
 		_reset_button, stats.spent_points() > 0 and stats.gold >= stats.reset_cost()
 	)

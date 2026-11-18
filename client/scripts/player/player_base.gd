@@ -19,6 +19,7 @@ const FloatingText = preload("res://scripts/ui/floating_text.gd")
 const ItemDb = preload("res://scripts/items/item_db.gd")
 const HeroLook = preload("res://scripts/player/hero_look.gd")
 const ClassDb = preload("res://scripts/player/class_db.gd")
+const Leveling = preload("res://scripts/player/leveling.gd")
 const HitSpark = preload("res://scripts/combat/hit_spark.gd")
 const TargetMarker = preload("res://scripts/combat/target_marker.gd")
 const StatusEffects = preload("res://scripts/combat/status_effects.gd")
@@ -125,10 +126,20 @@ var _hit_invincible_seconds: float = 1.0
 @onready var _slash = $Slash
 
 
-## Called by enemies when they die.
-func gain_xp(amount: int) -> void:
+## Called by monsters when they die: their XP, less when the hero is far
+## above their level and a little more when they are above his (Leveling).
+func gain_kill_xp(amount: int, monster_level: int) -> void:
+	var factor: float = Leveling.gap_factor(stats.level, monster_level)
+	gain_xp(Leveling.kill_xp(amount, stats.level, monster_level), factor)
+
+
+## Adds XP (from kills, quests and rewards). factor is only for the message.
+func gain_xp(amount: int, factor: float = 1.0) -> void:
 	var levels_gained: int = stats.add_xp(amount)
-	_say("+%d EXP" % amount, XP_COLOR)
+	if is_equal_approx(factor, 1.0):
+		_say("+%d EXP" % amount, XP_COLOR)
+	else:
+		_say("+%d EXP (%d%%)" % [amount, roundi(factor * 100.0)], XP_COLOR)
 	if levels_gained > 0:
 		max_hp = stats.max_hp()
 		hp = max_hp
@@ -448,7 +459,7 @@ func record_kill(monster_id: String, elite: bool) -> void:
 	_announce(earned)
 
 
-## Puts one free stat point into "strength", "agility", "vitality" or "energy".
+## Puts one free stat point into "strength", "dexterity", "vitality" or "energy".
 func add_stat_point(stat_id: String) -> void:
 	if stats.add_stat_point(stat_id):
 		_limits_changed()

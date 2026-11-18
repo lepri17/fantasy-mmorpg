@@ -11,7 +11,10 @@ import random
 from ..data import roundi, table
 from . import items as item_db
 
-SAVE_VERSION = 10
+SAVE_VERSION = 11
+# Version 11 reworked the stats (AGI became DEX): older saves get their points back.
+STATS_REWORK_VERSION = 11
+STATS_REWORK_NOTICE = "The stats were reworked: all your stat points are free to spend again."
 POTION_ID = "red_potion"
 DEFAULT_CLASS = "warrior"
 
@@ -71,6 +74,31 @@ def class_skills(class_id: str) -> list:
     skills = table("skills")
     owned = [s for s in skills if skills[s].get("class", DEFAULT_CLASS) == class_id]
     return sorted(owned, key=lambda s: skills[s]["action"])
+
+
+def level_gap_factor(hero_level: int, monster_level: int) -> float:
+    """Part of a monster's XP a hero gets: full up to a few levels above it,
+    then less for every level more (never below the lowest), and a little
+    more for monsters above the hero (character.json "xp_level_gap")."""
+    gap = character_rules()["xp_level_gap"]
+    difference = hero_level - monster_level
+    if difference < 0:
+        return min(1.0 + float(gap["gain_per_level"]) * -difference, float(gap["highest"]))
+    extra = difference - int(gap["free_levels"])
+    if extra <= 0:
+        return 1.0
+    return max(1.0 - float(gap["loss_per_level"]) * extra, float(gap["lowest"]))
+
+
+def xp_for_level(level: int) -> int:
+    """XP to finish a level: base x level^exponent (character.json "xp_curve")."""
+    curve = character_rules()["xp_curve"]
+    return roundi(float(curve["base"]) * level ** float(curve["exponent"]))
+
+
+def kill_xp(xp: int, hero_level: int, monster_level: int) -> int:
+    """The XP one kill gives, never less than 1 (leveling.gd kill_xp)."""
+    return max(1, roundi(xp * level_gap_factor(hero_level, monster_level)))
 
 
 def with_article(word: str) -> str:
@@ -244,6 +272,7 @@ class Stats:
         self.auto_potion = 0
         self.quests = QuestLog()
         self.record = Record()
+        self.notice = ""  # a message for the player after loading an older save
         self._start_fresh()
 
     # numbers
@@ -326,7 +355,10 @@ class Stats:
         return True
 
     def reset_cost(self) -> int:
-        return _int(character_rules()["stat_reset_gold_per_level"]) * self.level
+        rules = character_rules()
+        if self.level < _int(rules["stat_reset_free_below_level"]):
+            return 0
+        return _int(rules["stat_reset_gold_per_level"]) * self.level
 
     def reset_stats(self, pay_gold: bool) -> bool:
         if self.spent_points() == 0 or (pay_gold and self.gold < self.reset_cost()):
@@ -519,7 +551,7 @@ class Stats:
     # levels
 
     def xp_to_next(self) -> int:
-        return _int(character_rules()["xp_per_level"]) * self.level
+        return xp_for_level(self.level)
 
     def add_xp(self, amount: int) -> int:
         gained = 0
@@ -532,8 +564,7 @@ class Stats:
 
     def total_xp(self) -> int:
         """All XP ever earned, for the leaderboard."""
-        per_level = _int(character_rules()["xp_per_level"])
-        return per_level * (self.level - 1) * self.level // 2 + self.xp
+        return sum(xp_for_level(level) for level in range(1, self.level)) + self.xp
 
     # saving
 
@@ -594,13 +625,18 @@ class Stats:
 
     def _load_progress(self, data: dict) -> None:
         self.stat_points = {}
+        self.notice = ""
         saved = data.get("stat_points", {})
         if isinstance(saved, dict):
             for stat_id, value in saved.items():
+                stat_id = "dexterity" if stat_id == "agility" else stat_id
                 if stat_id in character_rules()["stats"] and _int(value) > 0:
-                    self.stat_points[stat_id] = _int(value)
+                    self.stat_points[stat_id] = self.stat_points.get(stat_id, 0) + _int(value)
         if self.free_points() < 0:
             self.stat_points = {}
+        if self.stat_points and _int(data.get("version", 1), 1) < STATS_REWORK_VERSION:
+            self.stat_points = {}
+            self.notice = STATS_REWORK_NOTICE
         skills = table("skills")
         self.learned_skills = []
         saved = data.get("learned_skills", [])

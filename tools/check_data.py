@@ -218,9 +218,17 @@ def check_translations(he: dict) -> None:
 
 def check_character(character: dict, items: dict, gear_slots: list) -> None:
     where = "character.json"
-    for key in ("base_max_hp", "base_damage", "xp_per_level", "move_speed", "attack_range",
+    for key in ("base_max_hp", "base_damage", "move_speed", "attack_range",
                 "attack_cooldown", "max_stamina", "bag_size", "respawn_seconds"):
         need_number(where, character, key, 0.01)
+    curve = character.get("xp_curve", {})
+    need_number(f"{where} xp_curve", curve, "base", 1.0)
+    need_number(f"{where} xp_curve", curve, "exponent", 1.0, 4.0)
+    gap = character.get("xp_level_gap", {})
+    for key in ("free_levels", "loss_per_level", "gain_per_level"):
+        need_number(f"{where} xp_level_gap", gap, key)
+    need_number(f"{where} xp_level_gap", gap, "lowest", 0.0, 1.0)
+    need_number(f"{where} xp_level_gap", gap, "highest", 1.0, 3.0)
     for key in ("hp_per_level", "damage_per_level", "stamina_regen_per_second",
                 "regen_delay_seconds", "regen_hp_per_second", "hit_invincible_seconds",
                 "defense"):
@@ -375,7 +383,7 @@ def check_progress(character: dict, items: dict, skills: dict, monsters: dict,
             and all(is_number(c) and 0 <= c < 100 for c in choices)):
         error(f"{where}: 'auto_potion_choices' must be percents below 100, with 0 for off")
     need_number(where, character, "auto_potion_seconds", 0.1)
-    for key in ("stat_points_per_level", "stat_reset_gold_per_level"):
+    for key in ("stat_points_per_level", "stat_reset_gold_per_level", "stat_reset_free_below_level"):
         value = need_number(where, character, key)
         if value is not None and value != int(value):
             error(f"{where}: '{key}' must be a whole number")

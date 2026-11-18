@@ -1,23 +1,26 @@
 extends SceneTree
 ## Writes the numbers player_stats.gd gives for a few heroes (every class, with
-## stat points, upgraded and set gear, job advancement, a title) to a JSON file.
+## stat points, upgraded and set gear, job advancement, a title, an old save from
+## before the stat rework) and the level rules (leveling.gd) to a JSON file.
 ## The server's tests compare its Python port with it (server/tests/fixtures).
 ## Run: godot --headless -s res://tests/stats_fixture.gd -- <output.json>
 
 const PlayerStats = preload("res://scripts/player/player_stats.gd")
+const Leveling = preload("res://scripts/player/leveling.gd")
 const WEAPONS := {"warrior": "training_sword", "mage": "oak_staff", "archer": "short_bow"}
 
 
 func _initialize() -> void:
-	var out: Array = []
+	var heroes: Array = []
 	for class_id in ["warrior", "mage", "archer"]:
-		for case in range(4):
+		for case in range(5):
 			var hero = PlayerStats.new()
 			hero.from_dict(_case_dict(class_id, case))
-			out.append(
+			heroes.append(
 				{
 					"class": class_id,
 					"case": case,
+					"input": _case_dict(class_id, case),
 					"max_hp": hero.max_hp(),
 					"attack": hero.attack_damage(),
 					"defense": hero.defense(),
@@ -29,9 +32,25 @@ func _initialize() -> void:
 					"crit_damage": hero.total("crit_damage"),
 					"accuracy": hero.total("accuracy"),
 					"attack_speed": hero.total("attack_speed"),
+					"xp_to_next": hero.xp_to_next(),
+					"notice": hero.notice,
 					"dict": hero.to_dict(),
 				}
 			)
+	var curve: Array = []
+	for level in range(1, 31):
+		curve.append(Leveling.xp_for_level(level))
+	var gaps: Array = []
+	for pair in [[1, 1], [1, 3], [1, 40], [5, 5], [7, 5], [8, 5], [10, 4], [12, 1], [60, 1]]:
+		gaps.append(
+			[
+				pair[0],
+				pair[1],
+				Leveling.gap_factor(pair[0], pair[1]),
+				Leveling.kill_xp(37, pair[0], pair[1]),
+			]
+		)
+	var out := {"heroes": heroes, "xp_for_level": curve, "gap": gaps}
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	var path: String = args[0] if not args.is_empty() else "user://stats.json"
 	var file := FileAccess.open(path, FileAccess.WRITE)
@@ -41,11 +60,23 @@ func _initialize() -> void:
 
 
 func _case_dict(class_id: String, case: int) -> Dictionary:
-	var data := {"version": 10, "class": class_id, "name": "Test", "level": 1, "xp": 3, "gold": 50}
+	var data := {
+		"version": PlayerStats.SAVE_VERSION,
+		"class": class_id,
+		"name": "Test",
+		"level": 1,
+		"xp": 3,
+		"gold": 50,
+	}
 	if case == 0:
 		return data
 	data["level"] = 7
-	data["stat_points"] = {"strength": 3, "agility": 4, "vitality": 2, "energy": 3}
+	data["stat_points"] = {"strength": 3, "dexterity": 4, "vitality": 2, "energy": 3}
+	if case == 4:
+		# A save from before the stat rework: the points come back.
+		data["version"] = 10
+		data["stat_points"] = {"strength": 3, "agility": 4}
+		return data
 	data["equipment"] = {
 		"weapon":
 		{
