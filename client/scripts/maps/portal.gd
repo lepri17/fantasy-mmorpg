@@ -14,21 +14,23 @@ const ARM_SECONDS := 0.25
 @export var to_spawn: String = "default"
 
 var _spin: float = 0.0
+## The name of the place it leads to (edge_exit.gd moves it).
+var _label: Label
 var _armed_in: float = ARM_SECONDS
 
 
 func _ready() -> void:
 	add_to_group("portals")
 	body_entered.connect(_on_body_entered)
-	var label := Label.new()
-	label.text = GameData.table("maps")["maps"].get(to_map, {}).get("name", to_map)
-	label.add_theme_font_size_override("font_size", 18)
-	label.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.15))
-	label.add_theme_constant_override("outline_size", 6)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.size = Vector2(200, 24)
-	label.position = Vector2(-100, -84)
-	add_child(label)
+	_label = Label.new()
+	_label.text = GameData.table("maps")["maps"].get(to_map, {}).get("name", to_map)
+	_label.add_theme_font_size_override("font_size", 18)
+	_label.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.15))
+	_label.add_theme_constant_override("outline_size", 6)
+	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_label.size = Vector2(200, 24)
+	_label.position = Vector2(-100, -84)
+	add_child(_label)
 
 
 func _process(delta: float) -> void:

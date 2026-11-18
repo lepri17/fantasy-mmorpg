@@ -688,6 +688,9 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
             inside(point, f"spawn '{spawn_name}'")
         for thing in data.get("objects", []):
             kind = thing.get("type")
+            if kind == "exit":
+                check_exit(where, map_id, thing, size, maps, spawns)
+                continue
             if kind not in OBJECT_TYPES:
                 error(f"{where}: object type '{kind}' is not one of {sorted(OBJECT_TYPES)}")
                 continue
@@ -714,6 +717,47 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                     if isinstance(point, list) and len(point) == 2 and all(
                             is_number(v) for v in point) and math.dist(point, thing["pos"]) < 80:
                         error(f"{where}: spawn '{spawn_name}' is too close to a portal")
+
+
+EXIT_SIDES = {"north", "south", "east", "west"}
+EXIT_DEPTH = 64  # client/scripts/maps/edge_exit.gd DEPTH
+EXIT_WALLS = (24, 80, 24, 20)  # edge_exit.gd WALLS: left, top, right, bottom
+
+
+def check_exit(where: str, map_id: str, exit_: dict, size: tuple, maps: dict, spawns: dict) -> None:
+    """A road at a map's edge into the next map (edge_exit.gd): a side, a span
+    along that edge, a map and spawn to arrive at, and no spawn inside it (the
+    hero would be sent straight back)."""
+    side, span = exit_.get("side"), exit_.get("span")
+    if side not in EXIT_SIDES:
+        error(f"{where}: exit side must be one of {sorted(EXIT_SIDES)}")
+        return
+    along = size[1] if side in ("east", "west") else size[0]
+    if not (isinstance(span, list) and len(span) == 2 and all(is_number(v) for v in span)
+            and 0 <= span[0] < span[1] <= along and span[1] - span[0] >= 96):
+        error(f"{where}: {side} exit 'span' must be [from, to] on that edge, at least 96 wide")
+        return
+    target = maps.get(exit_.get("to"), {})
+    if not target:
+        error(f"{where}: exit to unknown map '{exit_.get('to')}'")
+    elif exit_.get("spawn", "default") not in target.get("spawns", {}):
+        error(f"{where}: exit to '{exit_['to']}' names no spawn there")
+    else:
+        if not any(e.get("type") == "exit" and e.get("to") == map_id for e in target.get("objects", [])):
+            error(f"{where}: the road to '{exit_['to']}' has no road back from there")
+    reach = EXIT_DEPTH + 40  # the trigger, and a hero's body beside it
+    if side == "west":
+        box = (0, span[0], EXIT_WALLS[0] + reach, span[1])
+    elif side == "east":
+        box = (size[0] - EXIT_WALLS[2] - reach, span[0], size[0], span[1])
+    elif side == "north":
+        box = (span[0], 0, span[1], EXIT_WALLS[1] + reach)
+    else:
+        box = (span[0], size[1] - EXIT_WALLS[3] - reach, span[1], size[1])
+    for spawn_name, point in spawns.items():
+        if (isinstance(point, list) and len(point) == 2 and box[0] <= point[0] <= box[2]
+                and box[1] <= point[1] <= box[3]):
+            error(f"{where}: spawn '{spawn_name}' is inside the {side} road out")
 
 
 def check_art(items: dict) -> None:

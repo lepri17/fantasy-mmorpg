@@ -12,7 +12,7 @@ const STEPS := [
 	["loot", "Walk over what a monster drops to pick it up."],
 	["skill", "Tap a coloured skill button to use a skill."],
 	["bag", "Open your bag (top right) to see your gear."],
-	["town", "The portal on the left of the meadow leads to town."],
+	["town", "The road west out of the meadow leads to town."],
 	["auto", "AUTO hunts for you. Explore the world. Have fun!"],
 ]
 ## The last hint stays this long.

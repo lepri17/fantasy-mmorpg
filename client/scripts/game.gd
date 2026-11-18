@@ -21,6 +21,8 @@ static var invasions_enabled: bool = true
 ## Seconds since midnight to use for the sky instead of the clock (tests,
 ## screenshots), or below 0 for the clock.
 static var sky_seconds: float = -1.0
+## A short fade from dark as a new map comes in (0: none, for the screenshots).
+static var fade_seconds: float = 0.3
 
 ## The map node shown now (game_map.gd).
 var map = null
@@ -31,6 +33,7 @@ var _rain: CPUParticles2D
 var _music: AudioStreamPlayer
 ## The invasion window already used ("YYYY-MM-DD HH:MM"), so it comes once.
 var _invaded_window: String = ""
+var _fade: ColorRect
 
 @onready var _world: Node2D = $World
 @onready var _player = $World/Player
@@ -209,6 +212,23 @@ func _build_sky() -> void:
 
 func _arrive(point: Vector2) -> void:
 	_player.call("enter_map", map.map_id, point, map.spawn_point("default"), map.bounds())
+	_fade_in()
 	_play_music(_maps()[map.map_id].get("music", ""))
 	update_sky()
 	_hud.call("show_banner", map.display_name(), _maps()[map.map_id].get("levels", ""))
+
+
+## The new map comes in from dark (fade_seconds).
+func _fade_in() -> void:
+	if fade_seconds <= 0.0:
+		return
+	if _fade == null:
+		var layer := CanvasLayer.new()
+		layer.layer = 40
+		add_child(layer)
+		_fade = ColorRect.new()
+		_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		layer.add_child(_fade)
+	_fade.color = Color(0.02, 0.01, 0.04, 0.85)
+	create_tween().tween_property(_fade, "color:a", 0.0, fade_seconds)

@@ -61,7 +61,7 @@ static func next_map(from: String, to: String) -> String:
 		var current: String = queue.pop_front()
 		for entry in maps().get(current, {}).get("objects", []):
 			var neighbor: String = entry.get("to", "")
-			if entry.get("type") != "portal" or came_from.has(neighbor):
+			if not entry.get("type") in ["portal", "exit"] or came_from.has(neighbor):
 				continue
 			came_from[neighbor] = current
 			if neighbor == to:

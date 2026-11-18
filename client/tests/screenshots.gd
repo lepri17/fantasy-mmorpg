@@ -23,6 +23,7 @@ func _initialize() -> void:
 	SaveFile.path = SAVE_PATH
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	GameScript.invasions_enabled = false
+	GameScript.fade_seconds = 0.0
 	Settings.path = "user://screenshots_settings.cfg"
 	Settings.load_file()
 	var main: Node = load("res://scenes/main.tscn").instantiate()

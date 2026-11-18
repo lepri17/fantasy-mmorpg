@@ -161,15 +161,6 @@
           ]
         },
         {
-          "type": "portal",
-          "pos": [
-            1990,
-            704
-          ],
-          "to": "field",
-          "spawn": "west"
-        },
-        {
           "type": "npc",
           "id": "merchant",
           "pos": [
@@ -216,6 +207,16 @@
             1024,
             900
           ]
+        },
+        {
+          "type": "exit",
+          "side": "east",
+          "span": [
+            608,
+            800
+          ],
+          "to": "field",
+          "spawn": "west"
         }
       ],
       "teleport_price": 0,
@@ -249,19 +250,21 @@
       },
       "objects": [
         {
-          "type": "portal",
-          "pos": [
-            70,
-            768
+          "type": "exit",
+          "side": "west",
+          "span": [
+            640,
+            896
           ],
           "to": "town",
           "spawn": "east"
         },
         {
-          "type": "portal",
-          "pos": [
-            2490,
-            880
+          "type": "exit",
+          "side": "east",
+          "span": [
+            752,
+            1008
           ],
           "to": "forest",
           "spawn": "west"
@@ -569,15 +572,6 @@
           "id": "blue_slime"
         },
         {
-          "type": "portal",
-          "pos": [
-            70,
-            832
-          ],
-          "to": "field",
-          "spawn": "east"
-        },
-        {
           "type": "monster",
           "id": "spore_shroom",
           "pos": [
@@ -619,10 +613,21 @@
           "spawn": "default"
         },
         {
-          "type": "portal",
-          "pos": [
-            1280,
-            110
+          "type": "exit",
+          "side": "west",
+          "span": [
+            736,
+            928
+          ],
+          "to": "field",
+          "spawn": "east"
+        },
+        {
+          "type": "exit",
+          "side": "north",
+          "span": [
+            1120,
+            1440
           ],
           "to": "twilight",
           "spawn": "south"
@@ -824,24 +829,6 @@
         ]
       },
       "objects": [
-        {
-          "type": "portal",
-          "pos": [
-            1280,
-            1490
-          ],
-          "to": "forest",
-          "spawn": "north"
-        },
-        {
-          "type": "portal",
-          "pos": [
-            1280,
-            110
-          ],
-          "to": "grove",
-          "spawn": "south"
-        },
         {
           "type": "monster",
           "id": "bramble_boar",
@@ -1777,6 +1764,26 @@
             980
           ],
           "color": "cyan"
+        },
+        {
+          "type": "exit",
+          "side": "south",
+          "span": [
+            1120,
+            1440
+          ],
+          "to": "forest",
+          "spawn": "north"
+        },
+        {
+          "type": "exit",
+          "side": "north",
+          "span": [
+            1120,
+            1440
+          ],
+          "to": "grove",
+          "spawn": "south"
         }
       ],
       "teleport_price": 80,
@@ -1816,15 +1823,6 @@
         ]
       },
       "objects": [
-        {
-          "type": "portal",
-          "pos": [
-            1280,
-            1490
-          ],
-          "to": "twilight",
-          "spawn": "north"
-        },
         {
           "type": "monster",
           "id": "rootling",
@@ -2654,6 +2652,16 @@
             760
           ],
           "color": "violet"
+        },
+        {
+          "type": "exit",
+          "side": "south",
+          "span": [
+            1120,
+            1440
+          ],
+          "to": "twilight",
+          "spawn": "north"
         }
       ],
       "teleport_price": 120,

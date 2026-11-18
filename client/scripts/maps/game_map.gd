@@ -1,6 +1,7 @@
 extends Node2D
 ## One map. Its entry in res://data/maps.json (by map_id) gives its name,
-## where the warrior arrives (spawns) and what stands on it (objects). A map
+## where the warrior arrives (spawns) and what stands on it (objects). Roads
+## at its edges ("exit" objects) lead on into the next maps: the open world. A map
 ## with ground rows is built here: a TileMapLayer ground, edges and objects.
 ## A map with a scene of its own (the meadow) keeps its nodes and only gets
 ## the objects from the data (its portals).
@@ -10,6 +11,7 @@ const MapTiles := preload("res://scripts/maps/map_tiles.gd")
 const DungeonRun := preload("res://scripts/maps/dungeon_run.gd")
 const Torch := preload("res://scripts/world/torch.gd")
 const Glowcap := preload("res://scripts/world/glowcap.gd")
+const EdgeExit := preload("res://scripts/maps/edge_exit.gd")
 const SCENES := {
 	"tree": preload("res://scenes/maps/tree.tscn"),
 	"rock": preload("res://scenes/maps/rock.tscn"),
@@ -78,6 +80,9 @@ func is_safe() -> bool:
 
 
 func _add_object(thing: Dictionary) -> void:
+	if thing["type"] == "exit":
+		_add_exit(thing)
+		return
 	var node: Node2D
 	match thing["type"]:
 		"torch":
@@ -102,6 +107,17 @@ func _add_object(thing: Dictionary) -> void:
 			node.set("to_map", thing["to"])
 			node.set("to_spawn", thing.get("spawn", "default"))
 	add_child(node)
+
+
+## A road out at an edge into the next map (edge_exit.gd): the open world.
+func _add_exit(thing: Dictionary) -> void:
+	var road = EdgeExit.new()
+	road.side = thing["side"]
+	road.span = Vector2(thing["span"][0], thing["span"][1])
+	road.map_size = map_size()
+	road.to_map = thing["to"]
+	road.to_spawn = thing.get("spawn", "default")
+	add_child(road)
 
 
 ## Fireflies drifting over the whole map (maps.json "fireflies": how many).

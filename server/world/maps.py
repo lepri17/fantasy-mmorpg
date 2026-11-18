@@ -68,8 +68,12 @@ def maps() -> dict:
             teleport_price=int(info.get("teleport_price", 0)),
         )
         for thing in things:
-            x, y = float(thing["pos"][0]), float(thing["pos"][1])
             kind = thing["type"]
+            if kind == "exit":  # a road at the edge into the next map (edge_exit.gd spot)
+                x, y = _exit_spot(thing["side"], thing["span"], width, height)
+                place.portals.append({"pos": (x, y), "to": thing["to"], "spawn": thing.get("spawn", "default")})
+                continue
+            x, y = float(thing["pos"][0]), float(thing["pos"][1])
             if kind in OBSTACLES:
                 offset, radius = OBSTACLES[kind]
                 scale = float(thing.get("scale", 1.0))  # the deep forest's bigger trees
@@ -82,6 +86,19 @@ def maps() -> dict:
                 place.monsters.append((thing.get("id", "green_slime"), x, y))
         found[map_id] = place
     return found
+
+
+def _exit_spot(side: str, span, width: float, height: float) -> tuple:
+    """The middle of an edge road's trigger (client/scripts/maps/edge_exit.gd spot)."""
+    middle = (float(span[0]) + float(span[1])) / 2.0
+    depth, walls = 64.0, (24.0, 80.0, 24.0, 20.0)
+    if side == "west":
+        return walls[0] + depth / 2.0, middle
+    if side == "east":
+        return width - walls[2] - depth / 2.0, middle
+    if side == "north":
+        return middle, walls[1] + depth / 2.0
+    return middle, height - walls[3] - depth / 2.0
 
 
 def town() -> str:
