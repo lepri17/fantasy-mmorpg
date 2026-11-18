@@ -7,6 +7,7 @@ const ItemDb := preload("res://scripts/items/item_db.gd")
 const GameData := preload("res://scripts/data/game_data.gd")
 const AchievementRecord := preload("res://scripts/player/achievement_record.gd")
 const QuestLog := preload("res://scripts/player/quest_log.gd")
+const DungeonLog := preload("res://scripts/player/dungeon_log.gd")
 
 ## Version of what to_dict() writes. 1 = level, xp, gold, potions.
 ## 2 = adds the bag and the gear; potions live in the bag.
@@ -15,7 +16,8 @@ const QuestLog := preload("res://scripts/player/quest_log.gd")
 ## 5 = adds the map the warrior is on.
 ## 6 = adds the storage in town.
 ## 7 = adds quests.
-const SAVE_VERSION := 7
+## 8 = adds dungeon entries per day.
+const SAVE_VERSION := 8
 const POTION_ID := "red_potion"
 
 ## The numbers from res://data/character.json: health and damage without gear
@@ -48,6 +50,8 @@ var stat_points: Dictionary = {}
 var learned_skills: Array = []
 ## Stacks left with the storage keeper in town, like the bag but bigger.
 var storage: Array = []
+## Dungeon entries per day (dungeon_log.gd).
+var dungeons = DungeonLog.new()
 ## The map the warrior is on (maps.json id), or "" before he has been anywhere.
 var map_id: String = ""
 ## Drink a red potion by itself below this percent of HP (0 = off).
@@ -96,14 +100,14 @@ func defense() -> int:
 func crit_chance() -> float:
 	return (
 		float(rules.get("crit_chance", 0.0))
-		+ gear_bonus_fraction("crit_chance")
+		+ gear_total("crit_chance")
 		+ extra_bonus("crit_chance")
 	)
 
 
 ## Chance (0..1) that a monster's hit misses.
 func evasion() -> float:
-	return float(rules.get("evasion", 0.0)) + gear_bonus_fraction("evasion") + extra_bonus("evasion")
+	return float(rules.get("evasion", 0.0)) + gear_total("evasion") + extra_bonus("evasion")
 
 
 func max_stamina() -> float:
@@ -185,14 +189,9 @@ func gear_bonus(stat: String) -> int:
 	return roundi(gear_total(stat))
 
 
-## Sum of one fraction bonus ("crit_chance", "evasion") over the gear worn.
-func gear_bonus_fraction(stat: String) -> float:
-	return gear_total(stat)
-
-
 ## One stat over all the gear worn: own values, random options and upgrades.
 func gear_total(stat: String) -> float:
-	var total: float = set_bonus(stat)
+	var total: float = _set_bonus(stat)
 	for stack in equipment.values():
 		total += ItemDb.stat_of(stack, stat)
 	return total
@@ -209,7 +208,7 @@ func set_pieces() -> Dictionary:
 
 
 ## What the worn sets add to one stat: every bonus whose piece count is reached.
-func set_bonus(stat: String) -> float:
+func _set_bonus(stat: String) -> float:
 	var total: float = 0.0
 	var counts: Dictionary = set_pieces()
 	for set_id in counts:
@@ -223,11 +222,6 @@ func set_bonus(stat: String) -> float:
 ## Id of the item worn in a gear slot, or "".
 func equipped_id(slot: String) -> String:
 	return equipment.get(slot, {}).get("id", "")
-
-
-## The bag's stacks, for showing them.
-func bag_items() -> Array:
-	return bag
 
 
 func count_of(item_id: String) -> int:
@@ -421,7 +415,7 @@ func to_dict() -> Dictionary:
 		"auto_potion": auto_potion,
 		"map": map_id,
 		"storage": storage.duplicate(true),
-	}.merged(record.to_dict()).merged(quests.to_dict())
+	}.merged(record.to_dict()).merged(quests.to_dict()).merged(dungeons.to_dict())
 
 
 func from_dict(data: Dictionary) -> void:
@@ -469,6 +463,7 @@ func _load_progress(data: Dictionary) -> void:
 				learned_skills.append(skill_id)
 	record.from_dict(data)
 	quests.from_dict(data)
+	dungeons.from_dict(data)
 	map_id = str(data.get("map", ""))
 	storage = []
 	var saved_storage = data.get("storage", [])

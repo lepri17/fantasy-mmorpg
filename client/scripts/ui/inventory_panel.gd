@@ -71,7 +71,7 @@ func refresh(stats, look: Texture2D = null) -> void:
 	_stats = stats
 	for slot_name in gear_slots:
 		gear_slots[slot_name].show_stack(stats.equipment.get(slot_name, {}))
-	var items: Array = stats.bag_items()
+	var items: Array = stats.bag
 	for i in bag_slots.size():
 		bag_slots[i].show_stack(items[i] if i < items.size() else {})
 	_gold_label.text = str(stats.gold)

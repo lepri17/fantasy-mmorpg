@@ -289,6 +289,10 @@
         "west": [
           200,
           832
+        ],
+        "east": [
+          2330,
+          700
         ]
       },
       "objects": [
@@ -582,9 +586,136 @@
             2250,
             1050
           ]
+        },
+        {
+          "type": "portal",
+          "pos": [
+            2480,
+            700
+          ],
+          "to": "cellar",
+          "spawn": "default"
         }
       ],
       "teleport_price": 40
+    },
+    "cellar": {
+      "name": "Old Cellar",
+      "levels": "Dungeon, Lv 5+",
+      "teleport_price": 0,
+      "ground": [
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc",
+        "cccccccccccccccc"
+      ],
+      "spawns": {
+        "default": [
+          300,
+          640
+        ]
+      },
+      "objects": [
+        {
+          "type": "rock",
+          "pos": [
+            700,
+            380
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            700,
+            900
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1350,
+            380
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1350,
+            900
+          ]
+        },
+        {
+          "type": "portal",
+          "pos": [
+            110,
+            640
+          ],
+          "to": "forest",
+          "spawn": "east"
+        }
+      ],
+      "dungeon": {
+        "entries_per_day": 3,
+        "area": [
+          600,
+          300,
+          1800,
+          1000
+        ],
+        "waves": [
+          [
+            {
+              "monster": "green_slime",
+              "count": 5
+            }
+          ],
+          [
+            {
+              "monster": "blue_slime",
+              "count": 3
+            },
+            {
+              "monster": "spore_shroom",
+              "count": 2
+            }
+          ],
+          [
+            {
+              "monster": "blue_slime",
+              "count": 4
+            },
+            {
+              "monster": "spore_shroom",
+              "count": 3
+            }
+          ]
+        ],
+        "boss": "slime_king",
+        "reward": {
+          "xp": 600,
+          "gold": 400,
+          "items": [
+            {
+              "id": "moon_stone",
+              "count": 1
+            }
+          ]
+        },
+        "exit": {
+          "to": "town",
+          "spawn": "default",
+          "pos": [
+            1024,
+            640
+          ]
+        }
+      }
     }
   }
 }

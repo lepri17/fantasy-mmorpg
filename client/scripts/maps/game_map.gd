@@ -7,6 +7,7 @@ extends Node2D
 
 const GameData := preload("res://scripts/data/game_data.gd")
 const MapTiles := preload("res://scripts/maps/map_tiles.gd")
+const DungeonRun := preload("res://scripts/maps/dungeon_run.gd")
 const SCENES := {
 	"tree": preload("res://scenes/maps/tree.tscn"),
 	"rock": preload("res://scenes/maps/rock.tscn"),
@@ -37,6 +38,11 @@ func _ready() -> void:
 		_add_object(thing)
 	if not is_safe():
 		call_deferred("_bake_navigation")
+	if data.has("dungeon"):
+		var run: Node = DungeonRun.new()
+		run.name = "DungeonRun"
+		add_child(run)
+		run.setup(data["dungeon"])
 
 
 ## The map's size in pixels.

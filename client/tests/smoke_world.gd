@@ -279,3 +279,47 @@ func run(test, main, player, hud) -> void:
 	main.end_invasion()
 	await t._frames(2)
 	t._check(t.get_nodes_in_group("invaders").is_empty(), "when the time is up they run off")
+
+	# --- the Old Cellar dungeon (W6): waves, the boss, the reward, entries per day
+	main.change_map("cellar")
+	await t._frames(3)
+	var run = main.map.get_node_or_null("DungeonRun")
+	t._check(
+		(
+			main.map.map_id == "cellar"
+			and run != null
+			and player.stats.dungeons.runs["cellar"]["count"] == 1
+		),
+		"going into the Old Cellar uses one of today's entries"
+	)
+	if run != null:
+		run.wave_delay = 0.05
+		var gold_before_run: int = player.stats.gold
+		for _i in 600:
+			await t._frames(1)
+			for monster in t.get_nodes_in_group("enemies"):
+				if not monster.is_dead:
+					monster.take_damage(99999, Vector2.ZERO, false, player)
+			if run.cleared:
+				break
+		t._check(
+			run.cleared and run.wave == 3, "three waves and then the boss: the cellar is cleared"
+		)
+		t._check(player.stats.gold >= gold_before_run + 400, "clearing it pays the reward")
+		await t._frames(2)
+		var way_out: Array = t.get_nodes_in_group("portals").filter(
+			func(portal): return portal.to_map == "town"
+		)
+		t._check(way_out.size() == 1, "a portal out to town opens")
+	main.change_map("town")
+	await t._frames(3)
+	var today: String = Time.get_date_string_from_system()
+	player.stats.dungeons.runs["cellar"] = {"date": today, "count": 3}
+	main.change_map("cellar")
+	await t._frames(3)
+	t._check(main.map.map_id == "town", "after 3 entries in a day the cellar stays shut")
+	var runs_saved = PlayerStats.new()
+	runs_saved.from_dict(player.stats.to_dict())
+	t._check(
+		runs_saved.dungeons.runs == player.stats.dungeons.runs, "entries survive saving (version 8)"
+	)

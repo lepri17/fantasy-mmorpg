@@ -494,6 +494,26 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                     and inside(area[2:], "invasion area corner") and area[0] < area[2]
                     and area[1] < area[3]):
                 error(f"{where}: invasion area must be [left, top, right, bottom] on the map")
+        dungeon = data.get("dungeon")
+        if dungeon is not None:
+            need_number(where + " dungeon", dungeon, "entries_per_day", 1, 50)
+            area = dungeon.get("area", [])
+            if not (len(area) == 4 and inside(area[:2], "dungeon area corner")
+                    and inside(area[2:], "dungeon area corner")):
+                error(f"{where}: dungeon area must be [left, top, right, bottom] on the map")
+            if not dungeon.get("waves"):
+                error(f"{where}: a dungeon needs waves")
+            for wave in dungeon.get("waves", []):
+                for group in wave:
+                    if group.get("monster") not in monsters:
+                        error(f"{where}: dungeon wave monster '{group.get('monster')}' is unknown")
+                    need_number(where + " wave", group, "count", 1, 30)
+            if dungeon.get("boss") not in monsters:
+                error(f"{where}: dungeon boss '{dungeon.get('boss')}' is unknown")
+            exit_portal = dungeon.get("exit", {})
+            if exit_portal.get("to") not in maps:
+                error(f"{where}: dungeon exit leads to unknown map '{exit_portal.get('to')}'")
+            inside(exit_portal.get("pos"), "dungeon exit")
         spawns = data.get("spawns", {})
         if "default" not in spawns:
             error(f"{where}: needs a 'default' spawn")

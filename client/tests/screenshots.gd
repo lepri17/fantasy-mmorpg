@@ -54,6 +54,24 @@ func _initialize() -> void:
 	main.change_map("forest", "west")
 	await _frames(20)
 	await _shot("09_forest")
+	var king = get_first_node_in_group("bosses")
+	player.global_position = king.global_position + Vector2(-260, 40)
+	await _frames(30)
+	king.call("_start_slam")
+	await _frames(20)
+	await _shot("11_boss")
+	var shroom = get_nodes_in_group("enemies").filter(
+		func(enemy): return enemy.monster_id == "spore_shroom"
+	)[0]
+	player.global_position = shroom.global_position + Vector2(-220, 0)
+	for _i in 120:
+		await process_frame
+		if not get_nodes_in_group("projectiles").is_empty():
+			break
+	await _shot("12_spore")
+	main.change_map("cellar")
+	await _frames(240)
+	await _shot("13_cellar")
 	player.take_damage(99999)
 	await _frames(20)
 	await _shot("10_death")

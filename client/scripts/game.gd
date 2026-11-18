@@ -88,8 +88,11 @@ func end_invasion() -> void:
 
 ## Takes the warrior to another map, after the current physics step.
 func change_map(map_id: String, spawn: String = "default") -> void:
-	if _maps().has(map_id):
-		call_deferred("_swap_map", map_id, spawn)
+	if not _maps().has(map_id):
+		return
+	if _maps()[map_id].has("dungeon") and not _player.call("enter_dungeon", map_id):
+		return
+	call_deferred("_swap_map", map_id, spawn)
 
 
 ## The death screen's button: get up at once, in town.

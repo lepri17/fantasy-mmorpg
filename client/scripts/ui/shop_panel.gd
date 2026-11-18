@@ -84,7 +84,7 @@ func show_page(page_name: String) -> void:
 func refresh(stats) -> void:
 	_stats = stats
 	_gold_label.text = "%d G" % stats.gold
-	var items: Array = stats.bag_items()
+	var items: Array = stats.bag
 	for i in bag_slots.size():
 		bag_slots[i].show_stack(items[i] if i < items.size() else {})
 	if _selected != null and _selected.item_id == "":

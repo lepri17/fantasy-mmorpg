@@ -327,6 +327,40 @@ func cycle_auto_potion(_unused: Variant = null) -> void:
 	_progress_changed()
 
 
+## W6: going into a dungeon uses one of its entries for today. Returns false,
+## and says so, when none are left.
+func enter_dungeon(map_id: String) -> bool:
+	var map_data: Dictionary = GameData.table("maps")["maps"][map_id]
+	var per_day: int = int(map_data["dungeon"]["entries_per_day"])
+	var today: String = QuestLog.today()
+	var left: int = stats.dungeons.entries_left(map_id, per_day, today)
+	if left <= 0:
+		_say(
+			"%s lets you in %d times a day. Come back tomorrow." % [map_data["name"], per_day],
+			WARNING_COLOR
+		)
+		return false
+	stats.dungeons.count_entry(map_id, today)
+	_say("Entering %s (%d entries left today)." % [map_data["name"], left - 1], QUEST_COLOR)
+	_progress_changed()
+	return true
+
+
+## A cleared dungeon's reward: items (if they fit), gold and XP.
+func dungeon_reward(reward: Dictionary) -> void:
+	if stats.room_for(reward.get("items", [])):
+		for entry in reward.get("items", []):
+			stats.add_item(entry["id"], int(entry["count"]))
+			_say("Got %s x%d." % [_item_name(entry["id"]), int(entry["count"])], QUEST_COLOR)
+	else:
+		_say("Your bag was full, so the reward items stayed behind.", WARNING_COLOR)
+	if int(reward.get("gold", 0)) > 0:
+		add_gold(int(reward["gold"]))
+	if int(reward.get("xp", 0)) > 0:
+		gain_xp(int(reward["xp"]))
+	_progress_changed()
+
+
 ## Takes a quest a townsperson offers.
 func accept_quest(quest_id: String) -> void:
 	if stats.quests.start(quest_id, stats, QuestLog.today()):
