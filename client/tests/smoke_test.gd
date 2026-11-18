@@ -13,6 +13,7 @@ const SaveFile = preload("res://scripts/player/save_file.gd")
 const CombatRules = preload("res://scripts/combat/combat_rules.gd")
 const SlimeScript = preload("res://scripts/enemies/slime.gd")
 const AchievementRecord = preload("res://scripts/player/achievement_record.gd")
+const ItemDb = preload("res://scripts/items/item_db.gd")
 
 var _failures: int = 0
 
@@ -197,7 +198,7 @@ func _run() -> void:
 	sword_slot.emit_signal("double_tapped", sword_slot)
 	await _frames(2)
 	_check(
-		player.stats.equipment.get("weapon", "") == "training_sword",
+		player.stats.equipped_id("weapon") == "training_sword",
 		"a double tap in the bag puts the sword back on"
 	)
 	_check(player.stats.attack_damage() == attack_with_sword, "the attack is back")
@@ -295,6 +296,61 @@ func _run() -> void:
 			and trainee.to_dict()["version"] == 3
 		),
 		"stat points, learned skills and titles survive saving (version 3)"
+	)
+
+	# --- gear with a rarity and random options, compared with what is worn (save version 4)
+	seed(7)
+	var rarities_seen: Dictionary = {}
+	var options_match := true
+	for _i in 300:
+		var piece: Dictionary = ItemDb.roll_gear("training_sword")
+		rarities_seen[piece["rarity"]] = true
+		var wanted: int = int(ItemDb.rarities[piece["rarity"]]["options"])
+		options_match = options_match and piece["options"].size() == wanted
+	_check(
+		rarities_seen.size() >= 3 and options_match,
+		"dropped gear rolls rarities, each with its number of options (%s)" % str(rarities_seen.keys())
+	)
+	var sharp_options := {"attack": 3, "crit_chance": 0.02}
+	var sharp: Dictionary = ItemDb.gear("training_sword", "rare", 0, sharp_options)
+	_check(is_equal_approx(ItemDb.stat_of(sharp, "attack"), 7.0), "a Rare sword adds its options")
+	_check(ItemDb.display_name(sharp, true) == "Rare Training Sword", "its name shows the rarity")
+	while player.stats.bag.size() >= 14:
+		player.stats.bag.pop_back()
+	var attack_before_rare: int = player.stats.attack_damage()
+	_check(player.add_stack(sharp), "a Rare sword goes into the bag")
+	var sharp_index: int = player.stats.bag.size() - 1
+	inventory.refresh(player.stats, null)
+	inventory.call("_on_slot_tapped", inventory.bag_slots[sharp_index])
+	var details: String = inventory.get("_info_label").text
+	_check(
+		"Compared with your Training Sword" in details and "+7 Attack (+3)" in details,
+		"the details compare it with the worn sword (%s)" % details.replace("\n", " / ")
+	)
+	player.equip_from_bag(sharp_index)
+	_check(
+		player.stats.attack_damage() == attack_before_rare + 3
+		and player.stats.equipment["weapon"]["rarity"] == "rare",
+		"wearing the Rare sword adds its options to the attack"
+	)
+	var saved_gear = PlayerStats.new()
+	saved_gear.from_dict(player.stats.to_dict())
+	_check(
+		saved_gear.equipment["weapon"] == player.stats.equipment["weapon"],
+		"gear keeps its rarity and options after saving (version 4)"
+	)
+	var v3_save = PlayerStats.new()
+	v3_save.from_dict(
+		{
+			"version": 3,
+			"level": 2,
+			"equipment": {"weapon": "training_sword"},
+			"bag": [{"id": "leather_boots", "count": 1}],
+		}
+	)
+	_check(
+		v3_save.equipped_id("weapon") == "training_sword" and v3_save.bag[0]["rarity"] == "common",
+		"a version 3 save turns its gear into common pieces"
 	)
 
 	# --- the character window: C opens it, + spends a point, titles change
@@ -399,6 +455,24 @@ func _run() -> void:
 	loaded.from_dict(SaveFile.load_data())
 	_check(loaded.level == player.stats.level, "saved level matches (level %d)" % loaded.level)
 	_check(loaded.gold == player.stats.gold, "saved gold matches")
+
+	# --- monsters drop gear with a rolled rarity; picking it up keeps it whole
+	var looter = _first_alive(enemies)
+	looter.gear_drops = {"chance": 1.0, "items": ["leather_boots"]}
+	looter.call("_maybe_drop_gear")
+	await _frames(2)
+	var gear_pickup = null
+	for pickup in get_nodes_in_group("pickups"):
+		if pickup.get("item_id") == "leather_boots" and not pickup.get("stack").is_empty():
+			gear_pickup = pickup
+	_check(gear_pickup != null, "a monster can drop gear")
+	if gear_pickup != null:
+		var dropped: Dictionary = gear_pickup.get("stack").duplicate(true)
+		while player.stats.bag.size() >= 15:
+			player.stats.bag.pop_back()
+		player.global_position = gear_pickup.global_position
+		await _frames(4)
+		_check(player.stats.bag.has(dropped), "picking dropped gear up keeps its rarity and options")
 
 	# --- skills from skills.json, dash, statuses, telegraphed slam
 	await _frames(70)

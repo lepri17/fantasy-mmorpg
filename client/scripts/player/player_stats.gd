@@ -10,7 +10,8 @@ const AchievementRecord := preload("res://scripts/player/achievement_record.gd")
 ## Version of what to_dict() writes. 1 = level, xp, gold, potions.
 ## 2 = adds the bag and the gear; potions live in the bag.
 ## 3 = adds stat points, skills learned from books, achievements and the title.
-const SAVE_VERSION := 3
+## 4 = gear keeps its own rarity, upgrade level and random options.
+const SAVE_VERSION := 4
 const POTION_ID := "red_potion"
 
 ## The numbers from res://data/character.json: health and damage without gear
@@ -25,7 +26,7 @@ static var stat_rules: Dictionary = rules["stats"]
 var level: int = 1
 var xp: int = 0
 var gold: int = 0
-## Gear slot -> item id. A slot with nothing on it is not in the dictionary.
+## Gear slot -> the worn entry ({"id", "count": 1, "rarity", "plus", "options"}).
 var equipment: Dictionary = {}
 ## Up to bag_size stacks of {"id": item id, "count": n}, with no gaps.
 ## Gear never stacks; other items (potions) share one stack.
@@ -88,12 +89,12 @@ func evasion() -> float:
 
 
 func max_stamina() -> float:
-	return float(rules["max_stamina"]) + extra_bonus("max_stamina")
+	return float(rules["max_stamina"]) + gear_total("max_stamina") + extra_bonus("max_stamina")
 
 
 ## Extra skill damage as a fraction (0.1 = +10%).
 func skill_damage_bonus() -> float:
-	return extra_bonus("skill_damage")
+	return gear_total("skill_damage") + extra_bonus("skill_damage")
 
 
 ## What the stat points and the title add to one number ("attack", "max_hp",
@@ -163,18 +164,25 @@ func learn_skill(skill_id: String) -> bool:
 
 ## Sum of one whole-number bonus ("attack", "max_hp", "defense") over the gear worn.
 func gear_bonus(stat: String) -> int:
-	var total: int = 0
-	for item_id in equipment.values():
-		total += int(ItemDb.items[item_id].get(stat, 0))
-	return total
+	return roundi(gear_total(stat))
 
 
 ## Sum of one fraction bonus ("crit_chance", "evasion") over the gear worn.
 func gear_bonus_fraction(stat: String) -> float:
+	return gear_total(stat)
+
+
+## One stat over all the gear worn: own values, random options and upgrades.
+func gear_total(stat: String) -> float:
 	var total: float = 0.0
-	for item_id in equipment.values():
-		total += float(ItemDb.items[item_id].get(stat, 0.0))
+	for stack in equipment.values():
+		total += ItemDb.stat_of(stack, stat)
 	return total
+
+
+## Id of the item worn in a gear slot, or "".
+func equipped_id(slot: String) -> String:
+	return equipment.get(slot, {}).get("id", "")
 
 
 ## The bag's stacks, for showing them.
@@ -207,21 +215,35 @@ func add_item(item_id: String, count: int = 1) -> bool:
 	if bag.size() + count > bag_size:
 		return false
 	for _i in count:
-		bag.append({"id": item_id, "count": 1})
+		bag.append(ItemDb.gear(item_id))
 	return true
 
 
-## Takes one item out of a bag slot. Returns its id, or "" if the slot is empty.
-func take_from_bag(index: int) -> String:
+## Puts an entry in the bag as it is (gear keeps its rarity, upgrades and
+## options). Returns false, and changes nothing, when it does not fit.
+func add_stack(stack: Dictionary) -> bool:
+	var entry: Dictionary = ItemDb.clean_stack(stack)
+	if entry.is_empty():
+		return false
+	if not ItemDb.is_gear(entry["id"]):
+		return add_item(entry["id"], int(entry["count"]))
+	if bag.size() >= bag_size:
+		return false
+	bag.append(entry)
+	return true
+
+
+## Takes one item out of a bag slot and returns its entry, or {} for an empty slot.
+func take_from_bag(index: int) -> Dictionary:
 	if index < 0 or index >= bag.size():
-		return ""
-	var item_id: String = bag[index]["id"]
-	var left: int = int(bag[index]["count"]) - 1
+		return {}
+	var stack: Dictionary = bag[index]
+	var left: int = int(stack["count"]) - 1
 	if left <= 0:
 		bag.remove_at(index)
-	else:
-		bag[index]["count"] = left
-	return item_id
+		return stack
+	stack["count"] = left
+	return {"id": stack["id"], "count": 1}
 
 
 ## Wears the gear in a bag slot. Gear already worn in that place goes to the
@@ -229,35 +251,35 @@ func take_from_bag(index: int) -> String:
 func equip(index: int) -> bool:
 	if index < 0 or index >= bag.size():
 		return false
-	var item_id: String = bag[index]["id"]
-	var slot: String = ItemDb.items[item_id].get("slot", "")
+	var stack: Dictionary = bag[index]
+	var slot: String = ItemDb.items[stack["id"]].get("slot", "")
 	if slot == "":
 		return false
-	var worn: String = equipment.get(slot, "")
-	equipment[slot] = item_id
-	if worn == "":
+	var worn: Dictionary = equipment.get(slot, {})
+	equipment[slot] = stack
+	if worn.is_empty():
 		bag.remove_at(index)
 	else:
-		bag[index] = {"id": worn, "count": 1}
+		bag[index] = worn
 	return true
 
 
 ## Moves worn gear into the bag. Returns false if nothing is worn there or the
 ## bag is full.
 func unequip(slot: String) -> bool:
-	var item_id: String = equipment.get(slot, "")
-	if item_id == "" or bag.size() >= bag_size:
+	var worn: Dictionary = equipment.get(slot, {})
+	if worn.is_empty() or bag.size() >= bag_size:
 		return false
 	equipment.erase(slot)
-	bag.append({"id": item_id, "count": 1})
+	bag.append(worn)
 	return true
 
 
-## Takes worn gear off without keeping it (it is dropped). Returns its id, or "".
-func remove_equipped(slot: String) -> String:
-	var item_id: String = equipment.get(slot, "")
+## Takes worn gear off without keeping it (it is dropped). Returns its entry, or {}.
+func remove_equipped(slot: String) -> Dictionary:
+	var worn: Dictionary = equipment.get(slot, {})
 	equipment.erase(slot)
-	return item_id
+	return worn
 
 
 ## XP needed to finish the current level.
@@ -283,7 +305,7 @@ func to_dict() -> Dictionary:
 		"xp": xp,
 		"gold": gold,
 		"bag": bag.duplicate(true),
-		"equipment": equipment.duplicate(),
+		"equipment": equipment.duplicate(true),
 		"stat_points": stat_points.duplicate(),
 		"learned_skills": learned_skills.duplicate(),
 	}.merged(record.to_dict())
@@ -304,14 +326,15 @@ func from_dict(data: Dictionary) -> void:
 	var saved_gear = data.get("equipment", {})
 	if saved_gear is Dictionary:
 		for slot in saved_gear:
-			var item_id = saved_gear[slot]
-			if ItemDb.items.has(item_id) and ItemDb.items[item_id].get("slot", "") == slot:
-				equipment[slot] = item_id
+			# Before version 4 a worn piece was only its item id.
+			var saved = saved_gear[slot]
+			var worn: Dictionary = ItemDb.clean_stack(saved if saved is Dictionary else {"id": saved})
+			if not worn.is_empty() and ItemDb.items[worn["id"]].get("slot", "") == slot:
+				equipment[slot] = worn
 	var saved_bag = data.get("bag", [])
 	if saved_bag is Array:
 		for stack in saved_bag:
-			if stack is Dictionary and ItemDb.items.has(stack.get("id", "")):
-				add_item(stack["id"], int(stack.get("count", 1)))
+			add_stack(stack if stack is Dictionary else {})
 
 
 ## Version 3 parts. Anything unknown or out of range is left out.
@@ -336,7 +359,9 @@ func _load_progress(data: Dictionary) -> void:
 
 ## Starting gear and bag from the data.
 func _start_fresh() -> void:
-	equipment = (rules["starting_gear"] as Dictionary).duplicate()
+	equipment = {}
+	for slot in rules["starting_gear"]:
+		equipment[slot] = ItemDb.gear(rules["starting_gear"][slot])
 	bag = []
 	for stack in rules["starting_bag"]:
 		add_item(stack["id"], int(stack["count"]))

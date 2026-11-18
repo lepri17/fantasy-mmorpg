@@ -14,6 +14,7 @@ const Telegraph = preload("res://scripts/combat/telegraph.gd")
 const CRIT_COLOR := Color(1.0, 0.55, 0.2)
 const MISS_COLOR := Color(0.8, 0.85, 0.95)
 const PICKUP_SCENE := preload("res://scenes/items/pickup.tscn")
+const ItemDb := preload("res://scripts/items/item_db.gd")
 
 const KNOCKBACK_SPEED := 240.0
 const KNOCKBACK_DECAY := 1400.0
@@ -48,6 +49,8 @@ var gold_min: int = 1
 var gold_max: int = 5
 ## [{"item": item id, "chance": 0..1}, ...]
 var drops: Array = []
+## {"chance", "items"}: gear that can drop, with a random rarity.
+var gear_drops: Dictionary = {}
 ## Status put on the warrior by a landed hit, or {}: {"status", "chance", "seconds", "value"}.
 var on_hit: Dictionary = {}
 ## A telegraphed slam instead of every Nth attack, or {}:
@@ -286,6 +289,7 @@ func _die() -> void:
 	for drop in drops:
 		if randf() < float(drop["chance"]):
 			_drop("item", 1, drop["item"])
+	_maybe_drop_gear()
 	await get_tree().create_timer(respawn_seconds).timeout
 	_respawn()
 
@@ -353,10 +357,32 @@ func _load_monster_data() -> void:
 	gold_min = int(data["gold"][0])
 	gold_max = int(data["gold"][1])
 	drops = data.get("drops", [])
+	gear_drops = data.get("gear_drops", {})
 	on_hit = data.get("on_hit", {})
 	special = data.get("special", {})
 	var rgba: Array = data.get("tint", [1, 1, 1, 1])
 	tint = Color(rgba[0], rgba[1], rgba[2], rgba[3])
+
+
+## Gear drops now and then; elites drop it more often and roll better rarity.
+func _maybe_drop_gear() -> void:
+	var pool: Array = gear_drops.get("items", [])
+	var chance: float = float(gear_drops.get("chance", 0.0))
+	var rolls: int = 1
+	if is_elite:
+		var elite: Dictionary = CombatRules.settings["elite"]
+		chance += float(elite.get("gear_chance", 0.0))
+		rolls = int(elite.get("rarity_rolls", 1))
+	if pool.is_empty() or randf() >= chance:
+		return
+	var piece: Dictionary = ItemDb.roll_gear(pool.pick_random(), rolls)
+	var pickup: Node2D = PICKUP_SCENE.instantiate()
+	pickup.set("kind", "item")
+	pickup.set("item_id", piece["id"])
+	pickup.set("stack", piece)
+	pickup.set("lifetime", 60.0)
+	pickup.position = position + Vector2(randf_range(-24.0, 24.0), randf_range(-16.0, 16.0))
+	get_parent().call_deferred("add_child", pickup)
 
 
 func _drop(kind: String, amount: int, item_id: String = "") -> void:

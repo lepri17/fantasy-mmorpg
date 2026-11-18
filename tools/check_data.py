@@ -259,6 +259,44 @@ def check_progress(character: dict, items: dict, skills: dict, monsters: dict,
         check_bonus(place, achievement.get("bonus", {}))
 
 
+def check_gear(items_data: dict, monsters: dict, elite: dict) -> None:
+    """Rarities, the random options on dropped gear, and the gear drop tables."""
+    rarities = items_data.get("rarities", {})
+    if not isinstance(rarities, dict) or not rarities:
+        error("items.json: 'rarities' must be a non-empty object")
+        rarities = {}
+    for rarity_id, rarity in rarities.items():
+        where = f"items.json: rarity '{rarity_id}'"
+        if not isinstance(rarity.get("name"), str):
+            error(f"{where}: needs a 'name'")
+        color = rarity.get("color")
+        if not (isinstance(color, list) and len(color) == 4 and all(is_number(c) for c in color)):
+            error(f"{where}: 'color' must be [r, g, b, a]")
+        need_number(where, rarity, "options", 0, len(items_data.get("random_options", {})))
+        need_number(where, rarity, "weight", 0.0001)
+    for stat, span in items_data.get("random_options", {}).items():
+        if stat not in BONUS_KEYS:
+            error(f"items.json: random option '{stat}' is not one of {sorted(BONUS_KEYS)}")
+        if not (isinstance(span, list) and len(span) == 2 and all(is_number(v) for v in span)
+                and 0 < span[0] <= span[1]):
+            error(f"items.json: random option '{stat}' must be [low, high] with 0 < low <= high")
+    gear_ids = {i for i, item in items_data.get("items", {}).items() if item.get("slot")}
+    for monster_id, monster in monsters.items():
+        table = monster.get("gear_drops")
+        if table is None:
+            continue
+        where = f"monsters.json: '{monster_id}' gear_drops"
+        need_number(where, table, "chance", 0.0, 1.0)
+        pool = table.get("items", [])
+        if not pool:
+            error(f"{where}: 'items' must list gear")
+        for item_id in pool:
+            if item_id not in gear_ids:
+                error(f"{where}: '{item_id}' is not gear")
+    need_number("combat.json elite", elite, "gear_chance", 0.0, 1.0)
+    need_number("combat.json elite", elite, "rarity_rolls", 1, 5)
+
+
 def check_art(items: dict) -> None:
     """The warrior's gear parts must name real items."""
     sys.path.insert(0, str(ROOT / "tools"))
@@ -298,6 +336,7 @@ def main() -> int:
             error(f"combat.json elite: drop '{drop.get('item')}' is not an item")
     check_progress(load("character"), items, load("skills"), load("monsters"),
                    load("achievements"))
+    check_gear(items_data, load("monsters"), elite)
     check_art(items)
     if errors:
         print("DATA PROBLEMS:")

@@ -26,6 +26,8 @@
         "item": "rebirth_scroll",
         "chance": 0.15
       }
-    ]
+    ],
+    "gear_chance": 0.5,
+    "rarity_rolls": 2
   }
 }

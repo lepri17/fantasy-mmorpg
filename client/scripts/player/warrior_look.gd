@@ -10,10 +10,12 @@ const ATLAS_PATH := "res://assets/characters/warrior/warrior_parts.png"
 static var _atlas: Image = null
 
 
-## equipment: gear slot -> item id, as in player_stats.gd.
+## equipment: gear slot -> worn entry (or just its item id), as in player_stats.gd.
 static func build(equipment: Dictionary) -> ImageTexture:
 	var atlas: Image = _parts_atlas()
-	var worn: Array = equipment.values()
+	var worn: Array = []
+	for entry in equipment.values():
+		worn.append(entry["id"] if entry is Dictionary else entry)
 	var sheet := Image.create(
 		Parts.COLUMNS * Parts.CELL, Parts.DIRECTIONS.size() * Parts.CELL, false, Image.FORMAT_RGBA8
 	)

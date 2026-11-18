@@ -27,7 +27,18 @@
       1.0
     ],
     "defense": 0,
-    "evasion": 0.05
+    "evasion": 0.05,
+    "gear_drops": {
+      "chance": 0.03,
+      "items": [
+        "red_headband",
+        "training_sword",
+        "leather_gloves",
+        "red_cape",
+        "blue_plate",
+        "leather_boots"
+      ]
+    }
   },
   "blue_slime": {
     "name": "Blue Slime",
@@ -73,6 +84,17 @@
       "radius": 80,
       "warning_seconds": 0.8,
       "damage_multiplier": 2.0
+    },
+    "gear_drops": {
+      "chance": 0.06,
+      "items": [
+        "red_headband",
+        "training_sword",
+        "leather_gloves",
+        "red_cape",
+        "blue_plate",
+        "leather_boots"
+      ]
     }
   }
 }

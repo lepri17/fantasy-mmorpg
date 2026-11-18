@@ -13,6 +13,8 @@ const ICON_SCALE_ON_GROUND := 0.55
 var kind: String = "gold"
 var item_id: String = ""
 var amount: int = 1
+## For gear: the whole entry (rarity, upgrades, options) that goes into the bag.
+var stack: Dictionary = {}
 ## Seconds before it disappears.
 var lifetime: float = 30.0
 ## Seconds before it can be picked up, so a dropped item is not picked straight
@@ -40,9 +42,18 @@ func _ready() -> void:
 			target_scale = ICON_SCALE_ON_GROUND
 	else:
 		_sprite.texture = COIN_TEXTURE
+	if not stack.is_empty() and ItemDb.is_special(stack):
+		queue_redraw()  # a glow in the rarity color under the item
 	_sprite.scale = Vector2.ONE * target_scale * 0.3
 	create_tween().tween_property(_sprite, "scale", Vector2.ONE * target_scale, 0.25)
 	body_entered.connect(_on_body_entered)
+
+
+func _draw() -> void:
+	if not stack.is_empty() and ItemDb.is_special(stack):
+		var glow: Color = ItemDb.rarity_color(stack)
+		draw_circle(Vector2(0, 8), 18.0, Color(glow.r, glow.g, glow.b, 0.22))
+		draw_arc(Vector2(0, 8), 18.0, 0.0, TAU, 32, Color(glow.r, glow.g, glow.b, 0.7), 2.0)
 
 
 func _process(delta: float) -> void:
@@ -63,7 +74,12 @@ func _on_body_entered(body: Node) -> void:
 	if _age < pickup_delay or is_queued_for_deletion() or not body.is_in_group("player"):
 		return
 	if kind == "item":
-		if not body.call("add_item", item_id, amount):
+		var picked: bool = (
+			body.call("add_stack", stack)
+			if not stack.is_empty()
+			else body.call("add_item", item_id, amount)
+		)
+		if not picked:
 			return  # bag full: the item stays on the ground
 	else:
 		body.call("add_gold", amount)

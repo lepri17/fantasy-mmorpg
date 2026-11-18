@@ -252,25 +252,41 @@ func add_item(item_id: String, count: int = 1) -> bool:
 	return true
 
 
+## Picks up an entry as it is: gear keeps its rarity, upgrades and options.
+func add_stack(stack: Dictionary) -> bool:
+	if not ItemDb.is_gear(stack.get("id", "")):
+		return add_item(stack.get("id", ""), int(stack.get("count", 1)))
+	if not stats.add_stack(stack):
+		_say("Your bag is full.", WARNING_COLOR)
+		return false
+	var text: String = ItemDb.display_name(stack, true)
+	var color: Color = ItemDb.rarity_color(stack)
+	FloatingText.spawn(self, "+" + text, color, 100.0, 22)
+	_sfx("coin")
+	_say("Picked up %s." % text, color)
+	_progress_changed()
+	return true
+
+
 ## Puts on the gear in a bag slot. Gear worn in that place goes to the bag.
 func equip_from_bag(index: int) -> void:
 	if is_dead or index < 0 or index >= stats.bag.size():
 		return
-	var item_id: String = stats.bag[index]["id"]
+	var piece: Dictionary = stats.bag[index]
 	if stats.equip(index):
-		_say("Equipped %s." % _item_name(item_id))
+		_say("Equipped %s." % ItemDb.display_name(piece))
 		_gear_changed()
 
 
 ## Moves worn gear (by gear slot, such as "weapon") into the bag.
 func unequip(slot: String) -> void:
-	var item_id: String = stats.equipment.get(slot, "")
-	if is_dead or item_id == "":
+	var worn: Dictionary = stats.equipment.get(slot, {})
+	if is_dead or worn.is_empty():
 		return
 	if not stats.unequip(slot):
 		_say("Your bag is full.", WARNING_COLOR)
 		return
-	_say("Took off %s." % _item_name(item_id))
+	_say("Took off %s." % ItemDb.display_name(worn))
 	_gear_changed()
 
 
@@ -278,10 +294,10 @@ func unequip(slot: String) -> void:
 func drop_from_bag(index: int) -> void:
 	if is_dead:
 		return
-	var item_id: String = stats.take_from_bag(index)
-	if item_id == "":
+	var taken: Dictionary = stats.take_from_bag(index)
+	if taken.is_empty():
 		return
-	_drop_on_ground(item_id)
+	_drop_on_ground(taken)
 	_progress_changed()
 
 
@@ -289,10 +305,10 @@ func drop_from_bag(index: int) -> void:
 func drop_equipped(slot: String) -> void:
 	if is_dead:
 		return
-	var item_id: String = stats.remove_equipped(slot)
-	if item_id == "":
+	var worn: Dictionary = stats.remove_equipped(slot)
+	if worn.is_empty():
 		return
-	_drop_on_ground(item_id)
+	_drop_on_ground(worn)
 	_gear_changed()
 
 
@@ -783,15 +799,19 @@ func _explain_lock(skill_id: String) -> void:
 		_say("%s opens at level %s." % [skill_name, lock.trim_prefix("Lv")], WARNING_COLOR)
 
 
-func _drop_on_ground(item_id: String) -> void:
+## stack: the entry dropped; gear keeps its rarity, upgrades and options.
+func _drop_on_ground(stack: Dictionary) -> void:
 	var pickup: Node2D = PICKUP_SCENE.instantiate()
 	pickup.set("kind", "item")
-	pickup.set("item_id", item_id)
+	pickup.set("item_id", stack["id"])
+	pickup.set("amount", int(stack.get("count", 1)))
+	if ItemDb.is_gear(stack["id"]):
+		pickup.set("stack", stack)
 	pickup.set("lifetime", DROPPED_ITEM_SECONDS)
 	pickup.set("pickup_delay", 1.0)
 	pickup.position = position + FACING_VECTORS[facing] * DROP_DISTANCE
 	get_parent().call_deferred("add_child", pickup)
-	_say("Dropped %s." % _item_name(item_id))
+	_say("Dropped %s." % ItemDb.display_name(stack))
 
 
 ## Freezes the game for a blink when a hit lands, so hits feel heavy. The timer

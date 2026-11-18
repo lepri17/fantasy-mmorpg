@@ -21,15 +21,23 @@ const WARRIOR_SHEET := "res://assets/characters/warrior/warrior.png"
 const COIN_ICON := "res://assets/items/icons/coin.png"
 const GOLD_TEXT := Color(1.0, 0.86, 0.45)
 const FRAME_BORDER := Color(0.85, 0.68, 0.32)
-## How item bonuses are written in the details: whole numbers, then fractions.
-const STAT_TEXTS := {"attack": "+%d Attack.", "max_hp": "+%d Max HP.", "defense": "+%d Defense."}
-const PERCENT_TEXTS := {"crit_chance": "+%d%% Crit.", "evasion": "+%d%% Evasion."}
+## How gear bonuses are named in the details, in this order.
+const STAT_NAMES := {
+	"attack": "Attack",
+	"max_hp": "Max HP",
+	"defense": "Defense",
+	"max_stamina": "Max Stamina",
+	"crit_chance": "Crit",
+	"evasion": "Evasion",
+	"skill_damage": "Skill damage",
+}
 
 ## Gear slot name -> slot control.
 var gear_slots: Dictionary = {}
 var bag_slots: Array = []
 
 var _selected = null
+var _stats = null
 var _portrait_frame := AtlasTexture.new()
 var _gold_label: Label
 var _stats_label: Label
@@ -57,14 +65,12 @@ func _ready() -> void:
 ## Shows the current gear, bag and gold. stats is a player_stats.gd object,
 ## look the warrior's current sprite sheet (for the portrait).
 func refresh(stats, look: Texture2D = null) -> void:
+	_stats = stats
 	for slot_name in gear_slots:
-		gear_slots[slot_name].show_item(stats.equipment.get(slot_name, ""))
+		gear_slots[slot_name].show_stack(stats.equipment.get(slot_name, {}))
 	var items: Array = stats.bag_items()
 	for i in bag_slots.size():
-		if i < items.size():
-			bag_slots[i].show_item(items[i]["id"], items[i]["count"])
-		else:
-			bag_slots[i].show_item("")
+		bag_slots[i].show_stack(items[i] if i < items.size() else {})
 	_gold_label.text = str(stats.gold)
 	var damage: Vector2i = CombatRules.damage_range(stats.attack_damage())
 	_stats_label.text = "ATK %d~%d  HP %d\nDEF %d  CRIT %d%%  EVA %d%%" % [
@@ -107,20 +113,53 @@ func _show_details() -> void:
 		_primary_button.hide()
 		_drop_button.hide()
 		return
-	var item: Dictionary = ItemDb.items[_selected.item_id]
-	var parts: PackedStringArray = []
-	for stat in STAT_TEXTS:
-		if item.has(stat):
-			parts.append(STAT_TEXTS[stat] % int(item[stat]))
-	for stat in PERCENT_TEXTS:
-		if item.has(stat):
-			parts.append(PERCENT_TEXTS[stat] % roundi(float(item[stat]) * 100.0))
-	parts.append(item["text"])
-	_name_label.text = item["name"]
-	_info_label.text = " ".join(parts)
+	var stack: Dictionary = _selected.stack
+	var item: Dictionary = ItemDb.items[stack["id"]]
+	var text: String = item["text"]
+	var name_color := Color.WHITE
+	if ItemDb.is_gear(stack["id"]):
+		var worn: Dictionary = {}
+		if _selected.place == "bag" and _stats != null:
+			worn = _stats.equipment.get(item["slot"], {})
+		text = _gear_text(stack, worn) + " " + text
+		name_color = ItemDb.rarity_color(stack)
+	_name_label.text = ItemDb.display_name(stack, true)
+	_name_label.add_theme_color_override("font_color", name_color)
+	_info_label.text = text
 	_primary_button.text = _primary_action()[0]
 	_primary_button.visible = _primary_button.text != ""
 	_drop_button.show()
+
+
+## "+6 Attack (+2). +3% Crit (+3%)." For gear in the bag, each bonus also says
+## how it compares with the piece worn in that slot now (I7).
+func _gear_text(stack: Dictionary, worn: Dictionary) -> String:
+	var parts := PackedStringArray()
+	for stat in STAT_NAMES:
+		var value: float = ItemDb.stat_of(stack, stat)
+		var worn_value: float = 0.0 if worn.is_empty() else ItemDb.stat_of(worn, stat)
+		if is_zero_approx(value) and is_zero_approx(worn_value):
+			continue
+		var line: String = "%s %s" % [_amount(stat, value), STAT_NAMES[stat]]
+		if not worn.is_empty():
+			var diff: float = value - worn_value
+			line += " (=)" if is_zero_approx(diff) else " (%s)" % _amount(stat, diff)
+		parts.append(line)
+	var text: String = (". ".join(parts) + ".") if not parts.is_empty() else ""
+	if not worn.is_empty():
+		text = "Compared with your %s:\n%s" % [ItemDb.display_name(worn), text]
+	return text
+
+
+static func _amount(stat: String, value: float) -> String:
+	var sign_text: String = "+" if value >= 0.0 else "-"
+	if stat in ItemDb.PERCENT_STATS:
+		var percent: float = absf(value) * 100.0
+		var shown: String = (
+			str(roundi(percent)) if is_equal_approx(percent, roundf(percent)) else "%.1f" % percent
+		)
+		return "%s%s%%" % [sign_text, shown]
+	return "%s%d" % [sign_text, roundi(absf(value))]
 
 
 ## [button text, player method] for the selected item. Text "" = no such button.
