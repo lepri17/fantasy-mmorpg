@@ -151,6 +151,8 @@ func update_sky() -> void:
 	var indoor: bool = _maps()[map.map_id].get("indoor", false)
 	var raining: bool = not indoor and SkyClock.raining(seconds)
 	var light: Color = SkyClock.INDOOR if indoor else SkyClock.daylight(seconds)
+	var shade: Array = _maps()[map.map_id].get("shade", [1, 1, 1])  # deeper woods are darker
+	light *= Color(shade[0], shade[1], shade[2])
 	_daylight.color = light * RAIN_DIM if raining else light
 	_player.call("set_light", SkyClock.darkness(_daylight.color))
 	_rain.emitting = raining

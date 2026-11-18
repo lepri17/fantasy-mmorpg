@@ -9,6 +9,7 @@ const GameData := preload("res://scripts/data/game_data.gd")
 const MapTiles := preload("res://scripts/maps/map_tiles.gd")
 const DungeonRun := preload("res://scripts/maps/dungeon_run.gd")
 const Torch := preload("res://scripts/world/torch.gd")
+const Glowcap := preload("res://scripts/world/glowcap.gd")
 const SCENES := {
 	"tree": preload("res://scenes/maps/tree.tscn"),
 	"rock": preload("res://scenes/maps/rock.tscn"),
@@ -37,6 +38,8 @@ func _ready() -> void:
 		_add_edges()
 	for thing in data.get("objects", []):
 		_add_object(thing)
+	if int(data.get("fireflies", 0)) > 0:
+		_add_fireflies(int(data["fireflies"]))
 	call_deferred("_bake_navigation")
 	if data.has("dungeon"):
 		var run: Node = DungeonRun.new()
@@ -75,8 +78,21 @@ func is_safe() -> bool:
 
 
 func _add_object(thing: Dictionary) -> void:
-	var node: Node2D = Torch.new() if thing["type"] == "torch" else SCENES[thing["type"]].instantiate()
+	var node: Node2D
+	match thing["type"]:
+		"torch":
+			node = Torch.new()
+		"glowcap":
+			node = Glowcap.new()
+			node.set("color_name", thing.get("color", "cyan"))
+		_:
+			node = SCENES[thing["type"]].instantiate()
 	node.position = Vector2(thing["pos"][0], thing["pos"][1])
+	if thing["type"] in ["tree", "rock"]:
+		# The deep forest: bigger, darker trees (maps.json "scale" and "tint").
+		node.scale = Vector2.ONE * float(thing.get("scale", 1.0))
+		var rgba: Array = thing.get("tint", [1, 1, 1, 1])
+		node.modulate = Color(rgba[0], rgba[1], rgba[2], rgba[3])
 	match thing["type"]:
 		"monster":
 			node.set("monster_id", thing["id"])
@@ -86,6 +102,33 @@ func _add_object(thing: Dictionary) -> void:
 			node.set("to_map", thing["to"])
 			node.set("to_spawn", thing.get("spawn", "default"))
 	add_child(node)
+
+
+## Fireflies drifting over the whole map (maps.json "fireflies": how many).
+func _add_fireflies(count: int) -> void:
+	var flies := CPUParticles2D.new()
+	flies.name = "Fireflies"
+	flies.amount = count
+	flies.lifetime = 7.0
+	flies.preprocess = 7.0
+	flies.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	flies.emission_rect_extents = map_size() / 2.0
+	flies.position = map_size() / 2.0
+	flies.direction = Vector2(0, -1)
+	flies.spread = 180.0
+	flies.gravity = Vector2.ZERO
+	flies.initial_velocity_min = 4.0
+	flies.initial_velocity_max = 16.0
+	flies.scale_amount_min = 2.0
+	flies.scale_amount_max = 3.5
+	var fade := Gradient.new()
+	fade.set_color(0, Color(0.85, 1.0, 0.5, 0.0))
+	fade.set_color(1, Color(0.85, 1.0, 0.5, 0.0))
+	fade.add_point(0.3, Color(0.9, 1.0, 0.55, 0.95))
+	fade.add_point(0.7, Color(0.9, 1.0, 0.55, 0.95))
+	flies.color_ramp = fade
+	flies.z_index = 5
+	add_child(flies)
 
 
 ## Q1: a navigation mesh over the map that leaves out trees and rocks (the

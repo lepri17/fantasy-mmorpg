@@ -83,6 +83,21 @@ func _initialize() -> void:
 		if not get_nodes_in_group("projectiles").is_empty():
 			break
 	await _shot("12_spore")
+	GameScript.sky_seconds = 60.0  # day, to show how much darker the deep forest is
+	main.change_map("twilight", "south")
+	await _frames(30)
+	var boar = get_nodes_in_group("enemies").filter(
+		func(enemy): return enemy.monster_id == "bramble_boar"
+	)[0]
+	player.global_position = boar.global_position + Vector2(-210, 30)
+	await _frames(24)
+	await _shot("31_twilight")
+	main.change_map("grove", "south")
+	await _frames(30)
+	player.global_position = Vector2(1280, 640)
+	await _frames(30)
+	await _shot("32_grove")
+	GameScript.sky_seconds = -1.0
 	main.change_map("cellar")
 	await _frames(240)
 	await _shot("13_cellar")

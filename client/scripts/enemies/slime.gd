@@ -77,6 +77,16 @@ var special: Dictionary = {}
 var statuses = StatusEffects.new()
 ## Color multiplier, used to tell the kinds of slime apart.
 var tint: Color = Color.WHITE
+## A charge (Bramble Boar): a lane fills up on the ground, then it rushes along it.
+var charge: Dictionary = {}
+## Fading out and back a little way off when the hero comes close (Lantern Wisp).
+var blink: Dictionary = {}
+## Digging in, moving under the ground and bursting out by the hero (Rootling).
+var burrow: Dictionary = {}
+## How many pixels it floats up and down (Lantern Wisp).
+var hover: float = 0.0
+## True while it is under the ground: it cannot be seen or hit.
+var burrowed: bool = false
 ## Elites have more HP, damage, XP and loot, glow, and are a bit bigger.
 var is_elite: bool = false
 
@@ -102,6 +112,13 @@ var _enraged: bool = false
 var _summon_left: float = 0.0
 var _minions: Array = []
 var _crown: Sprite2D = null
+var _move_ready_in: float = 0.0  # until its charge, blink or dig can be used again
+var _rush: Vector2 = Vector2.ZERO
+var _rush_left: float = 0.0
+var _rush_hit: bool = false
+var _dig_left: float = 0.0
+var _hover_time: float = 0.0
+var _sprite_y: float = 0.0
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
 @onready var _collision: CollisionShape2D = $Collision
@@ -122,6 +139,7 @@ func _ready() -> void:
 	_spawn_position = global_position
 	_wander_target = global_position
 	_sprite.modulate = tint
+	_sprite_y = _sprite.position.y
 	_hp_bar.set_label("Lv.%d %s" % [level, display_name])
 	_hp_bar.set_values(hp, max_hp)
 	_sprite.play("idle")
@@ -135,20 +153,28 @@ func _physics_process(delta: float) -> void:
 	_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
 	statuses.update(delta)
 	_casting_left = maxf(0.0, _casting_left - delta)
+	_move_ready_in = maxf(0.0, _move_ready_in - delta)
 	if _enraged:
 		_summon_tick(delta)
 	var stunned: bool = statuses.is_active("stun")
 	_sprite.speed_scale = 0.0 if stunned else 1.0
+	_float(delta)
 
 	var movement := Vector2.ZERO
 	var target: Node2D = _chase_target()
-	if stunned or _casting_left > 0.0:
+	if _rush_left > 0.0:
+		movement = _rush_step(delta, target)
+	elif burrowed:
+		movement = _dig_toward(target, delta)
+	elif stunned or _casting_left > 0.0:
 		pass  # stays put: stunned, or winding up a slam
 	elif target == null:
 		movement = _wander(delta)
 	else:
 		var distance: float = global_position.distance_to(target.global_position)
-		if not ranged.is_empty():
+		if _try_move(target, distance):
+			pass  # started its charge, blink or dig
+		elif not ranged.is_empty():
 			movement = _ranged_movement(target, distance, delta)
 		elif distance > attack_range:
 			var speed: float = move_speed * statuses.speed_factor()
@@ -328,8 +354,16 @@ func _attack(target: Node2D) -> void:
 
 ## Telegraphed slam: a red circle fills up, then everything inside gets hit hard.
 func _start_slam() -> void:
-	var warning: float = float(special["warning_seconds"])
-	var radius: float = float(special["radius"])
+	_area_attack(
+		float(special["radius"]),
+		float(special["warning_seconds"]),
+		float(special["damage_multiplier"])
+	)
+
+
+## A red circle round it fills up while it stands still; whoever it is after
+## gets a hard hit if still inside when the circle is full.
+func _area_attack(radius: float, warning: float, multiplier: float) -> void:
 	_casting_left = warning
 	var center: Vector2 = global_position  # the circle frees itself when it is full
 	var circle: Node2D = Telegraph.new()
@@ -342,16 +376,150 @@ func _start_slam() -> void:
 	if is_dead or not is_inside_tree():
 		return
 	var target: Node2D = _chase_target()
-	if target == null or target.global_position.distance_to(center) > radius:
-		return
+	if target != null and target.global_position.distance_to(center) <= radius:
+		_hit_hard(target, multiplier)
+
+
+## A strong hit that was warned of: no dodge roll, but defense counts.
+func _hit_hard(target: Node2D, multiplier: float) -> void:
 	var target_stats = target.get("stats")
 	var hit: Dictionary = CombatRules.resolve_hit(
-		roundi(attack_damage * float(special["damage_multiplier"])),
+		roundi(attack_damage * multiplier),
 		0.0,
 		target_stats.defense() if target_stats != null else 0,
 		0.0
 	)
 	target.call("take_damage", hit["damage"])
+
+
+## Starts its special move when it is ready and the hero is where it works:
+## a charge from mid range, a blink when he comes too close, a dig from afar.
+func _try_move(target: Node2D, distance: float) -> bool:
+	if _move_ready_in > 0.0:
+		return false
+	if not charge.is_empty() and distance <= float(charge["range"]):
+		if distance >= float(charge["min_range"]):
+			_start_charge(target)
+			return true
+	if not blink.is_empty() and distance <= float(blink["when_closer"]):
+		_blink_away(target)
+		return true
+	if not burrow.is_empty() and distance > attack_range * 1.5:
+		_dig_in()
+		return true
+	return false
+
+
+## Bramble Boar: a lane fills up on the ground toward the hero, then it rushes
+## along the lane and hits him once if he is still in the way.
+func _start_charge(target: Node2D) -> void:
+	_move_ready_in = float(charge["cooldown"])
+	var warning: float = float(charge["warning_seconds"])
+	var direction: Vector2 = global_position.direction_to(target.global_position)
+	var length: float = float(charge["distance"])
+	_casting_left = warning
+	var lane: Node2D = Telegraph.new()
+	lane.radius = body_radius() + 10.0
+	lane.length = length
+	lane.rotation = direction.angle()
+	lane.seconds = warning
+	lane.z_index = -1
+	lane.position = position
+	get_parent().add_child(lane)
+	await _wait(warning)
+	if is_dead or not is_inside_tree():
+		return
+	_sprite.play("attack")
+	_rush = direction * float(charge["speed"])
+	_rush_left = length / float(charge["speed"])
+	_rush_hit = false
+
+
+func _rush_step(delta: float, target: Node2D) -> Vector2:
+	_rush_left = maxf(0.0, _rush_left - delta)
+	if target != null and not _rush_hit:
+		if global_position.distance_to(target.global_position) <= body_radius() + 22.0:
+			_rush_hit = true
+			_hit_hard(target, float(charge["damage_multiplier"]))
+	if _rush_left == 0.0:
+		_attack_ready_in = attack_cooldown  # catches its breath after the rush
+	return _rush
+
+
+## Lantern Wisp: fades out and comes back a little way off, still facing the hero.
+func _blink_away(target: Node2D) -> void:
+	_move_ready_in = float(blink["cooldown"])
+	var away: Vector2 = target.global_position.direction_to(global_position)
+	if away == Vector2.ZERO:
+		away = Vector2.RIGHT
+	var spot: Vector2 = target.global_position + away.rotated(randf_range(-1.0, 1.0)) * float(
+		blink["distance"]
+	)
+	var closest: Vector2 = NavigationServer2D.map_get_closest_point(
+		get_world_2d().navigation_map, spot
+	)
+	if closest != Vector2.ZERO:
+		spot = closest
+	_casting_left = 0.3
+	Burst.spawn(get_parent(), position, Color(1.0, 0.92, 0.6), 10, 80.0)
+	var fade: Tween = create_tween()
+	fade.tween_property(_sprite, "modulate:a", 0.0, 0.12)
+	fade.tween_callback(func() -> void: global_position = spot)
+	fade.tween_property(_sprite, "modulate:a", 1.0, 0.15)
+
+
+## Rootling: digs in where it stands, out of sight and out of reach.
+func _dig_in() -> void:
+	_move_ready_in = float(burrow["cooldown"])
+	_dig_left = float(burrow["seconds"])
+	_set_burrowed(true)
+
+
+## Moves under the ground toward the hero; bursts out next to him or when the
+## time is up.
+func _dig_toward(target: Node2D, delta: float) -> Vector2:
+	_dig_left -= delta
+	var beside: bool = target != null and global_position.distance_to(target.global_position) < 40.0
+	if _dig_left <= 0.0 or beside or target == null:
+		_set_burrowed(false)
+		_sprite.play("attack")
+		_area_attack(
+			float(burrow["radius"]),
+			float(burrow["warning_seconds"]),
+			float(burrow["damage_multiplier"])
+		)
+		return Vector2.ZERO
+	return _steer_to(target.global_position, delta) * float(burrow["speed"])
+
+
+func _set_burrowed(value: bool) -> void:
+	burrowed = value
+	_sprite.visible = not value
+	_hp_bar.visible = not value and not is_dead
+	_collision.set_deferred("disabled", value)
+	if value:
+		remove_from_group("enemies")
+	else:
+		add_to_group("enemies")
+	queue_redraw()
+
+
+## While it is under the ground: a mound of earth that moves along.
+func _draw() -> void:
+	if not burrowed:
+		return
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.55))
+	draw_circle(Vector2(0.0, -6.0), 15.0, Color(0.33, 0.24, 0.17))
+	draw_circle(Vector2(-4.0, -10.0), 7.0, Color(0.45, 0.33, 0.22))
+	draw_circle(Vector2(6.0, -4.0), 4.0, Color(0.4, 0.29, 0.2))
+
+
+## Lantern Wisp: bobs gently in the air.
+func _float(delta: float) -> void:
+	if hover <= 0.0:
+		return
+	_hover_time += delta
+	_sprite.position.y = _sprite_y + sin(_hover_time * 3.0) * hover
 
 
 func _on_animation_finished() -> void:
@@ -467,6 +635,10 @@ func _load_monster_data() -> void:
 	tint = Color(rgba[0], rgba[1], rgba[2], rgba[3])
 	boss = data.get("boss", {})
 	size_scale = float(data.get("scale", 1.0))
+	charge = data.get("charge", {})
+	blink = data.get("blink", {})
+	burrow = data.get("burrow", {})
+	hover = float(data.get("hover", 0.0))
 
 
 ## Draws and sizes it by size_scale: sprite, body, health bar; a boss gets a crown.
@@ -480,6 +652,7 @@ func _apply_size() -> void:
 		_collision.shape = body
 	if not boss.is_empty():
 		add_to_group("bosses")
+	if not boss.is_empty() and GameData.table("monsters")[monster_id].get("crown", true):
 		_crown = Sprite2D.new()
 		_crown.texture = CROWN
 		_crown.scale = Vector2.ONE * size_scale * 0.5
@@ -573,6 +746,10 @@ func _respawn() -> void:
 	_threat.clear()
 	_attack_count = 0
 	_casting_left = 0.0
+	_rush_left = 0.0
+	_move_ready_in = 0.0
+	if burrowed:
+		_set_burrowed(false)
 	_load_monster_data()
 	_enraged = false
 	_clear_elite()

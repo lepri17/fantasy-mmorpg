@@ -7,14 +7,18 @@
     "path",
     "stone",
     "forest",
-    "cellar"
+    "cellar",
+    "twilight",
+    "grove"
   ],
   "legend": {
     "g": "grass",
     "p": "path",
     "s": "stone",
     "f": "forest",
-    "c": "cellar"
+    "c": "cellar",
+    "t": "twilight",
+    "e": "grove"
   },
   "maps": {
     "town": {
@@ -282,10 +286,10 @@
       "name": "Mossy Woods",
       "levels": "Lv 3-8",
       "ground": [
-        "ffffffffffffffffffff",
-        "ffffffffffffffffffff",
-        "ffffffffffffffffffff",
-        "ffffffffffffffffffff",
+        "fffffffffppfffffffff",
+        "fffffffffppfffffffff",
+        "fffffffffppfffffffff",
+        "fffffffffppfffffffff",
         "fffffffffppfffffffff",
         "fffffffffppfffffffff",
         "ppppppppppppffffffff",
@@ -307,6 +311,10 @@
         "east": [
           2330,
           700
+        ],
+        "north": [
+          1280,
+          200
         ]
       },
       "objects": [
@@ -341,7 +349,7 @@
         {
           "type": "tree",
           "pos": [
-            1350,
+            1530,
             230
           ]
         },
@@ -609,6 +617,15 @@
           ],
           "to": "cellar",
           "spawn": "default"
+        },
+        {
+          "type": "portal",
+          "pos": [
+            1280,
+            110
+          ],
+          "to": "twilight",
+          "spawn": "south"
         }
       ],
       "pvp_zone": [
@@ -774,6 +791,1879 @@
       },
       "music": "music_cellar",
       "indoor": true
+    },
+    "twilight": {
+      "name": "Twilight Woods",
+      "levels": "Lv 8-13",
+      "ground": [
+        "tttttttttppttttttttt",
+        "tttttttttppttttttttt",
+        "tttttttttppttttttttt",
+        "tttttttttppppttttttt",
+        "tttttttttttppttttttt",
+        "tttttppppppppttttttt",
+        "tttttttttttppttttttt",
+        "tttttttttppppttttttt",
+        "tttttttttppttttttttt",
+        "tttttttttppttttttttt",
+        "tttttttttppttttttttt",
+        "tttttttttppttttttttt"
+      ],
+      "spawns": {
+        "default": [
+          1280,
+          1400
+        ],
+        "south": [
+          1280,
+          1400
+        ],
+        "north": [
+          1280,
+          200
+        ]
+      },
+      "objects": [
+        {
+          "type": "portal",
+          "pos": [
+            1280,
+            1490
+          ],
+          "to": "forest",
+          "spawn": "north"
+        },
+        {
+          "type": "portal",
+          "pos": [
+            1280,
+            110
+          ],
+          "to": "grove",
+          "spawn": "south"
+        },
+        {
+          "type": "monster",
+          "id": "bramble_boar",
+          "pos": [
+            560,
+            1180
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "bramble_boar",
+          "pos": [
+            1900,
+            1250
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "bramble_boar",
+          "pos": [
+            2050,
+            760
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "bramble_boar",
+          "pos": [
+            700,
+            420
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "bramble_boar",
+          "pos": [
+            1750,
+            380
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "lantern_wisp",
+          "pos": [
+            500,
+            800
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "lantern_wisp",
+          "pos": [
+            1500,
+            1000
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "lantern_wisp",
+          "pos": [
+            2150,
+            450
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "lantern_wisp",
+          "pos": [
+            1000,
+            300
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "lantern_wisp",
+          "pos": [
+            2200,
+            1050
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            110,
+            177
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.14
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2443,
+            200
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.04
+        },
+        {
+          "type": "tree",
+          "pos": [
+            107,
+            366
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.15
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2474,
+            337
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.09
+        },
+        {
+          "type": "tree",
+          "pos": [
+            98,
+            498
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.02
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2451,
+            508
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.14
+        },
+        {
+          "type": "tree",
+          "pos": [
+            138,
+            720
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.19
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2440,
+            683
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.22
+        },
+        {
+          "type": "tree",
+          "pos": [
+            94,
+            879
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.06
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2447,
+            863
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.24
+        },
+        {
+          "type": "tree",
+          "pos": [
+            124,
+            1050
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.09
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2441,
+            1052
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.15
+        },
+        {
+          "type": "tree",
+          "pos": [
+            123,
+            1176
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.02
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2446,
+            1188
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.07
+        },
+        {
+          "type": "tree",
+          "pos": [
+            129,
+            1395
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.06
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2426,
+            1351
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.05
+        },
+        {
+          "type": "tree",
+          "pos": [
+            273,
+            145
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.24
+        },
+        {
+          "type": "tree",
+          "pos": [
+            231,
+            1447
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.03
+        },
+        {
+          "type": "tree",
+          "pos": [
+            451,
+            145
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.06
+        },
+        {
+          "type": "tree",
+          "pos": [
+            435,
+            1461
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            584,
+            166
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.11
+        },
+        {
+          "type": "tree",
+          "pos": [
+            576,
+            1463
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.24
+        },
+        {
+          "type": "tree",
+          "pos": [
+            766,
+            138
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.01
+        },
+        {
+          "type": "tree",
+          "pos": [
+            785,
+            1457
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.18
+        },
+        {
+          "type": "tree",
+          "pos": [
+            951,
+            144
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.07
+        },
+        {
+          "type": "tree",
+          "pos": [
+            944,
+            1458
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.12
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1650,
+            169
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.18
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1621,
+            1433
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.02
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1809,
+            140
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.17
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1778,
+            1435
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.17
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1940,
+            133
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.25
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1954,
+            1440
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.2
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2113,
+            162
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.06
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2144,
+            1456
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.03
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2293,
+            164
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.12
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2296,
+            1429
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.04
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1982,
+            536
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.17
+        },
+        {
+          "type": "tree",
+          "pos": [
+            640,
+            1006
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.05
+        },
+        {
+          "type": "tree",
+          "pos": [
+            738,
+            1262
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.02
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1862,
+            1044
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.11
+        },
+        {
+          "type": "tree",
+          "pos": [
+            891,
+            1131
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.19
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2175,
+            660
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.04
+        },
+        {
+          "type": "tree",
+          "pos": [
+            999,
+            465
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.09
+        },
+        {
+          "type": "tree",
+          "pos": [
+            533,
+            416
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.16
+        },
+        {
+          "type": "tree",
+          "pos": [
+            330,
+            626
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.11
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1664,
+            1097
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.14
+        },
+        {
+          "type": "tree",
+          "pos": [
+            413,
+            977
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.01
+        },
+        {
+          "type": "tree",
+          "pos": [
+            818,
+            574
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.16
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1024,
+            908
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.24
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1775,
+            567
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.15
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1805,
+            812
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.07
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1478,
+            1177
+          ],
+          "tint": [
+            0.62,
+            0.7,
+            0.82,
+            1.0
+          ],
+          "scale": 1.1
+        },
+        {
+          "type": "rock",
+          "pos": [
+            420,
+            560
+          ],
+          "tint": [
+            0.66,
+            0.7,
+            0.82,
+            1.0
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1650,
+            640
+          ],
+          "tint": [
+            0.66,
+            0.7,
+            0.82,
+            1.0
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            2300,
+            900
+          ],
+          "tint": [
+            0.66,
+            0.7,
+            0.82,
+            1.0
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            900,
+            1300
+          ],
+          "tint": [
+            0.66,
+            0.7,
+            0.82,
+            1.0
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1950,
+            200
+          ],
+          "tint": [
+            0.66,
+            0.7,
+            0.82,
+            1.0
+          ]
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            360,
+            980
+          ],
+          "color": "teal"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            820,
+            640
+          ],
+          "color": "cyan"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            1460,
+            760
+          ],
+          "color": "teal"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            1720,
+            1380
+          ],
+          "color": "cyan"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            2380,
+            640
+          ],
+          "color": "teal"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            1100,
+            1120
+          ],
+          "color": "cyan"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            600,
+            230
+          ],
+          "color": "teal"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            2000,
+            980
+          ],
+          "color": "cyan"
+        }
+      ],
+      "teleport_price": 80,
+      "music": "music_twilight",
+      "shade": [
+        0.8,
+        0.85,
+        0.95
+      ],
+      "fireflies": 36
+    },
+    "grove": {
+      "name": "Elder Grove",
+      "levels": "Lv 12-18",
+      "ground": [
+        "eeeeeeeeeeeeeeeeeeee",
+        "eeeeeeeeeeeeeeeeeeee",
+        "eeeeeeeeeeeeeeeeeeee",
+        "eeeeeeeeeeeeeeeeeeee",
+        "eeeeeeeeeeeeeeeeeeee",
+        "eeeeeeeeppppeeeeeeee",
+        "eeeeeeeeeppeeeeeeeee",
+        "eeeeeeeeeppeeeeeeeee",
+        "eeeeeeeeeppeeeeeeeee",
+        "eeeeeeeeeppeeeeeeeee",
+        "eeeeeeeeeppeeeeeeeee",
+        "eeeeeeeeeppeeeeeeeee"
+      ],
+      "spawns": {
+        "default": [
+          1280,
+          1400
+        ],
+        "south": [
+          1280,
+          1400
+        ]
+      },
+      "objects": [
+        {
+          "type": "portal",
+          "pos": [
+            1280,
+            1490
+          ],
+          "to": "twilight",
+          "spawn": "north"
+        },
+        {
+          "type": "monster",
+          "id": "rootling",
+          "pos": [
+            600,
+            1150
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "rootling",
+          "pos": [
+            1900,
+            1200
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "rootling",
+          "pos": [
+            450,
+            650
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "rootling",
+          "pos": [
+            2150,
+            700
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "rootling",
+          "pos": [
+            1550,
+            900
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "moss_golem",
+          "pos": [
+            900,
+            900
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "moss_golem",
+          "pos": [
+            1750,
+            560
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "moss_golem",
+          "pos": [
+            650,
+            380
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "moss_golem",
+          "pos": [
+            2000,
+            1000
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "elder_treant",
+          "pos": [
+            1280,
+            380
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            101,
+            176
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.44
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2441,
+            181
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.42
+        },
+        {
+          "type": "tree",
+          "pos": [
+            82,
+            385
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.31
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2426,
+            376
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.59
+        },
+        {
+          "type": "tree",
+          "pos": [
+            109,
+            603
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.58
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2474,
+            604
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.37
+        },
+        {
+          "type": "tree",
+          "pos": [
+            111,
+            802
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.59
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2422,
+            802
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.51
+        },
+        {
+          "type": "tree",
+          "pos": [
+            116,
+            1023
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.53
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2434,
+            1040
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.57
+        },
+        {
+          "type": "tree",
+          "pos": [
+            82,
+            1220
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.41
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2443,
+            1232
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.38
+        },
+        {
+          "type": "tree",
+          "pos": [
+            119,
+            1463
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.58
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2471,
+            1423
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.52
+        },
+        {
+          "type": "tree",
+          "pos": [
+            276,
+            154
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.5
+        },
+        {
+          "type": "tree",
+          "pos": [
+            247,
+            1457
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.37
+        },
+        {
+          "type": "tree",
+          "pos": [
+            473,
+            140
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.46
+        },
+        {
+          "type": "tree",
+          "pos": [
+            442,
+            1438
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.53
+        },
+        {
+          "type": "tree",
+          "pos": [
+            666,
+            159
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.54
+        },
+        {
+          "type": "tree",
+          "pos": [
+            686,
+            1451
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.36
+        },
+        {
+          "type": "tree",
+          "pos": [
+            889,
+            168
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.6
+        },
+        {
+          "type": "tree",
+          "pos": [
+            893,
+            1444
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.59
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1103,
+            162
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.32
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1086,
+            1459
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.46
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1327,
+            147
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.58
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1529,
+            151
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.5
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1518,
+            1454
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.54
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1719,
+            131
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.37
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1721,
+            1466
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.59
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1952,
+            137
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.58
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1918,
+            1431
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.54
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2141,
+            146
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.38
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2120,
+            1431
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.32
+        },
+        {
+          "type": "tree",
+          "pos": [
+            341,
+            341
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.35
+        },
+        {
+          "type": "tree",
+          "pos": [
+            963,
+            1155
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.56
+        },
+        {
+          "type": "tree",
+          "pos": [
+            406,
+            840
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.37
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2057,
+            827
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.46
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1794,
+            910
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.6
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2203,
+            415
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.44
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1796,
+            365
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.54
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1663,
+            1206
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.59
+        },
+        {
+          "type": "tree",
+          "pos": [
+            671,
+            970
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.31
+        },
+        {
+          "type": "tree",
+          "pos": [
+            434,
+            1075
+          ],
+          "tint": [
+            0.5,
+            0.62,
+            0.54,
+            1.0
+          ],
+          "scale": 1.56
+        },
+        {
+          "type": "rock",
+          "pos": [
+            380,
+            1000
+          ],
+          "tint": [
+            0.55,
+            0.66,
+            0.58,
+            1.0
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            2250,
+            380
+          ],
+          "tint": [
+            0.55,
+            0.66,
+            0.58,
+            1.0
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1650,
+            1300
+          ],
+          "tint": [
+            0.55,
+            0.66,
+            0.58,
+            1.0
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            980,
+            640
+          ],
+          "tint": [
+            0.55,
+            0.66,
+            0.58,
+            1.0
+          ]
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            300,
+            820
+          ],
+          "color": "violet"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            760,
+            1250
+          ],
+          "color": "cyan"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            1120,
+            760
+          ],
+          "color": "violet"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            1450,
+            1150
+          ],
+          "color": "teal"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            2280,
+            900
+          ],
+          "color": "violet"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            1860,
+            340
+          ],
+          "color": "cyan"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            980,
+            250
+          ],
+          "color": "teal"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            1600,
+            250
+          ],
+          "color": "violet"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            1280,
+            640
+          ],
+          "color": "cyan"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            2100,
+            1320
+          ],
+          "color": "teal"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            520,
+            480
+          ],
+          "color": "cyan"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            1700,
+            760
+          ],
+          "color": "violet"
+        }
+      ],
+      "teleport_price": 120,
+      "music": "music_grove",
+      "shade": [
+        0.6,
+        0.72,
+        0.64
+      ],
+      "fireflies": 56
     }
   }
 }

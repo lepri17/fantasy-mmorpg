@@ -368,5 +368,380 @@
       0.35,
       1
     ]
+  },
+  "bramble_boar": {
+    "name": "Bramble Boar",
+    "level": 9,
+    "max_hp": 420,
+    "move_speed": 90,
+    "detect_radius": 300,
+    "attack_range": 52,
+    "attack_damage": 34,
+    "attack_cooldown": 1.3,
+    "respawn_seconds": 7,
+    "xp": 150,
+    "gold": [
+      12,
+      24
+    ],
+    "drops": [
+      {
+        "item": "red_potion",
+        "chance": 0.4
+      },
+      {
+        "item": "blue_potion",
+        "chance": 0.15
+      },
+      {
+        "item": "ember_stone",
+        "chance": 0.12
+      },
+      {
+        "item": "moon_stone",
+        "chance": 0.04
+      }
+    ],
+    "defense": 6,
+    "evasion": 0.05,
+    "tint": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "frames": "res://assets/monsters/boar/boar_frames.tres",
+    "knockback_resist": 0.3,
+    "charge": {
+      "range": 300,
+      "min_range": 100,
+      "warning_seconds": 0.7,
+      "speed": 520,
+      "distance": 320,
+      "damage_multiplier": 1.6,
+      "cooldown": 5.0
+    },
+    "gear_drops": {
+      "chance": 0.05,
+      "items": [
+        "verdant_headband",
+        "verdant_cape",
+        "verdant_gloves",
+        "verdant_boots",
+        "crimson_plate",
+        "crimson_sword",
+        "ember_staff",
+        "midnight_robe",
+        "crimson_bow",
+        "shadow_vest",
+        "swift_boots",
+        "hawk_gloves"
+      ]
+    }
+  },
+  "lantern_wisp": {
+    "name": "Lantern Wisp",
+    "level": 10,
+    "max_hp": 260,
+    "move_speed": 105,
+    "detect_radius": 360,
+    "attack_range": 250,
+    "attack_damage": 30,
+    "attack_cooldown": 1.8,
+    "respawn_seconds": 7,
+    "xp": 140,
+    "gold": [
+      10,
+      22
+    ],
+    "drops": [
+      {
+        "item": "red_potion",
+        "chance": 0.4
+      },
+      {
+        "item": "blue_potion",
+        "chance": 0.15
+      },
+      {
+        "item": "ember_stone",
+        "chance": 0.12
+      },
+      {
+        "item": "moon_stone",
+        "chance": 0.04
+      }
+    ],
+    "defense": 3,
+    "evasion": 0.18,
+    "tint": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "frames": "res://assets/monsters/wisp/wisp_frames.tres",
+    "ranged": {
+      "keep_distance": 160,
+      "projectile_speed": 300
+    },
+    "blink": {
+      "when_closer": 120,
+      "distance": 210,
+      "cooldown": 3.5
+    },
+    "hover": 6,
+    "gear_drops": {
+      "chance": 0.05,
+      "items": [
+        "verdant_headband",
+        "verdant_cape",
+        "verdant_gloves",
+        "verdant_boots",
+        "crimson_plate",
+        "crimson_sword",
+        "ember_staff",
+        "midnight_robe",
+        "crimson_bow",
+        "shadow_vest",
+        "swift_boots",
+        "hawk_gloves"
+      ]
+    }
+  },
+  "rootling": {
+    "name": "Rootling",
+    "level": 13,
+    "max_hp": 650,
+    "move_speed": 75,
+    "detect_radius": 320,
+    "attack_range": 50,
+    "attack_damage": 44,
+    "attack_cooldown": 1.3,
+    "respawn_seconds": 8,
+    "xp": 230,
+    "gold": [
+      16,
+      32
+    ],
+    "drops": [
+      {
+        "item": "red_potion",
+        "chance": 0.4
+      },
+      {
+        "item": "blue_potion",
+        "chance": 0.15
+      },
+      {
+        "item": "ember_stone",
+        "chance": 0.12
+      },
+      {
+        "item": "moon_stone",
+        "chance": 0.04
+      }
+    ],
+    "defense": 9,
+    "evasion": 0.06,
+    "tint": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "frames": "res://assets/monsters/rootling/rootling_frames.tres",
+    "on_hit": {
+      "status": "slow",
+      "chance": 0.3,
+      "seconds": 1.5,
+      "value": 0.5
+    },
+    "burrow": {
+      "cooldown": 7.0,
+      "seconds": 1.6,
+      "speed": 170,
+      "radius": 80,
+      "warning_seconds": 0.6,
+      "damage_multiplier": 1.5
+    },
+    "gear_drops": {
+      "chance": 0.06,
+      "items": [
+        "verdant_headband",
+        "verdant_cape",
+        "verdant_gloves",
+        "verdant_boots",
+        "crimson_plate",
+        "crimson_sword",
+        "ember_staff",
+        "midnight_robe",
+        "crimson_bow",
+        "shadow_vest",
+        "swift_boots",
+        "hawk_gloves",
+        "duelist_cape",
+        "starlit_hat",
+        "azure_hood"
+      ]
+    }
+  },
+  "moss_golem": {
+    "name": "Moss Golem",
+    "level": 15,
+    "max_hp": 1300,
+    "move_speed": 58,
+    "detect_radius": 280,
+    "attack_range": 66,
+    "attack_damage": 58,
+    "attack_cooldown": 1.8,
+    "respawn_seconds": 10,
+    "xp": 330,
+    "gold": [
+      24,
+      48
+    ],
+    "drops": [
+      {
+        "item": "red_potion",
+        "chance": 0.4
+      },
+      {
+        "item": "blue_potion",
+        "chance": 0.15
+      },
+      {
+        "item": "ember_stone",
+        "chance": 0.12
+      },
+      {
+        "item": "moon_stone",
+        "chance": 0.04
+      }
+    ],
+    "defense": 14,
+    "evasion": 0.0,
+    "tint": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "frames": "res://assets/monsters/golem/golem_frames.tres",
+    "scale": 1.5,
+    "knockback_resist": 0.7,
+    "special": {
+      "every": 2,
+      "radius": 110,
+      "warning_seconds": 1.0,
+      "damage_multiplier": 1.8
+    },
+    "gear_drops": {
+      "chance": 0.07,
+      "items": [
+        "verdant_headband",
+        "verdant_cape",
+        "verdant_gloves",
+        "verdant_boots",
+        "crimson_plate",
+        "crimson_sword",
+        "ember_staff",
+        "midnight_robe",
+        "crimson_bow",
+        "shadow_vest",
+        "swift_boots",
+        "hawk_gloves",
+        "duelist_cape",
+        "starlit_hat",
+        "azure_hood"
+      ]
+    }
+  },
+  "elder_treant": {
+    "name": "Elder Treant",
+    "level": 18,
+    "max_hp": 8000,
+    "move_speed": 50,
+    "detect_radius": 460,
+    "attack_range": 96,
+    "attack_damage": 70,
+    "attack_cooldown": 1.6,
+    "respawn_seconds": 360,
+    "xp": 4000,
+    "gold": [
+      400,
+      800
+    ],
+    "drops": [
+      {
+        "item": "moon_stone",
+        "chance": 1.0
+      },
+      {
+        "item": "ember_stone",
+        "chance": 1.0
+      },
+      {
+        "item": "red_potion",
+        "chance": 1.0
+      },
+      {
+        "item": "blue_potion",
+        "chance": 0.6
+      },
+      {
+        "item": "rebirth_scroll",
+        "chance": 0.15
+      }
+    ],
+    "defense": 18,
+    "evasion": 0.0,
+    "tint": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "frames": "res://assets/monsters/treant/treant_frames.tres",
+    "scale": 2.6,
+    "knockback_resist": 1.0,
+    "special": {
+      "every": 2,
+      "radius": 170,
+      "warning_seconds": 1.1,
+      "damage_multiplier": 1.7
+    },
+    "boss": {
+      "enrage_at": 0.5,
+      "enrage_speed": 1.3,
+      "rarity_rolls": 3,
+      "summon": {
+        "monster": "rootling",
+        "count": 2,
+        "every": 14.0,
+        "most": 4
+      }
+    },
+    "gear_drops": {
+      "chance": 1.0,
+      "items": [
+        "verdant_headband",
+        "verdant_cape",
+        "verdant_gloves",
+        "verdant_boots",
+        "crimson_plate",
+        "crimson_sword",
+        "ember_staff",
+        "midnight_robe",
+        "crimson_bow",
+        "shadow_vest",
+        "swift_boots",
+        "hawk_gloves",
+        "duelist_cape",
+        "starlit_hat",
+        "azure_hood"
+      ]
+    },
+    "crown": false
   }
 }

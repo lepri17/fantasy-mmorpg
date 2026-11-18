@@ -72,7 +72,8 @@ def maps() -> dict:
             kind = thing["type"]
             if kind in OBSTACLES:
                 offset, radius = OBSTACLES[kind]
-                place.obstacles.append((x, y + offset, radius + MONSTER_RADIUS))
+                scale = float(thing.get("scale", 1.0))  # the deep forest's bigger trees
+                place.obstacles.append((x, y + offset * scale, radius * scale + MONSTER_RADIUS))
             elif kind == "portal":
                 place.portals.append({"pos": (x, y), "to": thing["to"], "spawn": thing.get("spawn", "default")})
             elif kind == "npc":

@@ -25,12 +25,13 @@ from server.rules.stats import (  # noqa: E402
 )
 
 OUT = ROOT / "docs" / "BALANCE.md"
-LEVELS = (1, 2, 3, 4, 5, 6, 8, 10, 12, 15)
+LEVELS = (1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 18)
 # Where a hero of each level hunts (the monster used for "time to kill").
-HUNT = [(1, "green_slime"), (3, "blue_slime"), (4, "spore_shroom"), (8, "slime_king")]
+HUNT = [(1, "green_slime"), (3, "blue_slime"), (4, "spore_shroom"), (8, "slime_king"), (9, "bramble_boar"),
+        (10, "lantern_wisp"), (13, "rootling"), (15, "moss_golem"), (18, "elder_treant")]
 MAIN_STAT = {"warrior": "strength", "archer": "dexterity", "mage": "energy"}
 # Monsters a hero hunts for XP (not the boss nor the event's golden slimes).
-REGULAR = ("green_slime", "blue_slime", "spore_shroom")
+REGULAR = ("green_slime", "blue_slime", "spore_shroom", "bramble_boar", "lantern_wisp", "rootling", "moss_golem")
 BUILD_LEVEL = 10
 GEAR_TARGET = "blue_slime"  # the monster the gear table measures DPS and survival against
 BETWEEN_FIGHTS = 5.0  # seconds of walking, looting and waiting for respawns per kill (pace table)
@@ -47,7 +48,7 @@ def hero(class_id: str, level: int) -> Stats:
 def prey(level: int) -> str:
     chosen = HUNT[0][1]
     for from_level, monster_id in HUNT:
-        if level >= from_level and monster_id != "slime_king":
+        if level >= from_level and "boss" not in table("monsters")[monster_id]:
             chosen = monster_id
     return chosen
 
@@ -102,7 +103,6 @@ def heroes_section() -> str:
 
 def monsters_section() -> str:
     rows = []
-    reference = hero("warrior", 1)
     for monster in table("monsters").values():
         gold = sum(monster["gold"]) / 2
         level_hero = hero("warrior", int(monster["level"]))
@@ -111,13 +111,15 @@ def monsters_section() -> str:
             monster["name"], monster["level"], monster["max_hp"], monster["attack_damage"], monster.get("defense", 0),
             f"{float(monster.get('evasion', 0)) * 100:.0f}%", monster["xp"], f"{gold:.1f}",
             f"{monster['xp'] / monster['max_hp']:.2f}", f"{monster['max_hp'] / dps:.1f}",
-            f"{monster_hit(monster, reference):.1f}",
+            f"{monster_hit(monster, level_hero):.1f}", f"{survive_seconds(level_hero, monster):.0f}",
         ])
     return "\n".join([
         "## מפלצות", "",
-        "\"שנ' להריגה\": לוחם ברמה של המפלצת, תקיפה רגילה בלבד. \"פגיעה בלוחם רמה 1\": נזק ממוצע למכה (אחרי הגנה והתחמקות).", "",
+        "מול לוחם ברמה של המפלצת, עם ציוד ההתחלה: \"שנ' להריגה\" בתקיפה רגילה בלבד, \"פגיעה בלוחם\" "
+        "נזק ממוצע למכה רגילה (אחרי הגנה והתחמקות), ו\"שנ' עד שהיא הורגת\" בלי לרפא. מכות מיוחדות (הסתערות, "
+        "מכת קרקע, התפרצות) חזקות יותר אבל מסומנות מראש.", "",
         md_table(["מפלצת", "רמה", "HP", "נזק", "הגנה", "התחמקות", "EXP", "זהב (ממוצע)", "EXP ל-HP",
-                  "שנ' להריגה", "פגיעה בלוחם רמה 1"], rows), "",
+                  "שנ' להריגה", "פגיעה בלוחם", "שנ' עד שהיא הורגת"], rows), "",
     ])
 
 
@@ -140,7 +142,7 @@ def pace_section() -> str:
     monsters = table("monsters")
     rows = []
     total_minutes = 0.0
-    for level in range(1, 16):
+    for level in range(1, 21):
         stats = hero("warrior", level)
         monster_id, xp, seconds_each = best_hunt(stats)
         kills = stats.xp_to_next() / xp

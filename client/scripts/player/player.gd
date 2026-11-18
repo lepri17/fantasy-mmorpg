@@ -836,7 +836,8 @@ func _update_silhouette(delta: float) -> void:
 func _behind_tree() -> bool:
 	for tree in get_tree().get_nodes_in_group("trees"):
 		var gap: Vector2 = tree.global_position - global_position
-		if gap.y > 0.0 and gap.y < TREE_COVER.y and absf(gap.x) < TREE_COVER.x:
+		var cover: Vector2 = TREE_COVER * tree.scale  # the deep forest has bigger trees
+		if gap.y > 0.0 and gap.y < cover.y and absf(gap.x) < cover.x:
 			return true
 	return false
 

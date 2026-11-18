@@ -5,11 +5,16 @@ extends Area2D
 const GameData := preload("res://scripts/data/game_data.gd")
 const SWIRL := Color(0.55, 0.85, 1.0)
 const RINGS := 3
+## A moment after a map loads before its portals work. The hero is moved to
+## his spawn point as the map loads; without this, a portal standing where he
+## was on the last map could send him on at once.
+const ARM_SECONDS := 0.25
 
 @export var to_map: String = ""
 @export var to_spawn: String = "default"
 
 var _spin: float = 0.0
+var _armed_in: float = ARM_SECONDS
 
 
 func _ready() -> void:
@@ -27,6 +32,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_armed_in = maxf(0.0, _armed_in - delta)
 	_spin += delta * 2.5
 	queue_redraw()
 
@@ -41,5 +47,7 @@ func _draw() -> void:
 
 
 func _on_body_entered(body: Node) -> void:
+	if _armed_in > 0.0:
+		return
 	if body.is_in_group("player") and not body.get("is_dead"):
 		get_tree().call_group("game", "change_map", to_map, to_spawn)

@@ -1675,7 +1675,7 @@ def build_icon(sheet: Image.Image) -> Image.Image:
 TILE = 128
 # Ground kinds in tiles.png, two seamless variants each, in this column order.
 # client/data/maps.json names them in "tile_kinds".
-TILE_KINDS = ["grass", "path", "stone", "forest", "cellar"]
+TILE_KINDS = ["grass", "path", "stone", "forest", "cellar", "twilight", "grove"]
 
 
 def _seamless(size: int, base, paint, seed: int) -> Image.Image:
@@ -1748,6 +1748,50 @@ def _paint_forest(draw, rng, everywhere, size, scale):
             fill=color, width=int(1.5 * scale)))
 
 
+def _blobs(draw, rng, everywhere, size, scale, count, colors, rx_range, ry_range):
+    for _ in range(count):
+        x, y = rng.uniform(0, size) * scale, rng.uniform(0, size) * scale
+        rx, ry = rng.uniform(*rx_range) * scale, rng.uniform(*ry_range) * scale
+        color = rng.choice(colors)
+        everywhere(lambda ox, oy: draw.ellipse(
+            [ox + x - rx, oy + y - ry, ox + x + rx, oy + y + ry], fill=color))
+
+
+def _tufts(draw, rng, everywhere, size, scale, count, colors):
+    for _ in range(count):
+        x, y = rng.uniform(0, size) * scale, rng.uniform(0, size) * scale
+        h = rng.uniform(4, 7) * scale
+        color = rng.choice(colors)
+        everywhere(lambda ox, oy: draw.line(
+            [(ox + x - 3 * scale, oy + y - h), (ox + x, oy + y), (ox + x + 3 * scale, oy + y - h)],
+            fill=color, width=int(1.5 * scale)))
+
+
+def _paint_twilight(draw, rng, everywhere, size, scale):
+    """Twilight Woods: a dim blue-green floor with fallen leaves."""
+    _blobs(draw, rng, everywhere, size, scale, 12,
+           [(52, 94, 90, 255), (66, 112, 98, 255), (46, 84, 90, 255)], (16, 34), (10, 20))
+    _blobs(draw, rng, everywhere, size, scale, 14,
+           [(150, 112, 74, 255), (118, 96, 136, 255), (92, 128, 90, 255)], (2.5, 4.0), (1.5, 2.5))
+    _tufts(draw, rng, everywhere, size, scale, 34, [(40, 80, 72, 255), (84, 128, 104, 255)])
+
+
+def _paint_grove(draw, rng, everywhere, size, scale):
+    """Elder Grove: deep moss crossed by old roots, with a few glowing specks."""
+    _blobs(draw, rng, everywhere, size, scale, 12,
+           [(52, 100, 62, 255), (38, 76, 50, 255), (60, 112, 68, 255)], (16, 34), (10, 20))
+    for _ in range(4):
+        x, y = rng.uniform(0, size) * scale, rng.uniform(0, size) * scale
+        phase = rng.uniform(0, 6)
+        step = rng.uniform(8, 13) * scale
+        points = [(x + k * step, y + math.sin(k * 1.2 + phase) * 5 * scale) for k in range(7)]
+        everywhere(lambda ox, oy: draw.line(
+            [(ox + px, oy + py) for px, py in points], fill=(86, 64, 44, 255), width=int(3 * scale),
+            joint="curve"))
+    _tufts(draw, rng, everywhere, size, scale, 20, [(34, 70, 46, 255), (78, 128, 82, 255)])
+    _blobs(draw, rng, everywhere, size, scale, 10, [(160, 236, 196, 255)], (1.0, 1.4), (1.0, 1.4))
+
+
 def _paint_cellar(draw, rng, everywhere, size, scale):
     bricks = 4
     step = size / bricks
@@ -1771,6 +1815,8 @@ def build_tiles() -> Image.Image:
         "stone": lambda seed: _seamless(TILE, (160, 154, 170, 255), _paint_stone, seed),
         "forest": lambda seed: _seamless(TILE, (78, 142, 82, 255), _paint_forest, seed),
         "cellar": lambda seed: _seamless(TILE, (60, 54, 72, 255), _paint_cellar, seed),
+        "twilight": lambda seed: _seamless(TILE, (58, 102, 92, 255), _paint_twilight, seed),
+        "grove": lambda seed: _seamless(TILE, (46, 88, 60, 255), _paint_grove, seed),
     }
     sheet = Image.new("RGBA", (TILE * 2 * len(TILE_KINDS), TILE), (0, 0, 0, 0))
     for i, kind in enumerate(TILE_KINDS):
@@ -1955,6 +2001,319 @@ def build_shroom_sheet() -> Image.Image:
     return sheet
 
 
+# --- the deep forest: Twilight Woods and Elder Grove
+
+BOAR = (138, 92, 64, 255)
+BOAR_DARK = (100, 66, 46, 255)
+SNOUT = (236, 168, 150, 255)
+TUSK = (250, 244, 226, 255)
+BRAMBLE = (74, 124, 70, 255)
+THORN = (210, 228, 170, 255)
+DUST = (196, 180, 150, 180)
+# (animation, body half-width, half-height, face, dust)
+BOAR_POSES = [
+    ("idle", 21, 14, "normal", 0),
+    ("idle", 21.6, 13.3, "normal", 0),
+    ("attack", 23, 12.6, "angry", 3),
+    ("attack", 24, 12, "angry", 6),
+    ("die", 22, 12, "dead", 0),
+    ("die", 23, 8.5, "dead", 2),
+    ("die", 0, 0, "none", 6),
+]
+
+
+def _eyes(c, cx, eye_y, gap, face, size=1.0, color=EYE):
+    """Two eyes as the slimes have them: shut with crosses when dead, brows when angry."""
+    for side in (-1, 1):
+        ex = cx + side * gap
+        if face == "dead":
+            c.line([(ex - 2 * size, eye_y - 2 * size), (ex + 2 * size, eye_y + 2 * size)], width=1.3)
+            c.line([(ex - 2 * size, eye_y + 2 * size), (ex + 2 * size, eye_y - 2 * size)], width=1.3)
+            continue
+        c.ellipse(ex, eye_y, 2.2 * size, 2.8 * size, color, outline=False)
+        c.ellipse(ex - 0.7 * size, eye_y - 1.2 * size, 0.9 * size, 0.9 * size, WHITE, outline=False)
+        if face == "angry":
+            c.line([(ex + side * 3.6 * size, eye_y - 5 * size), (ex - side * 1.6 * size, eye_y - 3.2 * size)],
+                   width=1.3)
+
+
+def draw_boar(rx: float, ry: float, face: str, dust: int) -> Image.Image:
+    """Bramble Boar: a round boar with a thorny bramble mane, a pink snout and tusks."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 20, 4, SHADOW, outline=False)
+    rng = random.Random(dust * 5 + int(rx))
+    if rx == 0:  # only bramble leaves are left
+        for _ in range(dust):
+            c.ellipse(cx + rng.uniform(-16, 16), feet - rng.uniform(1, 12), 2.8, 1.8, BRAMBLE)
+        return c.finish()
+    for i in range(dust):  # dust kicked up behind a charge
+        side = -1 if i % 2 else 1
+        c.ellipse(cx + side * (rx + 3 + (i // 2) * 4), feet - 3 - (i % 3) * 2, 3.2, 2.4, DUST, outline=False)
+    cy = feet - ry - 4
+    for side in (-1, 1):
+        for leg in (11, 4):
+            c.rect(cx + side * leg - 3, feet - 8, cx + side * leg + 3, feet, BOAR_DARK, radius=2)
+    for k in range(6):  # the bramble mane over the back
+        angle = math.radians(196 + k * 30)
+        c.ellipse(cx + math.cos(angle) * rx * 0.78, cy + math.sin(angle) * ry * 0.95, 5.2, 4.2, BRAMBLE)
+    c.ellipse(cx, cy, rx, ry, BOAR)
+    for k in range(6):  # thorns out of the mane
+        angle = math.radians(198 + k * 30)
+        tx, ty = cx + math.cos(angle) * (rx * 0.78 + 5), cy + math.sin(angle) * (ry * 0.95 + 5)
+        tip = (tx + math.cos(angle) * 3.4, ty + math.sin(angle) * 3.4)
+        c.polygon([(tx - 1.6, ty), (tx + 1.6, ty), tip], THORN)
+    for side in (-1, 1):  # ears
+        ex = cx + side * rx * 0.58
+        c.polygon([(ex - 4, cy - ry * 0.55), (ex + 4, cy - ry * 0.55), (ex + side * 2.5, cy - ry - 3)], BOAR_DARK)
+    _eyes(c, cx, cy - 3, 7, face)
+    if face == "dead":
+        c.ellipse(cx, cy + 5, 7, 4.5, SNOUT)
+        return c.finish()
+    for side in (-1, 1):  # tusks
+        c.polygon([(cx + side * 5, cy + 7), (cx + side * 8, cy + 6), (cx + side * 10, cy + 0.5)], TUSK)
+    c.ellipse(cx, cy + 5, 7, 5, SNOUT)
+    for side in (-1, 1):
+        c.ellipse(cx + side * 2.6, cy + 5, 1.2, 1.8, BOAR_DARK, outline=False)
+    return c.finish()
+
+
+WISP_HALO = (255, 236, 160, 70)
+WISP_BODY = (255, 230, 140, 255)
+WISP_CORE = (255, 252, 230, 255)
+WISP_SPARK = (255, 214, 120, 255)
+# (animation, size, sway of the tip, face, sparks)
+WISP_POSES = [
+    ("idle", 1.0, -2.5, "normal", 0),
+    ("idle", 1.0, 2.5, "normal", 0),
+    ("attack", 1.14, 0, "angry", 3),
+    ("attack", 1.06, -1, "angry", 6),
+    ("die", 0.86, 0, "dead", 2),
+    ("die", 0.62, 0, "dead", 5),
+    ("die", 0.0, 0, "none", 8),
+]
+
+
+def draw_wisp(size: float, sway: float, face: str, sparks: int) -> Image.Image:
+    """Lantern Wisp: a little floating flame with a soft glow round it."""
+    c = Canvas(SLIME_FRAME)
+    cx, cy = 32, 32
+    c.ellipse(cx, SLIME_FEET_Y + 1, 9, 2.6, SHADOW, outline=False)
+    rng = random.Random(sparks * 3 + 1)
+    for _ in range(sparks):
+        sx, sy = cx + rng.uniform(-20, 20), cy + rng.uniform(-22, 16)
+        c.polygon([(sx, sy - 2.4), (sx + 1.6, sy), (sx, sy + 2.4), (sx - 1.6, sy)], WISP_SPARK, outline=False)
+    if size == 0:
+        return c.finish()
+    r = 11.5 * size
+    c.ellipse(cx, cy, 21 * size, 21 * size, WISP_HALO, outline=False)
+    body = arc_points(cx, cy + 3, r, r * 0.95, -25, 205, 18) + [(cx + sway, cy - r * 1.75)]
+    c.polygon(body, WISP_BODY)
+    c.ellipse(cx, cy + 4, r * 0.55, r * 0.5, WISP_CORE, outline=False)
+    _eyes(c, cx, cy + 2, 4.6 * size, face, 0.9 * size)
+    return c.finish()
+
+
+BARK = (138, 98, 68, 255)
+BARK_DARK = (98, 68, 46, 255)
+SPROUT = (116, 196, 92, 255)
+ROOT_EYE = (176, 255, 150, 255)
+# (animation, height, arms: 1 up / 0 down / -1 striking, face, wood chips)
+ROOTLING_POSES = [
+    ("idle", 30, 0, "normal", 0),
+    ("idle", 29, 0, "normal", 0),
+    ("attack", 31, 1, "angry", 0),
+    ("attack", 27, -1, "angry", 3),
+    ("die", 24, 0, "dead", 0),
+    ("die", 15, 0, "dead", 4),
+    ("die", 0, 0, "none", 7),
+]
+
+
+def draw_rootling(height: float, arms: int, face: str, chips: int) -> Image.Image:
+    """Rootling: a walking stump on root legs, with a sprout on its head and glowing eyes."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 15, 3.6, SHADOW, outline=False)
+    rng = random.Random(chips * 7 + int(height))
+    for _ in range(chips):
+        x, y = cx + rng.uniform(-16, 16), feet - rng.uniform(1, 10)
+        c.rect(x - 2.2, y - 1.4, x + 2.2, y + 1.4, BARK, radius=0.8)
+    if height == 0:
+        return c.finish()
+    top = feet - height
+    for dx, end in ((-7, -14), (-2, -6), (3, 6), (8, 14)):  # root legs
+        c.line([(cx + dx, feet - 7), (cx + dx + (end - dx) * 0.5, feet - 2), (cx + end, feet)], fill=BARK_DARK,
+               width=2.6)
+    for side in (-1, 1):  # root arms
+        shoulder = (cx + side * 10, top + 13)
+        if arms == 1:
+            hand = (cx + side * 17, top + 2)
+        elif arms == -1:
+            hand = (cx + side * 19, top + 20)
+        else:
+            hand = (cx + side * 15, top + 19)
+        c.line([shoulder, hand], fill=BARK_DARK, width=3.2)
+    c.rect(cx - 11, top, cx + 11, feet - 5, BARK, radius=7)
+    for x in (cx - 5, cx + 4):
+        c.line([(x, top + 5), (x + 1, feet - 9)], fill=BARK_DARK, width=1.2)
+    c.ellipse(cx, top + 1.5, 10, 3.2, (176, 134, 96, 255))  # the cut top with rings
+    c.ellipse(cx, top + 1.5, 5, 1.6, (150, 110, 78, 255), outline=False)
+    if face != "dead":
+        c.line([(cx + 2, top), (cx + 3, top - 7)], width=1.4)
+        c.polygon([(cx + 3, top - 6), (cx + 11, top - 11), (cx + 10, top - 4)], SPROUT)
+        c.polygon([(cx + 3, top - 6), (cx - 4, top - 10), (cx - 3, top - 3)], SPROUT)
+    _eyes(c, cx, top + 11, 4.6, face, 0.95, ROOT_EYE if face != "dead" else EYE)
+    if face == "angry":
+        c.line(arc_points(cx, top + 18, 2.4, 1.4, 200, 340, 8), width=1.2)
+    elif face == "normal":
+        c.line(arc_points(cx, top + 16, 2.2, 1.4, 20, 160, 8), width=1.1)
+    return c.finish()
+
+
+GOLEM_STONE = (134, 140, 134, 255)
+GOLEM_DARK = (100, 106, 102, 255)
+GOLEM_MOSS = (96, 156, 82, 255)
+GOLEM_MOSS_LIGHT = (140, 196, 106, 255)
+GOLEM_EYE = (140, 255, 226, 255)
+# (animation, bob down, arms: 1 up / 0 down / -1 slam, face, loose rocks)
+GOLEM_POSES = [
+    ("idle", 0, 0, "normal", 0),
+    ("idle", 1, 0, "normal", 0),
+    ("attack", -2, 1, "angry", 0),
+    ("attack", 2, -1, "angry", 4),
+    ("die", 3, -1, "dead", 3),
+    ("die", 8, -1, "dead", 6),
+    ("die", 0, 0, "none", 9),
+]
+
+
+def draw_golem(bob: float, arms: int, face: str, rocks: int) -> Image.Image:
+    """Moss Golem: a chunky stone body with moss on the head and shoulders, glowing eyes."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 20, 4, SHADOW, outline=False)
+    rng = random.Random(rocks * 11 + int(bob))
+    for _ in range(rocks):
+        c.ellipse(cx + rng.uniform(-20, 20), feet - rng.uniform(0, 5), rng.uniform(2, 3.6), 2.2, GOLEM_DARK)
+    if face == "none":
+        return c.finish()
+    top = feet - 36 + bob
+    for side in (-1, 1):  # legs
+        c.rect(cx + side * 9 - 5, feet - 9, cx + side * 9 + 5, feet, GOLEM_DARK, radius=2)
+    for side in (-1, 1):  # arms
+        if arms == 1:
+            box = (cx + side * 17 - 5, top - 6, cx + side * 17 + 5, top + 12)
+        elif arms == -1:
+            box = (cx + side * 21 - 6, top + 16, cx + side * 21 + 6, top + 30)
+        else:
+            box = (cx + side * 19 - 5, top + 9, cx + side * 19 + 5, top + 26)
+        c.rect(min(box[0], box[2]), box[1], max(box[0], box[2]), box[3], GOLEM_STONE, radius=4)
+    c.rect(cx - 15, top + 6, cx + 15, feet - 6, GOLEM_STONE, radius=7)
+    c.rect(cx - 10, top - 6, cx + 10, top + 10, GOLEM_STONE, radius=5)
+    for x, y, rx, ry in ((-6, -5, 6, 3.2), (5, -6, 5, 2.8), (-12, 7, 5, 3), (11, 8, 5.5, 3.2), (0, 20, 4, 2.4)):
+        c.ellipse(cx + x, top + y, rx, ry, GOLEM_MOSS, outline=False)
+        c.ellipse(cx + x - rx * 0.3, top + y - ry * 0.3, rx * 0.4, ry * 0.4, GOLEM_MOSS_LIGHT, outline=False)
+    eye_y = top + 3
+    for side in (-1, 1):
+        ex = cx + side * 4.5
+        if face == "dead":
+            c.line([(ex - 2, eye_y - 1), (ex + 2, eye_y + 1)], width=1.3)
+            continue
+        c.rect(ex - 2.2, eye_y - 1.6, ex + 2.2, eye_y + 1.6, GOLEM_EYE, radius=1, outline=False)
+        if face == "angry":
+            c.line([(ex + side * 3.6, eye_y - 4.4), (ex - side * 2, eye_y - 2.6)], width=1.4)
+    if face == "dead":
+        c.line([(cx - 8, top + 12), (cx - 2, top + 20), (cx - 5, top + 28)], width=1.2)
+        c.line([(cx + 6, top + 10), (cx + 2, top + 18)], width=1.2)
+    return c.finish()
+
+
+TRUNK = (114, 80, 54, 255)
+TRUNK_DARK = (82, 56, 38, 255)
+CROWN = (56, 116, 64, 255)
+CROWN_LIGHT = (94, 158, 82, 255)
+TREANT_EYE = (255, 204, 96, 255)
+BEARD = (128, 170, 100, 255)
+FALLING_LEAF = (110, 170, 84, 255)
+# (animation, sway of the crown, branches: 1 up / 0 down / -1 slam, face, falling leaves)
+TREANT_POSES = [
+    ("idle", -1.2, 0, "normal", 0),
+    ("idle", 1.2, 0, "normal", 0),
+    ("attack", 0, 1, "angry", 0),
+    ("attack", 0, -1, "angry", 4),
+    ("die", 2, -1, "dead", 3),
+    ("die", 5, -1, "dead", 6),
+    ("die", 0, 0, "none", 9),
+]
+
+
+def draw_treant(sway: float, branches: int, face: str, leaves: int) -> Image.Image:
+    """Elder Treant: an old tree with a face, branch arms, a mossy beard and a leafy crown."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 21, 4, SHADOW, outline=False)
+    rng = random.Random(leaves * 13 + 5)
+    if face == "none":  # a fallen log and leaves
+        c.rect(cx - 20, feet - 8, cx + 20, feet - 1, TRUNK, radius=4)
+        c.ellipse(cx + 20, feet - 4.5, 3, 3.5, (176, 134, 96, 255))
+    for _ in range(leaves):
+        x, y = cx + rng.uniform(-24, 24), feet - rng.uniform(2, 30)
+        c.ellipse(x, y, 2.4, 1.6, FALLING_LEAF)
+    if face == "none":
+        return c.finish()
+    for dx in (-13, -6, 6, 13):  # roots
+        c.polygon([(cx + dx * 0.6 - 3, feet - 8), (cx + dx * 0.6 + 3, feet - 8), (cx + dx, feet)], TRUNK_DARK)
+    for side in (-1, 1):  # branch arms with leafy ends
+        shoulder = (cx + side * 8, feet - 22)
+        if branches == 1:
+            hand = (cx + side * 22, feet - 40)
+        elif branches == -1:
+            hand = (cx + side * 25, feet - 10)
+        else:
+            hand = (cx + side * 22, feet - 22)
+        c.line([shoulder, hand], fill=TRUNK_DARK, width=3.4)
+        c.ellipse(hand[0], hand[1], 4.4, 3.6, CROWN)
+    c.rect(cx - 10, feet - 32, cx + 10, feet - 4, TRUNK, radius=4)
+    for x in (cx - 6, cx + 5):
+        c.line([(x, feet - 28), (x - 1, feet - 8)], fill=TRUNK_DARK, width=1.1)
+    for x, y, rx, ry, color in ((-11, -38, 12, 9, CROWN), (11, -38, 12, 9, CROWN), (0, -45, 15, 10, CROWN),
+                                (-5, -46, 6, 3.6, CROWN_LIGHT), (8, -40, 5, 3, CROWN_LIGHT)):
+        c.ellipse(cx + x + sway, feet + y, rx, ry, color, outline=color is CROWN)
+    eye_y = feet - 23
+    for side in (-1, 1):
+        ex = cx + side * 4.5
+        if face == "dead":
+            c.line([(ex - 2, eye_y - 2), (ex + 2, eye_y + 2)], width=1.3)
+            c.line([(ex - 2, eye_y + 2), (ex + 2, eye_y - 2)], width=1.3)
+            continue
+        c.ellipse(ex, eye_y, 2.4, 2.0, TREANT_EYE, outline=False)
+        brow_in = 3.2 if face == "angry" else 1.6
+        c.line([(ex + side * 3.4, eye_y - 3.6 - (1.2 if face == "angry" else 0)), (ex - side * 2.4, eye_y - brow_in)],
+               width=1.6)
+    c.polygon([(cx - 6, feet - 17), (cx + 6, feet - 17), (cx + 3, feet - 9), (cx, feet - 11), (cx - 3, feet - 9)],
+              BEARD)
+    c.line([(cx - 3, feet - 18.5), (cx + 3, feet - 18.5)], width=1.3)
+    return c.finish()
+
+
+# Monster folder -> (drawing, poses). Each gets <name>.png and <name>_frames.tres.
+FOREST_MONSTERS = {
+    "boar": (draw_boar, BOAR_POSES),
+    "wisp": (draw_wisp, WISP_POSES),
+    "rootling": (draw_rootling, ROOTLING_POSES),
+    "golem": (draw_golem, GOLEM_POSES),
+    "treant": (draw_treant, TREANT_POSES),
+}
+
+
+def build_monster_sheet(draw, poses) -> Image.Image:
+    sheet = Image.new("RGBA", (SLIME_FRAME * len(poses), SLIME_FRAME), (0, 0, 0, 0))
+    for col, pose in enumerate(poses):
+        sheet.paste(draw(*pose[1:]), (col * SLIME_FRAME, 0))
+    return sheet
+
+
 def build_slime_frames(sheet_res_path: str, poses=SLIME_POSES) -> str:
     """SpriteFrames text for a monster sheet: idle (loops), attack and die."""
     lines = [
@@ -2048,6 +2407,13 @@ def main() -> None:
     (shroom_dir / "shroom_frames.tres").write_text(
         build_slime_frames("res://assets/monsters/shroom/shroom.png", SHROOM_POSES), encoding="utf-8"
     )
+    for name, (draw, poses) in FOREST_MONSTERS.items():
+        folder = ASSETS / "monsters" / name
+        folder.mkdir(parents=True, exist_ok=True)
+        build_monster_sheet(draw, poses).save(folder / f"{name}.png")
+        (folder / f"{name}_frames.tres").write_text(
+            build_slime_frames(f"res://assets/monsters/{name}/{name}.png", poses), encoding="utf-8"
+        )
     print("Assets written to", ASSETS)
 
 

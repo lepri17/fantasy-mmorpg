@@ -307,6 +307,14 @@ def check_monsters(monsters: dict, items: dict) -> None:
         tint = monster.get("tint", [1, 1, 1, 1])
         if not (isinstance(tint, list) and len(tint) == 4 and all(map(is_number, tint))):
             error(f"{where}: 'tint' must be four numbers")
+        for move, keys in MONSTER_MOVES.items():
+            if move in monster:
+                for key in keys:
+                    need_number(f"{where} {move}", monster[move], key, 0.01)
+        if "hover" in monster:
+            need_number(where, monster, "hover", 0, 30)
+        if "knockback_resist" in monster:
+            need_number(where, monster, "knockback_resist", 0.0, 1.0)
 
 
 SKILL_TYPES = {
@@ -528,7 +536,15 @@ def check_upgrades(items_data: dict) -> None:
         check_bonus(f"{where} per_plus '{slot}'", bonus)
 
 
-OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc", "torch"}
+OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc", "torch", "glowcap"}
+GLOW_COLORS = {"cyan", "teal", "violet"}
+# A monster's extra moves (slime.gd) and the numbers each needs.
+MONSTER_MOVES = {
+    "charge": ("range", "min_range", "warning_seconds", "speed", "distance", "damage_multiplier", "cooldown"),
+    "blink": ("when_closer", "distance", "cooldown"),
+    "burrow": ("cooldown", "seconds", "speed", "radius", "warning_seconds", "damage_multiplier"),
+    "special": ("every", "radius", "warning_seconds", "damage_multiplier"),
+}
 SERVICES = {"shop", "heal", "storage", "teleport", "quests"}
 
 
@@ -615,6 +631,12 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
             error(f"{where}: music '{data['music']}' has no file in assets/audio")
         if not isinstance(data.get("indoor", False), bool):
             error(f"{where}: 'indoor' must be true or false")
+        shade = data.get("shade", [1, 1, 1])
+        if not (isinstance(shade, list) and len(shade) == 3 and all(is_number(v) and 0.2 <= v <= 1.0
+                                                                     for v in shade)):
+            error(f"{where}: 'shade' must be three numbers from 0.2 to 1")
+        if "fireflies" in data:
+            need_number(where, data, "fireflies", 0, 200)
         if "ground" in data:
             rows = data["ground"]
             if not rows or any(len(row) != len(rows[0]) for row in rows):
@@ -684,6 +706,13 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                 continue
             if not inside(thing.get("pos"), kind):
                 continue
+            if "tint" in thing and not (isinstance(thing["tint"], list) and len(thing["tint"]) == 4
+                                        and all(map(is_number, thing["tint"]))):
+                error(f"{where}: {kind} 'tint' must be four numbers")
+            if "scale" in thing:
+                need_number(f"{where} {kind}", thing, "scale", 0.5, 2.5)
+            if kind == "glowcap" and thing.get("color") not in GLOW_COLORS:
+                error(f"{where}: glowcap color must be one of {sorted(GLOW_COLORS)}")
             if kind == "npc" and thing.get("id") not in npcs:
                 error(f"{where}: npc '{thing.get('id')}' is not in npcs.json")
             if kind == "monster" and thing.get("id") not in monsters:

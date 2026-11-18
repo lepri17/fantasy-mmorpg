@@ -174,6 +174,24 @@ def build_music(rng: random.Random) -> dict[str, list[float]]:
         voice(arpeggio, beat, "triangle", 0.3), voice(drone, beat, "sine", 0.55),
         voice([(45, 24)], beat, "sine", 0.25), drips(seconds, rng, 2.5),
     )
+    # Twilight Woods: the forest tune, slower and in a minor key, with wind and rare calls.
+    beat = 60 / 72
+    melody = [(64, 2), (67, 1), (71, 1), (69, 3), (None, 1), (67, 2), (64, 1), (62, 1), (64, 4),
+              (64, 2), (67, 1), (72, 1), (71, 3), (None, 1), (69, 2), (67, 2), (64, 4)]
+    bass = bars(40, 36, 38, 35, 40, 36, 38, 40)
+    seconds = 32 * beat
+    tracks["music_twilight"] = mix(
+        voice(melody, beat, "sine", 0.4), voice(bass, beat, "triangle", 0.35),
+        wind(seconds, rng), chirps(seconds, rng, 6.0),
+    )
+    # Elder Grove: slow, old and a little magical: a soft arpeggio over a deep drone.
+    beat = 60 / 66
+    arpeggio = [(57, 1), (60, 1), (64, 1), (60, 1), (55, 1), (59, 1), (62, 1), (59, 1)] * 3
+    seconds = 24 * beat
+    tracks["music_grove"] = mix(
+        voice(arpeggio, beat, "triangle", 0.28), voice([(33, 24)], beat, "sine", 0.5),
+        voice([(76, 4), (74, 4), (72, 4), (71, 4), (69, 8)], beat, "sine", 0.22), wind(seconds, rng),
+    )
     return tracks
 
 
