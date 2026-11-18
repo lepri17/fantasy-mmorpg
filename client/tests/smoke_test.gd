@@ -27,6 +27,7 @@ func _run() -> void:
 	SaveFile.path = SAVE_PATH
 	_remove_test_save()
 	SlimeScript.elite_chance_override = 0.0  # random elites would change the numbers below
+	seed(20261118)  # the same drops on every run
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await _frames(5)
@@ -160,7 +161,7 @@ func _run() -> void:
 		if slot.item_id != "":
 			worn += 1
 	_check(worn == 6, "six pieces of gear are shown (found %d)" % worn)
-	var first = inventory.bag_slots[0]
+	var first = inventory.bag_slots[_bag_index(player, "red_potion")]
 	_check(
 		first.item_id == "red_potion" and first.count == 3,
 		"the bag shows the potions (%s x%d)" % [first.item_id, first.count]
@@ -759,6 +760,61 @@ func _run() -> void:
 	_check(
 		player.global_position.distance_to(main.map.spawn_point("default")) < 5.0,
 		"the old respawn timer does not move him afterwards"
+	)
+
+	# --- the townspeople: TALK, the shop, storage, the healer and the guide (W1, W9)
+	var townspeople: Array = get_nodes_in_group("npcs")
+	_check(townspeople.size() == 5, "five townspeople in Willow Town")
+	var mira = townspeople.filter(func(npc): return npc.npc_id == "merchant")[0]
+	player.global_position = mira.global_position + Vector2(70, 30)
+	await _frames(4)
+	var talk_button = hud.get_node("TalkButton")
+	_check(talk_button.visible, "standing near Mira shows TALK")
+	talk_button.pressed.emit()
+	var dialog = hud.get_node("NpcDialog")
+	_check(dialog.visible and "Mira" in dialog.get("_name_label").text, "TALK opens Mira's dialog")
+	dialog.option("Buy and sell").pressed.emit()
+	var shop = hud.get_node("Shop")
+	_check(shop.visible and not dialog.visible, "Buy and sell opens her shop")
+	player.stats.gold = 100
+	var potions_before_buying: int = player.stats.potions
+	shop.request.emit("buy_item", "red_potion")
+	_check(
+		player.stats.gold == 80 and player.stats.potions == potions_before_buying + 1,
+		"a potion costs 20 gold"
+	)
+	shop.request.emit("buy_item", "moon_stone")
+	_check(player.stats.gold == 80, "she does not sell what is not on her list")
+	while player.stats.bag.size() >= 14:
+		player.stats.bag.pop_back()
+	player.add_item("slime_jelly", 2)
+	shop.request.emit("sell_from_bag", _bag_index(player, "slime_jelly"))
+	_check(
+		player.stats.gold == 87 and player.stats.count_of("slime_jelly") == 1,
+		"selling a Slime Jelly gives 7 gold"
+	)
+	hud.call("_close_windows")
+	player.add_item("ember_stone", 3)
+	var stones: int = player.stats.count_of("ember_stone")
+	player.store_item(_bag_index(player, "ember_stone"))
+	_check(
+		player.stats.count_of("ember_stone") == 0 and player.stats.storage.size() == 1,
+		"storing moves the stones out of the bag"
+	)
+	var kept = PlayerStats.new()
+	kept.from_dict(player.stats.to_dict())
+	_check(kept.storage == player.stats.storage, "storage survives saving (version 6)")
+	player.take_stored(0)
+	_check(player.stats.count_of("ember_stone") == stones, "TAKE brings them all back")
+	player.hp = 10
+	player.heal_at_npc()
+	_check(player.hp == player.max_hp, "Sister Lune heals fully")
+	player.stats.gold = 100
+	player.travel("forest")
+	await _frames(3)
+	_check(
+		main.map.map_id == "forest" and player.stats.gold == 60,
+		"Tessa sends the warrior to the forest for 40 gold"
 	)
 
 	_remove_test_save()

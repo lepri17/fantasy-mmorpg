@@ -58,10 +58,14 @@ def check_project_file() -> set[str]:
 
 def check_script(script: Path, actions: set[str]) -> None:
     text = script.read_text(encoding="utf-8")
+    parent = re.match(r'extends "(res://[^"]+)"', text)
+    if parent and res_to_path(parent.group(1)).exists():
+        # a script that extends another sees its constants and nodes too
+        text = res_to_path(parent.group(1)).read_text(encoding="utf-8") + "\n" + text
     name = script.relative_to(CLIENT)
     res_path = "res://" + name.as_posix()
 
-    for action in set(re.findall(r'"(move_(?:left|right|up|down)|attack|skill(?:_[2-4])?|dash|use_potion|inventory|character)"', text)) - actions:
+    for action in set(re.findall(r'"(move_(?:left|right|up|down)|attack|skill(?:_[2-4])?|dash|use_potion|inventory|character|talk)"', text)) - actions:
         errors.append(f"{name}: input action '{action}' is not in project.godot")
 
     scenes = [s for s in CLIENT.rglob("*.tscn") if res_path in s.read_text(encoding="utf-8")]

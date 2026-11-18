@@ -26,6 +26,10 @@
       {
         "item": "blue_potion",
         "chance": 0.08
+      },
+      {
+        "item": "slime_jelly",
+        "chance": 0.4
       }
     ],
     "tint": [
@@ -87,6 +91,10 @@
       {
         "item": "blue_potion",
         "chance": 0.15
+      },
+      {
+        "item": "slime_jelly",
+        "chance": 0.5
       }
     ],
     "tint": [

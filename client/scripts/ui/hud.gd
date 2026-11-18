@@ -4,6 +4,15 @@ extends CanvasLayer
 
 const ACTION_INVENTORY := "inventory"
 const ACTION_CHARACTER := "character"
+const ACTION_TALK := "talk"
+const NpcDialog := preload("res://scripts/ui/npc_dialog.gd")
+const ShopPanel := preload("res://scripts/ui/shop_panel.gd")
+const StoragePanel := preload("res://scripts/ui/storage_panel.gd")
+const GameData := preload("res://scripts/data/game_data.gd")
+## Player methods the town windows (dialog, shop, storage) may ask for.
+const TOWN_ACTIONS := [
+	"buy_item", "sell_from_bag", "store_item", "take_stored", "heal_at_npc", "travel"
+]
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
 const PlayerStats := preload("res://scripts/player/player_stats.gd")
 const DEATH_RED := Color(1.0, 0.45, 0.5)
@@ -25,6 +34,12 @@ const CHARACTER_ACTIONS := ["add_stat_point", "reset_stats", "choose_title"]
 
 var _player: Node = null
 var _banner: Label
+var _dialog
+var _shop
+var _storage
+var _talk_button: Button
+## The townsperson close enough to talk to, or null.
+var _nearby_npc: Node = null
 var _death_screen: Control
 var _death_count: Label
 var _death_left: float = 0.0
@@ -40,8 +55,10 @@ var _death_left: float = 0.0
 
 func _ready() -> void:
 	_message.hide()
+	add_to_group("hud")
 	_build_banner()
 	_build_death_screen()
+	_build_town_windows()
 	_style_round_button(_bag_button)
 	_style_round_button(_stats_button)
 	_stats_button.add_theme_font_size_override("font_size", 18)
@@ -72,6 +89,8 @@ func _physics_process(_delta: float) -> void:
 		toggle_inventory()
 	if Input.is_action_just_pressed(ACTION_CHARACTER):
 		toggle_character()
+	if Input.is_action_just_pressed(ACTION_TALK) and _talk_button.visible:
+		talk()
 	if _player != null:
 		_update_action_buttons()
 
@@ -87,10 +106,70 @@ func toggle_character() -> void:
 ## Opens one window (inventory or character) and closes the other. While a
 ## window is open the round action buttons are hidden, because it covers them.
 func _show_window(window: Control, open: bool) -> void:
-	_inventory.visible = open and window == _inventory
-	_character.visible = open and window == _character
+	for each in _windows():
+		each.visible = open and each == window
 	_refresh_windows()
 	get_tree().call_group(ACTION_BUTTONS_GROUP, "set_visible", not open)
+	_update_talk_button()
+
+
+func _windows() -> Array:
+	return [_inventory, _character, _dialog, _shop, _storage]
+
+
+func _close_windows() -> void:
+	_show_window(null, false)
+
+
+## A townsperson's talk area was entered (npc.gd).
+func set_nearby_npc(npc: Node) -> void:
+	_nearby_npc = npc
+	_update_talk_button()
+
+
+func clear_nearby_npc(npc: Node) -> void:
+	if _nearby_npc == npc:
+		_nearby_npc = null
+		_update_talk_button()
+
+
+## Opens the dialog of the townsperson close by.
+func talk() -> void:
+	if _nearby_npc == null or not is_instance_valid(_nearby_npc):
+		return
+	_dialog.open(_nearby_npc.get("npc_id"))
+	_show_window(_dialog, true)
+
+
+func _update_talk_button() -> void:
+	var any_open: bool = _windows().any(func(each: Control) -> bool: return each.visible)
+	_talk_button.visible = (
+		_nearby_npc != null
+		and is_instance_valid(_nearby_npc)
+		and not any_open
+		and _player != null
+		and not _player.get("is_dead")
+	)
+
+
+func _on_town_request(method: String, argument: Variant) -> void:
+	if _player == null:
+		return
+	match method:
+		"open_shop":
+			_shop.open(argument)
+			_show_window(_shop, true)
+		"open_storage":
+			_show_window(_storage, true)
+		"buy_item":
+			var stock: Array = GameData.table("npcs").get(_shop.npc_id, {}).get("shop", [])
+			if argument in stock:
+				_player.call("buy_item", argument)
+		_:
+			if method in TOWN_ACTIONS:
+				_player.call(method, argument)
+				if method in ["travel", "heal_at_npc"]:
+					_close_windows()
 
 
 func _refresh_windows() -> void:
@@ -101,6 +180,10 @@ func _refresh_windows() -> void:
 		_inventory.refresh(stats, _player.get("look_texture"))
 	if _character.visible:
 		_character.refresh(stats)
+	if _shop.visible:
+		_shop.refresh(stats)
+	if _storage.visible:
+		_storage.refresh(stats)
 
 
 func _on_item_action(method: String, argument: Variant) -> void:
@@ -152,6 +235,12 @@ func _style_round_button(button: Button) -> void:
 
 ## The map's name for a moment when the warrior arrives.
 func show_banner(title: String, subtitle: String = "") -> void:
+	# a new map: whoever was close by is gone, and so are their windows
+	_nearby_npc = null
+	for each in [_dialog, _shop, _storage]:
+		if each.visible:
+			_close_windows()
+	_update_talk_button()
 	_banner.text = title if subtitle == "" else "%s\n%s" % [title, subtitle]
 	_banner.modulate.a = 0.0
 	var fade: Tween = create_tween()
@@ -169,16 +258,52 @@ func _process(delta: float) -> void:
 ## K5: a real death screen with a countdown, and a button to get up in town.
 func _on_player_died() -> void:
 	_death_left = float(PlayerStats.rules["respawn_seconds"])
+	_close_windows()
 	_death_screen.show()
+	_update_talk_button()
 
 
 func _on_player_respawned() -> void:
 	_death_screen.hide()
 	_message.hide()
+	_update_talk_button()
 
 
 func _on_town_pressed() -> void:
 	get_tree().call_group("game", "return_to_town")
+
+
+func _build_town_windows() -> void:
+	_dialog = NpcDialog.new()
+	_dialog.name = "NpcDialog"
+	_place(_dialog, Control.PRESET_CENTER_BOTTOM, Rect2(-360, -340, 720, 320))
+	_shop = ShopPanel.new()
+	_shop.name = "Shop"
+	_place(_shop, Control.PRESET_TOP_RIGHT, Rect2(-352, 100, 336, 600))
+	_storage = StoragePanel.new()
+	_storage.name = "Storage"
+	_place(_storage, Control.PRESET_CENTER, Rect2(-370, -290, 740, 580))
+	for window in [_dialog, _shop, _storage]:
+		window.hide()
+		window.connect("close_requested", _close_windows)
+		window.connect("request", _on_town_request)
+		add_child(window)
+	_talk_button = UiStyle.button("TALK", Color(0.25, 0.42, 0.55), Vector2(180, 64))
+	_talk_button.name = "TalkButton"
+	_talk_button.add_theme_font_size_override("font_size", 24)
+	_place(_talk_button, Control.PRESET_CENTER_BOTTOM, Rect2(-90, -150, 180, 64))
+	_talk_button.pressed.connect(talk)
+	_talk_button.hide()
+	add_child(_talk_button)
+
+
+## Anchors a control to a corner or side, offset by rect (position and size).
+static func _place(control: Control, preset: int, rect: Rect2) -> void:
+	control.set_anchors_preset(preset)
+	control.offset_left = rect.position.x
+	control.offset_top = rect.position.y
+	control.offset_right = rect.end.x
+	control.offset_bottom = rect.end.y
 
 
 func _build_banner() -> void:

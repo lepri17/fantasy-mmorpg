@@ -355,10 +355,30 @@ def check_upgrades(items_data: dict) -> None:
         check_bonus(f"{where} per_plus '{slot}'", bonus)
 
 
-OBJECT_TYPES = {"tree", "rock", "monster", "portal"}
+OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc"}
+SERVICES = {"shop", "heal", "storage", "teleport", "quests"}
 
 
-def check_maps(maps_data: dict, monsters: dict) -> None:
+def check_npcs(npcs: dict, items: dict) -> None:
+    """npcs.json: names, looks with art, services, and what shops sell."""
+    for npc_id, npc in npcs.items():
+        where = f"npcs.json: '{npc_id}'"
+        for key in ("name", "title", "greeting"):
+            if not isinstance(npc.get(key), str) or not npc[key]:
+                error(f"{where}: needs a '{key}'")
+        if not res_exists(f"res://assets/characters/npcs/{npc.get('look')}.png"):
+            error(f"{where}: look '{npc.get('look')}' has no picture")
+        for service in npc.get("services", []):
+            if service not in SERVICES:
+                error(f"{where}: service '{service}' is not one of {sorted(SERVICES)}")
+        if "shop" in npc.get("services", []) and not npc.get("shop"):
+            error(f"{where}: a shop needs a 'shop' list")
+        for item_id in npc.get("shop", []):
+            if item_id not in items or items[item_id].get("price", 0) <= 0:
+                error(f"{where}: sells '{item_id}', which is not an item with a price")
+
+
+def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
     """maps.json: ground rows, spawns, and objects; portals lead to a real spawn."""
     maps = maps_data.get("maps", {})
     for key in ("start", "town"):
@@ -374,6 +394,7 @@ def check_maps(maps_data: dict, monsters: dict) -> None:
         where = f"maps.json: map '{map_id}'"
         if not isinstance(data.get("name"), str):
             error(f"{where}: needs a 'name'")
+        need_number(where, data, "teleport_price", 0)
         if "ground" in data:
             rows = data["ground"]
             if not rows or any(len(row) != len(rows[0]) for row in rows):
@@ -411,6 +432,8 @@ def check_maps(maps_data: dict, monsters: dict) -> None:
                 continue
             if not inside(thing.get("pos"), kind):
                 continue
+            if kind == "npc" and thing.get("id") not in npcs:
+                error(f"{where}: npc '{thing.get('id')}' is not in npcs.json")
             if kind == "monster" and thing.get("id") not in monsters:
                 error(f"{where}: monster '{thing.get('id')}' is not in monsters.json")
             if kind == "portal":
@@ -476,7 +499,12 @@ def main() -> int:
     check_progress(load("character"), items, load("skills"), load("monsters"),
                    load("achievements"))
     check_gear(items_data, load("monsters"), elite)
-    check_maps(load("maps"), load("monsters"))
+    check_npcs(load("npcs"), items_data.get("items", {}))
+    check_maps(load("maps"), load("monsters"), load("npcs"))
+    need_number("character.json", load("character"), "storage_size", 1, 200)
+    need_number("items.json", items_data, "sell_fraction", 0.01, 1.0)
+    for item_id, item in items_data.get("items", {}).items():
+        need_number(f"items.json: '{item_id}'", item, "price", 0)
     check_art(items)
     if errors:
         print("DATA PROBLEMS:")

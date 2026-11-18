@@ -447,6 +447,82 @@ def recolor(image: Image.Image, rules) -> Image.Image:
     return out
 
 
+# Townspeople: the warrior's plain body (no gear) with the tunic dyed and the
+# hair recoloured. look -> (tunic hue, tunic saturation, hair hue or None for
+# grey hair).
+NPC_LOOKS = {
+    "merchant": (130, 0.45, 30),
+    "healer": (330, 0.28, 48),
+    "keeper": (28, 0.5, None),
+    "guide": (270, 0.45, 205),
+    "captain": (0, 0.55, 18),
+}
+
+
+def _dye(image: Image.Image, hue: float, saturation: float) -> Image.Image:
+    """The pale cream tunic (hue near 40, low saturation, light) in another colour."""
+    out = image.copy()
+    box = out.getchannel("A").getbbox()
+    if not box:
+        return out
+    pixels = out.load()
+    for y in range(box[1], box[3]):
+        for x in range(box[0], box[2]):
+            r, g, b, a = pixels[x, y]
+            h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+            if a and s < 0.35 and v > 0.55 and abs(h * 360 - 40) < 30:
+                r, g, b = (round(c * 255) for c in colorsys.hsv_to_rgb(hue / 360, saturation, v))
+                pixels[x, y] = (r, g, b, a)
+    return out
+
+
+def _hair(image: Image.Image, hue) -> Image.Image:
+    """The orange hair (strongly coloured, unlike the skin) in another colour, or grey."""
+    out = image.copy()
+    box = out.getchannel("A").getbbox()
+    if not box:
+        return out
+    pixels = out.load()
+    for y in range(box[1], box[3]):
+        for x in range(box[0], box[2]):
+            r, g, b, a = pixels[x, y]
+            h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+            if a and s > 0.5 and v > 0.3 and (h * 360 < 45 or h * 360 > 350):
+                if hue is None:
+                    rgb = colorsys.hsv_to_rgb(0, 0.04, min(1.0, v * 0.95))
+                else:
+                    rgb = colorsys.hsv_to_rgb(hue / 360, s, v)
+                pixels[x, y] = (*(round(c * 255) for c in rgb), a)
+    return out
+
+
+def build_npc_sheet(frames, look: str) -> Image.Image:
+    """Four idle frames (facing down) of a townsperson, side by side."""
+    tunic_hue, tunic_saturation, hair_hue = NPC_LOOKS[look]
+    sheet = Image.new("RGBA", (CELL * IDLE_FRAMES, CELL), (0, 0, 0, 0))
+    for col in range(IDLE_FRAMES):
+        parts = dict(frames[(0, col)])
+        for part in ("torso", "arms"):
+            if part in parts:
+                parts[part] = _dye(parts[part], tunic_hue, tunic_saturation)
+        if "head" in parts:
+            parts["head"] = _hair(parts["head"], hair_hue)
+        sheet.paste(compose(parts, "down", set()), (col * CELL, 0))
+    return sheet
+
+
+def build_jelly(out_size: int = 32, shadow: bool = True) -> Image.Image:
+    """Slime Jelly: a wobbly green drop that slimes leave behind."""
+    c = Canvas(32)
+    if shadow:
+        c.ellipse(16, 27.5, 9, 3, SHADOW, outline=False)
+    c.ellipse(16, 19, 10, 8, (118, 214, 110, 255))
+    c.ellipse(16, 13.5, 5.5, 5, (118, 214, 110, 255), outline=False)
+    c.ellipse(12.5, 15.5, 2.6, 2, (214, 255, 200, 255), outline=False)
+    c.ellipse(20, 21, 1.4, 1.1, (214, 255, 200, 255), outline=False)
+    return c.finish(out_size)
+
+
 def add_look_variants(frames) -> None:
     """Adds the recoloured parts of every LOOK_VARIANTS item to every frame."""
     for parts in frames.values():
@@ -1182,6 +1258,7 @@ def build_item_icons() -> dict[str, Image.Image]:
     icons["coin"] = build_coin(ICON, shadow=False)
     icons["book"] = build_book(ICON, shadow=False)
     icons["blue_potion"] = build_potion(ICON, shadow=False, colors=BLUE_POTION)
+    icons["jelly"] = build_jelly(ICON, shadow=False)
     icons["ember_stone"] = build_stone(ICON, shadow=False, colors=EMBER_STONE)
     icons["moon_stone"] = build_stone(ICON, shadow=False, colors=MOON_STONE)
     for variant, (_, icon_name, _, rules) in LOOK_VARIANTS.items():
@@ -1451,6 +1528,10 @@ def main() -> None:
     frames = build_warrior_parts()
     sheet = build_warrior_sheet(frames)
     sheet.save(warrior_dir / "warrior.png")
+    npc_dir = ASSETS / "characters" / "npcs"
+    npc_dir.mkdir(parents=True, exist_ok=True)
+    for look in NPC_LOOKS:
+        build_npc_sheet(frames, look).save(npc_dir / f"{look}.png")
     add_look_variants(frames)
     atlas, pieces = pack_warrior_parts(frames)
     atlas.save(warrior_dir / "warrior_parts.png")
@@ -1469,6 +1550,7 @@ def main() -> None:
     build_coin().save(items_dir / "coin.png")
     build_potion().save(items_dir / "potion.png")
     build_book().save(items_dir / "book.png")
+    build_jelly().save(items_dir / "jelly.png")
     build_potion(colors=BLUE_POTION).save(items_dir / "blue_potion.png")
     build_stone(colors=EMBER_STONE).save(items_dir / "ember_stone.png")
     build_stone(colors=MOON_STONE).save(items_dir / "moon_stone.png")

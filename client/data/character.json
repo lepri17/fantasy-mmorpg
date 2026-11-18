@@ -70,5 +70,6 @@
     50,
     70
   ],
-  "auto_potion_seconds": 1.5
+  "auto_potion_seconds": 1.5,
+  "storage_size": 30
 }

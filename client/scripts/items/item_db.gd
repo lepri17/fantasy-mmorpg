@@ -28,8 +28,24 @@ static var rarities: Dictionary = GameData.table("items")["rarities"]
 static var random_options: Dictionary = GameData.table("items")["random_options"]
 ## +1..+15 upgrades; empty when the data has none.
 static var upgrades: Dictionary = GameData.table("items").get("upgrades", {})
+## A shop pays this part of an item's price when buying it back.
+static var sell_fraction: float = float(GameData.table("items").get("sell_fraction", 0.25))
 ## Set id -> {"name", "bonuses": {"<pieces worn>": {stat: value}}}.
 static var sets: Dictionary = GameData.table("items").get("sets", {})
+
+
+static func price(item_id: String) -> int:
+	return int(items[item_id].get("price", 0))
+
+
+## What a shop pays for one of this entry: part of the price, more for rarer
+## and upgraded gear.
+static func sell_price(stack: Dictionary) -> int:
+	var value: float = price(stack["id"]) * sell_fraction
+	if is_gear(stack["id"]):
+		value *= 1.0 + rarity_rank(stack.get("rarity", "")) * 0.75
+		value += int(stack.get("plus", 0)) * 10
+	return maxi(1, floori(value))
 
 
 ## How many items belong to a set.

@@ -12,7 +12,8 @@ const AchievementRecord := preload("res://scripts/player/achievement_record.gd")
 ## 3 = adds stat points, skills learned from books, achievements and the title.
 ## 4 = gear keeps its own rarity, upgrade level and random options.
 ## 5 = adds the map the warrior is on.
-const SAVE_VERSION := 5
+## 6 = adds the storage in town.
+const SAVE_VERSION := 6
 const POTION_ID := "red_potion"
 
 ## The numbers from res://data/character.json: health and damage without gear
@@ -21,6 +22,7 @@ const POTION_ID := "red_potion"
 ## bag, and the tuning the player scene reads (speed, skill, regeneration).
 static var rules: Dictionary = GameData.table("character")
 static var bag_size: int = int(rules["bag_size"])
+static var storage_size: int = int(rules["storage_size"])
 ## STR, AGI, VIT, ENE: what one point in each adds ("attack", "max_hp", ...).
 static var stat_rules: Dictionary = rules["stats"]
 
@@ -42,6 +44,8 @@ var potions: int:
 var stat_points: Dictionary = {}
 ## Skills learned from books (skills.json entries with a "book").
 var learned_skills: Array = []
+## Stacks left with the storage keeper in town, like the bag but bigger.
+var storage: Array = []
 ## The map the warrior is on (maps.json id), or "" before he has been anywhere.
 var map_id: String = ""
 ## Drink a red potion by itself below this percent of HP (0 = off).
@@ -331,6 +335,40 @@ func upgrade(stack: Dictionary, roll: float) -> String:
 	return "same"
 
 
+## Moves a whole bag slot into storage. Returns false when storage is full.
+func store(index: int) -> bool:
+	if index < 0 or index >= bag.size():
+		return false
+	var stack: Dictionary = bag[index]
+	if not ItemDb.is_gear(stack["id"]):
+		for stored in storage:
+			if stored["id"] == stack["id"]:
+				stored["count"] = int(stored["count"]) + int(stack["count"])
+				bag.remove_at(index)
+				return true
+	if storage.size() >= storage_size:
+		return false
+	storage.append(stack)
+	bag.remove_at(index)
+	return true
+
+
+## Moves a whole storage slot back into the bag. Returns false when it does not fit.
+func take_stored(index: int) -> bool:
+	if index < 0 or index >= storage.size():
+		return false
+	var stack: Dictionary = storage[index]
+	if not ItemDb.is_gear(stack["id"]):
+		if not add_item(stack["id"], int(stack["count"])):
+			return false
+	elif bag.size() >= bag_size:
+		return false
+	else:
+		bag.append(stack)
+	storage.remove_at(index)
+	return true
+
+
 ## XP needed to finish the current level.
 func xp_to_next() -> int:
 	return int(rules["xp_per_level"]) * level
@@ -359,6 +397,7 @@ func to_dict() -> Dictionary:
 		"learned_skills": learned_skills.duplicate(),
 		"auto_potion": auto_potion,
 		"map": map_id,
+		"storage": storage.duplicate(true),
 	}.merged(record.to_dict())
 
 
@@ -407,6 +446,13 @@ func _load_progress(data: Dictionary) -> void:
 				learned_skills.append(skill_id)
 	record.from_dict(data)
 	map_id = str(data.get("map", ""))
+	storage = []
+	var saved_storage = data.get("storage", [])
+	if saved_storage is Array:
+		for stack in saved_storage:
+			var entry: Dictionary = ItemDb.clean_stack(stack)
+			if not entry.is_empty() and storage.size() < storage_size:
+				storage.append(entry)
 	auto_potion = int(data.get("auto_potion", 0))
 	if auto_potion not in auto_potion_choices():
 		auto_potion = 0

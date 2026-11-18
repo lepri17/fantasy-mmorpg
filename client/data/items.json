@@ -94,14 +94,16 @@
       "max_hp": 5,
       "icon": "res://assets/items/icons/headband.png",
       "text": "Cloth band with a small gold plate.",
-      "defense": 1
+      "defense": 1,
+      "price": 60
     },
     "training_sword": {
       "name": "Training Sword",
       "slot": "weapon",
       "attack": 4,
       "icon": "res://assets/items/icons/sword.png",
-      "text": "Plain steel. Every warrior starts with one."
+      "text": "Plain steel. Every warrior starts with one.",
+      "price": 120
     },
     "leather_gloves": {
       "name": "Leather Gloves",
@@ -109,14 +111,16 @@
       "attack": 1,
       "icon": "res://assets/items/icons/gloves.png",
       "text": "Steel bracers keep the grip steady.",
-      "crit_chance": 0.03
+      "crit_chance": 0.03,
+      "price": 60
     },
     "red_cape": {
       "name": "Red Cape",
       "slot": "cape",
       "max_hp": 5,
       "icon": "res://assets/items/icons/cape.png",
-      "text": "Warm wool with a gold trim."
+      "text": "Warm wool with a gold trim.",
+      "price": 60
     },
     "blue_plate": {
       "name": "Blue Plate Armor",
@@ -124,7 +128,8 @@
       "max_hp": 20,
       "icon": "res://assets/items/icons/armor.png",
       "text": "Light plates over padded cloth.",
-      "defense": 3
+      "defense": 3,
+      "price": 200
     },
     "leather_boots": {
       "name": "Leather Boots",
@@ -132,7 +137,8 @@
       "max_hp": 5,
       "icon": "res://assets/items/icons/boots.png",
       "text": "Good for long walks.",
-      "evasion": 0.02
+      "evasion": 0.02,
+      "price": 60
     },
     "red_potion": {
       "name": "Red Potion",
@@ -141,7 +147,8 @@
       "heal_fraction": 0.4,
       "icon": "res://assets/items/icons/potion.png",
       "world_icon": "res://assets/items/potion.png",
-      "text": "Heals 40% of max HP."
+      "text": "Heals 40% of max HP.",
+      "price": 20
     },
     "book_ground_slam": {
       "name": "Book: Ground Slam",
@@ -150,7 +157,8 @@
       "teaches": "ground_slam",
       "icon": "res://assets/items/icons/book.png",
       "world_icon": "res://assets/items/book.png",
-      "text": "Teaches Ground Slam. Needs level 5."
+      "text": "Teaches Ground Slam. Needs level 5.",
+      "price": 800
     },
     "rebirth_scroll": {
       "name": "Rebirth Scroll",
@@ -159,7 +167,8 @@
       "resets_stats": true,
       "icon": "res://assets/items/icons/scroll.png",
       "world_icon": "res://assets/items/scroll.png",
-      "text": "Gives back all your stat points, for free."
+      "text": "Gives back all your stat points, for free.",
+      "price": 1500
     },
     "blue_potion": {
       "name": "Blue Potion",
@@ -168,7 +177,8 @@
       "stamina_fraction": 0.5,
       "icon": "res://assets/items/icons/blue_potion.png",
       "world_icon": "res://assets/items/blue_potion.png",
-      "text": "Gives back half your stamina."
+      "text": "Gives back half your stamina.",
+      "price": 30
     },
     "ember_stone": {
       "name": "Ember Stone",
@@ -176,7 +186,8 @@
       "upgrade_stone": true,
       "icon": "res://assets/items/icons/ember_stone.png",
       "world_icon": "res://assets/items/ember_stone.png",
-      "text": "Upgrades gear from +0 to +6. It never fails."
+      "text": "Upgrades gear from +0 to +6. It never fails.",
+      "price": 300
     },
     "moon_stone": {
       "name": "Moon Stone",
@@ -184,7 +195,8 @@
       "upgrade_stone": true,
       "icon": "res://assets/items/icons/moon_stone.png",
       "world_icon": "res://assets/items/moon_stone.png",
-      "text": "Upgrades gear from +6 to +15. It can fail, and above +9 a failure costs a level."
+      "text": "Upgrades gear from +6 to +15. It can fail, and above +9 a failure costs a level.",
+      "price": 1200
     },
     "verdant_headband": {
       "name": "Verdant Headband",
@@ -194,7 +206,8 @@
       "max_hp": 10,
       "defense": 1,
       "icon": "res://assets/items/icons/verdant_headband.png",
-      "text": "Woven from forest thread."
+      "text": "Woven from forest thread.",
+      "price": 400
     },
     "verdant_cape": {
       "name": "Verdant Cape",
@@ -204,7 +217,8 @@
       "max_hp": 10,
       "evasion": 0.01,
       "icon": "res://assets/items/icons/verdant_cape.png",
-      "text": "Light as a leaf."
+      "text": "Light as a leaf.",
+      "price": 400
     },
     "verdant_gloves": {
       "name": "Verdant Gloves",
@@ -214,7 +228,8 @@
       "attack": 2,
       "crit_chance": 0.03,
       "icon": "res://assets/items/icons/verdant_gloves.png",
-      "text": "A sure grip for quick hits."
+      "text": "A sure grip for quick hits.",
+      "price": 400
     },
     "verdant_boots": {
       "name": "Verdant Boots",
@@ -224,7 +239,8 @@
       "max_hp": 10,
       "evasion": 0.03,
       "icon": "res://assets/items/icons/verdant_boots.png",
-      "text": "Soft soles for a fast step."
+      "text": "Soft soles for a fast step.",
+      "price": 400
     },
     "crimson_plate": {
       "name": "Crimson Plate",
@@ -234,7 +250,8 @@
       "max_hp": 30,
       "defense": 5,
       "icon": "res://assets/items/icons/crimson_plate.png",
-      "text": "Heavy red plate, hard to dent."
+      "text": "Heavy red plate, hard to dent.",
+      "price": 900
     },
     "crimson_sword": {
       "name": "Crimson Sword",
@@ -243,7 +260,16 @@
       "set": "crimson",
       "attack": 8,
       "icon": "res://assets/items/icons/crimson_sword.png",
-      "text": "A red-steel blade."
+      "text": "A red-steel blade.",
+      "price": 900
+    },
+    "slime_jelly": {
+      "name": "Slime Jelly",
+      "slot": "",
+      "icon": "res://assets/items/icons/jelly.png",
+      "world_icon": "res://assets/items/jelly.png",
+      "text": "Wobbly and sticky. Some people collect it.",
+      "price": 30
     }
   },
   "upgrades": {
@@ -313,5 +339,6 @@
         }
       }
     }
-  }
+  },
+  "sell_fraction": 0.25
 }

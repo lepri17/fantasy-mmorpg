@@ -12,6 +12,7 @@ const SCENES := {
 	"rock": preload("res://scenes/maps/rock.tscn"),
 	"monster": preload("res://scenes/enemies/slime.tscn"),
 	"portal": preload("res://scenes/maps/portal.tscn"),
+	"npc": preload("res://scenes/maps/npc.tscn"),
 }
 ## How far inside the map's edge the invisible walls stand: left, top, right, bottom.
 const EDGE_MARGINS := [24.0, 80.0, 24.0, 20.0]
@@ -69,6 +70,8 @@ func _add_object(thing: Dictionary) -> void:
 	match thing["type"]:
 		"monster":
 			node.set("monster_id", thing["id"])
+		"npc":
+			node.set("npc_id", thing["id"])
 		"portal":
 			node.set("to_map", thing["to"])
 			node.set("to_spawn", thing.get("spawn", "default"))

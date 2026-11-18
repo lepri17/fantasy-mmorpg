@@ -164,8 +164,49 @@
           ],
           "to": "field",
           "spawn": "west"
+        },
+        {
+          "type": "npc",
+          "id": "merchant",
+          "pos": [
+            700,
+            430
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "healer",
+          "pos": [
+            1350,
+            430
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "keeper",
+          "pos": [
+            700,
+            860
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "guide",
+          "pos": [
+            1350,
+            860
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "captain",
+          "pos": [
+            1024,
+            380
+          ]
         }
-      ]
+      ],
+      "teleport_price": 0
     },
     "field": {
       "name": "Green Meadow",
@@ -208,7 +249,8 @@
           "to": "forest",
           "spawn": "west"
         }
-      ]
+      ],
+      "teleport_price": 0
     },
     "forest": {
       "name": "Mossy Woods",
@@ -497,7 +539,8 @@
           "to": "field",
           "spawn": "east"
         }
-      ]
+      ],
+      "teleport_price": 40
     }
   }
 }

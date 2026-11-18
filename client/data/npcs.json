@@ -1,0 +1,58 @@
+{
+  "merchant": {
+    "name": "Mira",
+    "title": "Merchant",
+    "look": "merchant",
+    "greeting": "Fresh potions, good steel and fair prices!",
+    "services": [
+      "shop"
+    ],
+    "shop": [
+      "red_potion",
+      "blue_potion",
+      "ember_stone",
+      "red_headband",
+      "training_sword",
+      "leather_gloves",
+      "red_cape",
+      "blue_plate",
+      "leather_boots"
+    ]
+  },
+  "healer": {
+    "name": "Sister Lune",
+    "title": "Healer",
+    "look": "healer",
+    "greeting": "Rest a moment. I will mend your wounds.",
+    "services": [
+      "heal"
+    ]
+  },
+  "keeper": {
+    "name": "Old Bram",
+    "title": "Storage",
+    "look": "keeper",
+    "greeting": "Leave your things with me. Nothing gets lost here.",
+    "services": [
+      "storage"
+    ]
+  },
+  "guide": {
+    "name": "Tessa",
+    "title": "Guide",
+    "look": "guide",
+    "greeting": "Where shall I send you?",
+    "services": [
+      "teleport"
+    ]
+  },
+  "captain": {
+    "name": "Captain Rowan",
+    "title": "Town Guard",
+    "look": "captain",
+    "greeting": "Slimes keep pouring out of the woods. Lend me your sword?",
+    "services": [
+      "quests"
+    ]
+  }
+}
