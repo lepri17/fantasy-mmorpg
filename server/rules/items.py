@@ -54,6 +54,15 @@ def usable_by(item_id: str, class_id: str) -> bool:
     return not classes or class_id in classes
 
 
+def required_level(item_id: str) -> int:
+    """The level a hero needs to wear the item (items.json "level"; 1 when not set)."""
+    return max(1, int(items().get(item_id, {}).get("level", 1)))
+
+
+def can_wear(item_id: str, class_id: str, level: int) -> bool:
+    return is_gear(item_id) and usable_by(item_id, class_id) and level >= required_level(item_id)
+
+
 def rarity_rank(rarity: str) -> int:
     keys = list(rarities())
     return keys.index(rarity) if rarity in keys else -1
@@ -66,6 +75,30 @@ def sell_price(stack: dict) -> int:
         value *= 1.0 + rarity_rank(stack.get("rarity", "")) * 0.75
         value += int(stack.get("plus", 0)) * 10
     return max(1, math.floor(value))
+
+
+def sorted_bag(bag: list, class_id: str) -> list:
+    """The bag in a tidy order (item_db.gd sorted_bag): gear this class can wear
+    by slot, then the highest level, rarity and upgrade; other gear; things to
+    use; the rest. Entries that tie keep their order."""
+    keyed = sorted(enumerate(bag), key=lambda pair: (_sort_key(pair[1], class_id), pair[0]))
+    return [stack for _, stack in keyed]
+
+
+def _sort_key(stack: dict, class_id: str) -> int:
+    item_id = stack["id"]
+    item = items()[item_id]
+    if is_gear(item_id):
+        group = 0 if usable_by(item_id, class_id) else 1
+        return (
+            group * 10_000_000
+            + data()["gear_slots"].index(item["slot"]) * 100_000
+            + (99 - required_level(item_id)) * 1000
+            + (9 - rarity_rank(stack.get("rarity", ""))) * 100
+            + (99 - int(stack.get("plus", 0)))
+        )
+    group = 2 if item.get("usable", False) else 3
+    return group * 10_000_000 + list(items()).index(item_id)
 
 
 def gear(item_id: str, rarity: str = "common", plus: int = 0, options: dict | None = None) -> dict:

@@ -325,7 +325,7 @@ func equip(index: int) -> bool:
 		return false
 	var stack: Dictionary = bag[index]
 	var slot: String = ItemDb.items[stack["id"]].get("slot", "")
-	if slot == "" or not ItemDb.usable_by(stack["id"], class_id):
+	if slot == "" or not ItemDb.can_wear(stack["id"], class_id, level):
 		return false
 	var worn: Dictionary = equipment.get(slot, {})
 	equipment[slot] = stack

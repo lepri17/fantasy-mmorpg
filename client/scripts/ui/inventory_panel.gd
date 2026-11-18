@@ -2,7 +2,9 @@ extends PanelContainer
 ## Small inventory on the right side of the screen: the gear the warrior wears
 ## around his portrait, the bag, gold, auto-potion, and the item last tapped with
 ## its buttons (EQUIP / REMOVE / USE, UPGRADE for gear, and DROP). A double tap
-## does the first button.
+## does the first button. For gear in the bag the details say what wearing it
+## would really change for the hero (GearPreview), and the bag marks pieces
+## that are better with no loss, or need a higher level, or are for another class.
 ## It only shows state. What to do with an item is asked for with item_action,
 ## naming the player method to call and its argument.
 
@@ -14,25 +16,20 @@ const CombatRules := preload("res://scripts/combat/combat_rules.gd")
 const InventorySlot := preload("res://scripts/ui/inventory_slot.gd")
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
 const ClassDb := preload("res://scripts/player/class_db.gd")
+const GearPreview := preload("res://scripts/items/gear_preview.gd")
 
 const SLOT_SIZE := Vector2(52, 52)
 const BAG_COLUMNS := 5
 const BAG_ROWS := 3
-const PORTRAIT_SIZE := Vector2(128, 128)
+## One frame of the hero's sprite sheet, and the size it is shown at.
+const SHEET_FRAME := Vector2(128, 128)
+const PORTRAIT_SIZE := Vector2(112, 112)
 const WARRIOR_SHEET := "res://assets/characters/warrior/warrior.png"
 const COIN_ICON := "res://assets/items/icons/coin.png"
 const GOLD_TEXT := Color(1.0, 0.86, 0.45)
 const FRAME_BORDER := Color(0.85, 0.68, 0.32)
-## How gear bonuses are named in the details, in this order.
-const STAT_NAMES := {
-	"attack": "Attack",
-	"max_hp": "Max HP",
-	"defense": "Defense",
-	"max_stamina": "Max Stamina",
-	"crit_chance": "Crit",
-	"evasion": "Evasion",
-	"skill_damage": "Skill damage",
-}
+## The hero's numbers under the portrait.
+const STATS_TEXT := "ATK %d~%d  HP %d  DEF %d\nCRIT %d%% (x%.2f)  EVA %d%%\nACC %d%%  SPD +%d%%"
 
 ## Gear slot name -> slot control.
 var gear_slots: Dictionary = {}
@@ -74,17 +71,22 @@ func refresh(stats, look: Texture2D = null) -> void:
 		gear_slots[slot_name].show_stack(stats.equipment.get(slot_name, {}))
 	var items: Array = stats.bag
 	for i in bag_slots.size():
-		bag_slots[i].show_stack(items[i] if i < items.size() else {})
+		var entry: Dictionary = items[i] if i < items.size() else {}
+		bag_slots[i].mark = _mark_for(stats, i, entry)
+		bag_slots[i].show_stack(entry)
 	_gold_label.text = str(stats.gold)
 	_auto_button.text = "AUTO OFF" if stats.auto_potion == 0 else "AUTO %d%%" % stats.auto_potion
 	var damage: Vector2i = CombatRules.damage_range(stats.attack_damage())
-	_stats_label.text = "ATK %d~%d  HP %d\nDEF %d  CRIT %d%%  EVA %d%%" % [
+	_stats_label.text = STATS_TEXT % [
 		damage.x,
 		damage.y,
 		stats.max_hp(),
 		stats.defense(),
 		roundi(stats.crit_chance() * 100.0),
+		CombatRules.crit_multiplier + stats.total("crit_damage"),
 		roundi(stats.evasion() * 100.0),
+		roundi(stats.total("accuracy") * 100.0),
+		roundi(stats.total("attack_speed") * 100.0),
 	]
 	if look != null:
 		_portrait_frame.atlas = look
@@ -124,16 +126,15 @@ func _show_details() -> void:
 	var text: String = item["text"]
 	var name_color := Color.WHITE
 	if ItemDb.is_gear(stack["id"]):
-		var worn: Dictionary = {}
-		if _selected.place == "bag" and _stats != null:
-			worn = _stats.equipment.get(item["slot"], {})
-		text = _gear_text(stack, worn) + _set_text(item) + "\n" + _upgrade_text(stack)
+		text = _gear_text(stack) + _set_text(item) + "\n" + _upgrade_text(stack)
 		name_color = ItemDb.rarity_color(stack)
 		if _stats != null and not ItemDb.usable_by(stack["id"], _stats.class_id):
 			var names := PackedStringArray()
 			for class_id in item.get("classes", []):
 				names.append(ClassDb.display_name(class_id))
 			text = "For %s only.\n%s" % [" / ".join(names), text]
+		elif _stats != null and _selected.place == "bag":
+			text = _worn_text(stack) + "\n" + text
 	_name_label.text = ItemDb.display_name(stack, true)
 	_name_label.add_theme_color_override("font_color", name_color)
 	_info_label.text = text
@@ -143,24 +144,45 @@ func _show_details() -> void:
 	_drop_button.show()
 
 
-## "vs Training Sword: +6 ATK (+2), +3% CRIT (+3%)". For gear in the bag, each
-## bonus also says how it compares with the piece worn in that slot now (I7).
-func _gear_text(stack: Dictionary, worn: Dictionary) -> String:
+## "Gives: +7 ATK, +10% CRIT DMG": the piece's own bonuses (item, random
+## options and upgrade level), every stat the game has.
+func _gear_text(stack: Dictionary) -> String:
 	var parts := PackedStringArray()
-	for stat in STAT_NAMES:
+	for stat in UiStyle.BONUS_NAMES:
 		var value: float = ItemDb.stat_of(stack, stat)
-		var worn_value: float = 0.0 if worn.is_empty() else ItemDb.stat_of(worn, stat)
-		if is_zero_approx(value) and is_zero_approx(worn_value):
-			continue
-		var line: String = "%s %s" % [_amount(stat, value), UiStyle.stat_name(stat, true)]
-		if not worn.is_empty():
-			var diff: float = value - worn_value
-			line += " (=)" if is_zero_approx(diff) else " (%s)" % _amount(stat, diff)
-		parts.append(line)
-	var text: String = ", ".join(parts)
-	if not worn.is_empty():
-		text = "vs %s: %s" % [ItemDb.display_name(worn), text]
-	return text
+		if not is_zero_approx(value):
+			parts.append("%s %s" % [_amount(stat, value), UiStyle.stat_name(stat, true)])
+	return "Gives: %s" % ", ".join(parts)
+
+
+## For a bag piece: "If worn: +3 ATK, -2% EVA", what really changes for the
+## hero with the piece now worn taken off and set bonuses counted. Or the
+## level still needed: "Needs level 6 (you are 4)."
+func _worn_text(stack: Dictionary) -> String:
+	var needed: int = ItemDb.required_level(stack["id"])
+	if _stats.level < needed:
+		return "Needs level %d (you are %d)." % [needed, _stats.level]
+	var after: Dictionary = GearPreview.if_worn(_stats, int(_selected.key))
+	if after.is_empty():
+		return ""
+	var difference: Dictionary = GearPreview.changes(GearPreview.numbers(_stats), after)
+	if difference.is_empty():
+		return "If worn: no change."
+	var parts := PackedStringArray()
+	for stat in difference:
+		parts.append("%s %s" % [_amount(stat, difference[stat]), UiStyle.stat_name(stat, true)])
+	return "If worn: %s" % ", ".join(parts)
+
+
+## The sign in a bag square (InventorySlot.mark) for this entry.
+func _mark_for(stats, index: int, entry: Dictionary) -> String:
+	if entry.is_empty() or not ItemDb.is_gear(entry["id"]):
+		return ""
+	if not ItemDb.usable_by(entry["id"], stats.class_id):
+		return "other"
+	if stats.level < ItemDb.required_level(entry["id"]):
+		return "locked"
+	return "better" if GearPreview.is_better(stats, index) else ""
 
 
 ## "\nVerdant Set 2/4: 2 = +15 HP; 4 = +3 ATK, +3% EVA"
@@ -259,7 +281,7 @@ func _gear_row() -> Control:
 	middle.alignment = BoxContainer.ALIGNMENT_CENTER
 	var portrait := TextureRect.new()
 	_portrait_frame.atlas = load(WARRIOR_SHEET)
-	_portrait_frame.region = Rect2(Vector2.ZERO, PORTRAIT_SIZE)  # first idle frame, facing down
+	_portrait_frame.region = Rect2(Vector2.ZERO, SHEET_FRAME)  # first idle frame, facing down
 	portrait.texture = _portrait_frame
 	portrait.custom_minimum_size = PORTRAIT_SIZE
 	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -296,6 +318,10 @@ func _bag_header() -> Control:
 	coin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	coin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	row.add_child(coin)
+	var sort := _button("SORT", Color(0.25, 0.3, 0.42), Vector2(64, 34))
+	sort.add_theme_font_size_override("font_size", 14)
+	sort.pressed.connect(func() -> void: item_action.emit("sort_bag", null))
+	row.add_child(sort)
 	_gold_label = _label("0", 18, GOLD_TEXT)
 	row.add_child(_gold_label)
 	_auto_button = _button("AUTO OFF", Color(0.32, 0.2, 0.3), Vector2(104, 34))

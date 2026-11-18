@@ -573,6 +573,15 @@ LOOK_VARIANTS = {
     "verdant_boots": (
         "leather_boots", "boots", ["boots", "boots_far", "boots_near"], [("hue", 20, 110)]
     ),
+    "swift_boots": (
+        "leather_boots", "boots", ["boots", "boots_far", "boots_near"], [("hue", 20, 190)]
+    ),
+    "hawk_gloves": (
+        "leather_gloves", "gloves",
+        ["gloves", "bracers", "glove_far", "bracer_far", "grip_glove_body", "grip_glove_front"],
+        [("hue", 20, 45)],
+    ),
+    "duelist_cape": ("red_cape", "cape", ["cape", "scarf"], [("hue", 355, 215)]),
     "crimson_plate": (
         "blue_plate", "armor", ["armor", "armor_arms", "armor_arm_far", "pauldrons"],
         [("hue", 220, 355)],

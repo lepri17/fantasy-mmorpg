@@ -86,14 +86,20 @@ def check_items(items_data: dict) -> dict:
                 error(f"{where}: {key} '{item[key]}' does not exist")
         if "icon" not in item:
             error(f"{where}: needs an 'icon'")
-        for key in ("attack", "max_hp", "defense"):
+        for key in ("attack", "max_hp", "defense", "max_stamina"):
             if key in item:
                 value = need_number(where, item, key)
                 if value is not None and value != int(value):
                     error(f"{where}: '{key}' must be a whole number")
-        for key in ("crit_chance", "evasion"):
+        for key in ("crit_chance", "crit_damage", "evasion", "accuracy", "attack_speed", "skill_damage"):
             if key in item:
                 need_number(where, item, key, 0.0, 1.0)
+        if "level" in item:
+            if slot == "":
+                error(f"{where}: only gear has a 'level'")
+            value = need_number(where, item, "level", 1, 99)
+            if value is not None and value != int(value):
+                error(f"{where}: 'level' must be a whole number")
         if item.get("usable"):
             if slot != "":
                 error(f"{where}: gear cannot be 'usable'")

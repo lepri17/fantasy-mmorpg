@@ -184,6 +184,37 @@ EXP לפי פער הרמות (רמת הגיבור פחות רמת המפלצת):
 | 30% | x1.65 | x1.195 |
 | 30% | x1.80 | x1.240 |
 
+## ציוד (נגד Blue Slime)
+
+"הכי טוב": בכל משבצת, הפריט הרגיל (Common) שהגיבור יכול ללבוש ברמה הזאת ונותן הכי הרבה DPS כפול שניות חיים. כולל ציוד שדרוג המקצוע ברמה 10. "+6": אותו ציוד משודרג לכל +6 (אבני Ember, בלי סיכון). נקודות הסטטים כולן בסטט הראשי.
+
+| מקצוע | רמה | ציוד | התקפה | HP | הגנה | DPS | DPS מול ההתחלה | שנ' בחיים | פריטים |
+|---|---|---|---|---|---|---|---|---|---|
+| Warrior | 1 | התחלה | 10 | 100 | 4 | 21 | +0% | 9 | Red Headband, Training Sword, Leather Gloves, Red Cape, Blue Plate Armor, Leather Boots |
+| Warrior | 1 | הכי טוב | 10 | 100 | 4 | 21 | +0% | 9 | Red Headband, Training Sword, Leather Gloves, Red Cape, Blue Plate Armor, Leather Boots |
+| Warrior | 6 | התחלה | 40 | 175 | 4 | 100 | +0% | 16 | Red Headband, Training Sword, Leather Gloves, Red Cape, Blue Plate Armor, Leather Boots |
+| Warrior | 6 | הכי טוב | 52 | 215 | 8 | 132 | +32% | 29 | Verdant Headband, Crimson Sword, Verdant Gloves, Verdant Cape, Crimson Plate, Verdant Boots |
+| Warrior | 6 | הכי טוב +6 | 70 | 287 | 20 | 179 | +79% | 108 | Verdant Headband, Crimson Sword, Verdant Gloves, Verdant Cape, Crimson Plate, Verdant Boots |
+| Warrior | 10 | התחלה | 64 | 235 | 4 | 164 | +0% | 21 | Red Headband, Training Sword, Leather Gloves, Red Cape, Blue Plate Armor, Leather Boots |
+| Warrior | 10 | הכי טוב | 76 | 293 | 8 | 207 | +26% | 36 | Verdant Headband, Crimson Sword, Verdant Gloves, Champion Cape, Crimson Plate, Swift Boots |
+| Warrior | 10 | הכי טוב +6 | 94 | 365 | 20 | 257 | +57% | 127 | Verdant Headband, Crimson Sword, Verdant Gloves, Champion Cape, Crimson Plate, Swift Boots |
+| Archer | 1 | התחלה | 9 | 80 | 2 | 17 | +0% | 7 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots |
+| Archer | 1 | הכי טוב | 9 | 85 | 2 | 17 | +0% | 7 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots, Red Cape |
+| Archer | 6 | התחלה | 31 | 145 | 2 | 91 | +0% | 12 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots |
+| Archer | 6 | הכי טוב | 35 | 188 | 3 | 105 | +16% | 17 | Green Hood, Crimson Bow, Hawk Gloves, Shadow Vest, Verdant Boots, Verdant Cape |
+| Archer | 6 | הכי טוב +6 | 53 | 260 | 15 | 162 | +78% | 85 | Green Hood, Crimson Bow, Hawk Gloves, Shadow Vest, Verdant Boots, Verdant Cape |
+| Archer | 10 | התחלה | 49 | 197 | 2 | 170 | +0% | 16 | Green Hood, Short Bow, Leather Gloves, Ranger Vest, Leather Boots |
+| Archer | 10 | הכי טוב | 53 | 236 | 3 | 213 | +25% | 21 | Azure Hood, Crimson Bow, Hawk Gloves, Shadow Vest, Swift Boots, Duelist Cape |
+| Archer | 10 | הכי טוב +6 | 71 | 308 | 15 | 288 | +69% | 97 | Azure Hood, Crimson Bow, Hawk Gloves, Shadow Vest, Swift Boots, Duelist Cape |
+| Mage | 1 | התחלה | 9 | 70 | 1 | 14 | +0% | 5 | Sage Hat, Oak Staff, Violet Robe, Leather Boots |
+| Mage | 1 | הכי טוב | 10 | 75 | 1 | 16 | +16% | 6 | Sage Hat, Oak Staff, Violet Robe, Leather Boots, Leather Gloves, Red Cape |
+| Mage | 6 | התחלה | 39 | 125 | 1 | 72 | +0% | 9 | Sage Hat, Oak Staff, Violet Robe, Leather Boots |
+| Mage | 6 | הכי טוב | 44 | 168 | 3 | 87 | +20% | 14 | Sage Hat, Ember Staff, Midnight Robe, Verdant Boots, Hawk Gloves, Verdant Cape |
+| Mage | 6 | הכי טוב +6 | 62 | 240 | 15 | 124 | +71% | 73 | Sage Hat, Ember Staff, Midnight Robe, Verdant Boots, Hawk Gloves, Verdant Cape |
+| Mage | 10 | התחלה | 63 | 169 | 1 | 119 | +0% | 12 | Sage Hat, Oak Staff, Violet Robe, Leather Boots |
+| Mage | 10 | הכי טוב | 68 | 209 | 3 | 148 | +24% | 17 | Starlit Hat, Ember Staff, Midnight Robe, Swift Boots, Hawk Gloves, Duelist Cape |
+| Mage | 10 | הכי טוב +6 | 86 | 281 | 15 | 188 | +58% | 81 | Starlit Hat, Ember Staff, Midnight Robe, Swift Boots, Hawk Gloves, Duelist Cape |
+
 ## שדרוג ציוד
 
 | שלב | אבן | סיכוי | אבנים בממוצע | בכישלון |

@@ -29,6 +29,15 @@ def test_levels_and_stat_points():
     assert hero.reset_stats(True) and hero.gold == 50
 
 
+def test_gear_needs_a_level():
+    hero = Stats()
+    hero.bag = [items.gear("verdant_headband")]
+    assert items.required_level("verdant_headband") == 3
+    assert not hero.equip(0) and len(hero.bag) == 1
+    hero.level = 3
+    assert hero.equip(0) and hero.equipment["head"]["id"] == "verdant_headband"
+
+
 def test_xp_curve_and_level_gap():
     needs = [xp_for_level(level) for level in range(1, 41)]
     assert all(a < b for a, b in zip(needs, needs[1:], strict=False))
@@ -117,6 +126,13 @@ def test_same_numbers_as_godot():
         again.from_dict(case["dict"])  # and Godot's save of it loads the same
         assert norm(again.to_dict()) == norm(case["dict"]) and again.notice == ""
     assert [xp_for_level(level) for level in range(1, 31)] == [int(n) for n in fixture["xp_for_level"]]
+    bag = fixture["bag"]
+    for class_id in ("warrior", "archer"):
+        mine = [stack["id"] for stack in items.sorted_bag(bag["input"], class_id)]
+        assert mine == [stack["id"] for stack in bag[class_id]], class_id
+    assert {item_id: items.required_level(item_id) for item_id in bag["levels"]} == {
+        item_id: int(level) for item_id, level in bag["levels"].items()
+    }
     for hero_level, monster_level, factor, xp in fixture["gap"]:
         hero_level, monster_level = int(hero_level), int(monster_level)
         assert math.isclose(level_gap_factor(hero_level, monster_level), factor, abs_tol=1e-9)

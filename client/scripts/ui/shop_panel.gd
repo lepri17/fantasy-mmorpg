@@ -102,14 +102,39 @@ func _buy_row(item_id: String) -> Control:
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	row.add_child(icon)
+	var words := VBoxContainer.new()
+	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	words.add_theme_constant_override("separation", 0)
+	words.custom_minimum_size = Vector2(150, 0)
 	var item_name := UiStyle.label(ItemDb.items[item_id]["name"], 16, Color.WHITE)
-	item_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(item_name)
+	# A long name ends in "..." and a long line of bonuses wraps, instead of
+	# making the window wider than the screen.
+	item_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	words.add_child(item_name)
+	var info := UiStyle.label(_item_info(item_id), 12, Color(0.8, 0.82, 0.9))
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	words.add_child(info)
+	row.add_child(words)
 	row.add_child(UiStyle.label("%d G" % ItemDb.price(item_id), 16, UiStyle.GOLD_TEXT))
 	var buy := UiStyle.button("BUY", GREEN, Vector2(64, 40))
 	buy.pressed.connect(func() -> void: request.emit("buy_item", item_id))
 	row.add_child(buy)
 	return row
+
+
+## "Lv 5 +8 HP, +6% SPD" for gear (its bonuses, and the level it needs), or
+## the item's own short text.
+static func _item_info(item_id: String) -> String:
+	var item: Dictionary = ItemDb.items[item_id]
+	if not ItemDb.is_gear(item_id):
+		return item["text"]
+	var bonuses := {}
+	for stat in UiStyle.BONUS_NAMES:
+		if not is_zero_approx(float(item.get(stat, 0.0))):
+			bonuses[stat] = float(item[stat])
+	var text: String = UiStyle.bonus_text(bonuses, true)
+	var needed: int = ItemDb.required_level(item_id)
+	return text if needed <= 1 else "Lv %d %s" % [needed, text]
 
 
 func _buy_page() -> Control:

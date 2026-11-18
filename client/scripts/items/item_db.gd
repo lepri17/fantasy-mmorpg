@@ -66,6 +66,16 @@ static func usable_by(item_id: String, class_id: String) -> bool:
 	return classes.is_empty() or classes.has(class_id)
 
 
+## The level a hero needs to wear the item (items.json "level"; 1 when not set).
+static func required_level(item_id: String) -> int:
+	return maxi(1, int(items.get(item_id, {}).get("level", 1)))
+
+
+## True when a hero of this class and level may wear the piece now.
+static func can_wear(item_id: String, class_id: String, level: int) -> bool:
+	return is_gear(item_id) and usable_by(item_id, class_id) and level >= required_level(item_id)
+
+
 static func is_gear(item_id: String) -> bool:
 	return items.has(item_id) and items[item_id].get("slot", "") != ""
 
@@ -151,6 +161,17 @@ static func display_name(stack: Dictionary, with_rarity: bool = false) -> String
 	return text
 
 
+## The bag in a tidy order: gear this class can wear (by slot, then the
+## highest level, rarity and upgrade first), other gear, things to use, then
+## the rest. Entries that tie keep their order.
+static func sorted_bag(bag: Array, class_id: String) -> Array:
+	var keyed: Array = []
+	for i in bag.size():
+		keyed.append([_sort_key(bag[i], class_id), i, bag[i]])
+	keyed.sort_custom(func(a, b): return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
+	return keyed.map(func(entry): return entry[2])
+
+
 ## A safe copy of a saved or dropped entry, or {} for an unknown item.
 static func clean_stack(stack) -> Dictionary:
 	if not stack is Dictionary or not items.has(stack.get("id", "")):
@@ -172,6 +193,21 @@ static func clean_stack(stack) -> Dictionary:
 					options[stat] = roundi(float(saved[stat]))
 	var plus: int = clampi(int(stack.get("plus", 0)), 0, int(upgrades.get("max_plus", 15)))
 	return gear(item_id, rarity, plus, options)
+
+
+static func _sort_key(stack: Dictionary, class_id: String) -> int:
+	var item_id: String = stack["id"]
+	if is_gear(item_id):
+		var group: int = 0 if usable_by(item_id, class_id) else 1
+		return (
+			group * 10000000
+			+ gear_slots.find(items[item_id]["slot"]) * 100000
+			+ (99 - required_level(item_id)) * 1000
+			+ (9 - rarity_rank(stack.get("rarity", ""))) * 100
+			+ (99 - int(stack.get("plus", 0)))
+		)
+	var group: int = 2 if items[item_id].get("usable", false) else 3
+	return group * 10000000 + items.keys().find(item_id)
 
 
 static func _roll_rarity() -> String:

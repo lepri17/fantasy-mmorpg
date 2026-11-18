@@ -32,6 +32,7 @@ MAIN_STAT = {"warrior": "strength", "archer": "dexterity", "mage": "energy"}
 # Monsters a hero hunts for XP (not the boss nor the event's golden slimes).
 REGULAR = ("green_slime", "blue_slime", "spore_shroom")
 BUILD_LEVEL = 10
+GEAR_TARGET = "blue_slime"  # the monster the gear table measures DPS and survival against
 BETWEEN_FIGHTS = 5.0  # seconds of walking, looting and waiting for respawns per kill (pace table)
 
 
@@ -267,6 +268,56 @@ def crit_section() -> str:
     ])
 
 
+def survive_seconds(stats: Stats, monster: dict) -> float:
+    """How long the hero lives while the monster keeps hitting him."""
+    return stats.max_hp() / max(monster_hit(monster, stats), 0.1) * float(monster["attack_cooldown"])
+
+
+def best_gear(class_id: str, level: int, plus: int = 0) -> Stats:
+    """The hero wearing, in every slot, the common piece he may wear at this level
+    that gives the most DPS x seconds alive against the gear target."""
+    stats = hero(class_id, level)
+    monster = table("monsters")[GEAR_TARGET]
+    for _ in range(2):  # a second pass, so set bonuses can count
+        for slot in item_db.data()["gear_slots"]:
+            best = None
+            for item_id, item in item_db.items().items():
+                if item.get("slot") != slot or not item_db.can_wear(item_id, class_id, level):
+                    continue
+                stats.equipment[slot] = item_db.gear(item_id, "common", plus)
+                score = basic_dps(stats, monster) * survive_seconds(stats, monster)
+                if best is None or score > best[0]:
+                    best = (score, item_id)
+            if best is not None:
+                stats.equipment[slot] = item_db.gear(best[1], "common", plus)
+    return stats
+
+
+def gear_section() -> str:
+    monster = table("monsters")[GEAR_TARGET]
+    rows = []
+    for class_id in ("warrior", "archer", "mage"):
+        for level in (1, 6, 10):
+            start = hero(class_id, level)
+            loadouts = [("התחלה", start), ("הכי טוב", best_gear(class_id, level))]
+            if level > 1:
+                loadouts.append(("הכי טוב +6", best_gear(class_id, level, 6)))
+            for name, stats in loadouts:
+                pieces = ", ".join(item_db.items()[stack["id"]]["name"] for stack in stats.equipment.values())
+                rows.append([class_name(class_id), level, name, stats.attack_damage(), stats.max_hp(),
+                             stats.defense(), f"{basic_dps(stats, monster):.0f}",
+                             f"{basic_dps(stats, monster) / basic_dps(start, monster) * 100 - 100:+.0f}%",
+                             f"{survive_seconds(stats, monster):.0f}", pieces])
+    return "\n".join([
+        f"## ציוד (נגד {monster['name']})", "",
+        "\"הכי טוב\": בכל משבצת, הפריט הרגיל (Common) שהגיבור יכול ללבוש ברמה הזאת ונותן הכי הרבה "
+        "DPS כפול שניות חיים. כולל ציוד שדרוג המקצוע ברמה 10. \"+6\": אותו ציוד משודרג לכל +6 (אבני Ember, בלי סיכון). "
+        "נקודות הסטטים כולן בסטט הראשי.", "",
+        md_table(["מקצוע", "רמה", "ציוד", "התקפה", "HP", "הגנה", "DPS", "DPS מול ההתחלה", "שנ' בחיים", "פריטים"],
+                 rows), "",
+    ])
+
+
 def upgrade_section() -> str:
     upgrades = item_db.upgrades()
     rows = []
@@ -311,7 +362,8 @@ def build() -> str:
         "משנים את הנתונים ומריצים את הכלי מחדש. המספרים הם ממוצעים לפי חוקי המשחק.", "",
     ])
     return "\n".join([head, heroes_section(), monsters_section(), pace_section(), points_section(), builds_section(),
-                      skills_section(), crit_section(), upgrade_section(), economy_section()]).rstrip() + "\n"
+                      skills_section(), crit_section(), gear_section(), upgrade_section(),
+                      economy_section()]).rstrip() + "\n"
 
 
 def main() -> int:

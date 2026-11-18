@@ -246,6 +246,7 @@
     "verdant_headband": {
       "name": "Verdant Headband",
       "slot": "head",
+      "level": 3,
       "look": "red_headband",
       "set": "verdant",
       "max_hp": 10,
@@ -260,6 +261,7 @@
     "verdant_cape": {
       "name": "Verdant Cape",
       "slot": "cape",
+      "level": 3,
       "look": "red_cape",
       "set": "verdant",
       "max_hp": 10,
@@ -271,6 +273,7 @@
     "verdant_gloves": {
       "name": "Verdant Gloves",
       "slot": "gloves",
+      "level": 3,
       "look": "leather_gloves",
       "set": "verdant",
       "attack": 2,
@@ -282,6 +285,7 @@
     "verdant_boots": {
       "name": "Verdant Boots",
       "slot": "boots",
+      "level": 3,
       "look": "leather_boots",
       "set": "verdant",
       "max_hp": 10,
@@ -290,9 +294,45 @@
       "text": "Soft soles for a fast step.",
       "price": 400
     },
+    "swift_boots": {
+      "name": "Swift Boots",
+      "slot": "boots",
+      "level": 5,
+      "look": "leather_boots",
+      "max_hp": 8,
+      "attack_speed": 0.06,
+      "icon": "res://assets/items/icons/swift_boots.png",
+      "text": "Light soles for quick hands.",
+      "price": 650
+    },
+    "hawk_gloves": {
+      "name": "Hawk Gloves",
+      "slot": "gloves",
+      "level": 5,
+      "look": "leather_gloves",
+      "attack": 2,
+      "accuracy": 0.05,
+      "crit_damage": 0.1,
+      "icon": "res://assets/items/icons/hawk_gloves.png",
+      "text": "Steady fingers find the weak spot.",
+      "price": 650
+    },
+    "duelist_cape": {
+      "name": "Duelist Cape",
+      "slot": "cape",
+      "level": 8,
+      "look": "red_cape",
+      "max_hp": 15,
+      "crit_chance": 0.02,
+      "crit_damage": 0.15,
+      "icon": "res://assets/items/icons/duelist_cape.png",
+      "text": "Worn by those who strike first.",
+      "price": 1100
+    },
     "crimson_plate": {
       "name": "Crimson Plate",
       "slot": "armor",
+      "level": 6,
       "look": "blue_plate",
       "set": "crimson",
       "max_hp": 30,
@@ -307,6 +347,7 @@
     "crimson_sword": {
       "name": "Crimson Sword",
       "slot": "weapon",
+      "level": 6,
       "look": "training_sword",
       "set": "crimson",
       "attack": 8,
@@ -340,6 +381,7 @@
     "ember_staff": {
       "name": "Ember Staff",
       "slot": "weapon",
+      "level": 6,
       "classes": [
         "mage"
       ],
@@ -365,6 +407,7 @@
     "starlit_hat": {
       "name": "Starlit Hat",
       "slot": "head",
+      "level": 10,
       "classes": [
         "mage"
       ],
@@ -392,6 +435,7 @@
     "midnight_robe": {
       "name": "Midnight Robe",
       "slot": "armor",
+      "level": 6,
       "classes": [
         "mage"
       ],
@@ -418,6 +462,7 @@
     "crimson_bow": {
       "name": "Crimson Bow",
       "slot": "weapon",
+      "level": 6,
       "classes": [
         "archer"
       ],
@@ -443,6 +488,7 @@
     "azure_hood": {
       "name": "Azure Hood",
       "slot": "head",
+      "level": 10,
       "classes": [
         "archer"
       ],
@@ -470,6 +516,7 @@
     "shadow_vest": {
       "name": "Shadow Vest",
       "slot": "armor",
+      "level": 6,
       "classes": [
         "archer"
       ],
@@ -484,6 +531,7 @@
     "champion_cape": {
       "name": "Champion Cape",
       "slot": "cape",
+      "level": 10,
       "classes": [
         "warrior"
       ],

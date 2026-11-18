@@ -1,12 +1,14 @@
 extends SceneTree
 ## Writes the numbers player_stats.gd gives for a few heroes (every class, with
 ## stat points, upgraded and set gear, job advancement, a title, an old save from
-## before the stat rework) and the level rules (leveling.gd) to a JSON file.
+## before the stat rework), the level rules (leveling.gd), the level each piece
+## of gear needs and a sorted bag (item_db.gd) to a JSON file.
 ## The server's tests compare its Python port with it (server/tests/fixtures).
 ## Run: godot --headless -s res://tests/stats_fixture.gd -- <output.json>
 
 const PlayerStats = preload("res://scripts/player/player_stats.gd")
 const Leveling = preload("res://scripts/player/leveling.gd")
+const ItemDb = preload("res://scripts/items/item_db.gd")
 const WEAPONS := {"warrior": "training_sword", "mage": "oak_staff", "archer": "short_bow"}
 
 
@@ -50,7 +52,7 @@ func _initialize() -> void:
 				Leveling.kill_xp(37, pair[0], pair[1]),
 			]
 		)
-	var out := {"heroes": heroes, "xp_for_level": curve, "gap": gaps}
+	var out := {"heroes": heroes, "xp_for_level": curve, "gap": gaps, "bag": _bag()}
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	var path: String = args[0] if not args.is_empty() else "user://stats.json"
 	var file := FileAccess.open(path, FileAccess.WRITE)
@@ -104,3 +106,29 @@ func _case_dict(class_id: String, case: int) -> Dictionary:
 		data["achievements"] = ["first_hunt", "slime_hunter"]
 		data["title"] = "slime_hunter"
 	return data
+
+
+## A mixed bag and how it sorts for a warrior and an archer, and the level
+## every piece of gear needs.
+func _bag() -> Dictionary:
+	var mixed: Array = [
+		{"id": "ember_stone", "count": 2},
+		ItemDb.gear("short_bow"),
+		{"id": "red_potion", "count": 3},
+		ItemDb.gear("leather_boots"),
+		ItemDb.gear("training_sword"),
+		ItemDb.gear("crimson_sword"),
+		ItemDb.gear("training_sword", "rare"),
+		ItemDb.gear("swift_boots", "epic", 2),
+		{"id": "book_ground_slam", "count": 1},
+	]
+	var levels := {}
+	for item_id in ItemDb.items:
+		if ItemDb.is_gear(item_id):
+			levels[item_id] = ItemDb.required_level(item_id)
+	return {
+		"input": mixed,
+		"warrior": ItemDb.sorted_bag(mixed, "warrior"),
+		"archer": ItemDb.sorted_bag(mixed, "archer"),
+		"levels": levels,
+	}

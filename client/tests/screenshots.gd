@@ -36,6 +36,8 @@ func _initialize() -> void:
 	player.add_stack(ItemDb.gear("verdant_cape", "rare", 2, {"max_hp": 12, "evasion": 0.015}))
 	player.add_item("ember_stone", 4)
 	player.add_item("slime_jelly", 6)
+	player.add_stack(ItemDb.gear("short_bow"))  # another class's: faded in the bag
+	player.add_stack(ItemDb.gear("duelist_cape"))  # needs level 8: "Lv8" in red
 	await _shot("01_meadow")
 	player.stats.tutorial = 99  # the first hint is in 01; no more hints after it
 	hud.toggle_inventory()
@@ -108,6 +110,7 @@ func _initialize() -> void:
 	hud.toggle_inventory()
 	await _shot("17_archer_bag")
 	hud.toggle_inventory()
+	player.stats.level = 10  # the job advancement and its hood need level 10
 	player.stats.advanced = true
 	player.add_item("azure_hood")
 	for i in player.stats.bag.size():
@@ -164,6 +167,7 @@ func _initialize() -> void:
 	await _frames(5)
 	await _shot("24_hebrew")
 	hud.toggle_inventory()
+	_tap_first_gear(player, hud)
 	await _shot("25_hebrew_bag")
 	hud.toggle_inventory()
 	hud.toggle_menu()
@@ -216,3 +220,12 @@ func _shot(file_name: String) -> void:
 func _frames(count: int) -> void:
 	for i in count:
 		await process_frame
+
+
+## Taps the first piece of gear in the bag, so its details show.
+func _tap_first_gear(player, hud) -> void:
+	var inventory = hud.get_node("Inventory")
+	for i in player.stats.bag.size():
+		if ItemDb.is_gear(player.stats.bag[i]["id"]):
+			inventory.call("_on_slot_tapped", inventory.bag_slots[i])
+			return

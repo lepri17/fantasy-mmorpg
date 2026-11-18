@@ -1,6 +1,7 @@
 extends Control
 ## One square of the inventory: a frame (in the rarity color for special gear),
-## the item icon, the stack count and the upgrade level ("+3").
+## the item icon, the stack count, the upgrade level ("+3") and a mark in the
+## top right corner (see mark).
 ## Emits tapped when it is touched or clicked, and double_tapped on a quick
 ## second tap (like double-clicking an item in MapleStory).
 
@@ -15,6 +16,9 @@ const BORDER_SELECTED := Color(1.0, 0.92, 0.5)
 const HINT_COLOR := Color(1, 1, 1, 0.35)
 const COUNT_OUTLINE := Color(0.1, 0.05, 0.1)
 const PLUS_COLOR := Color(1.0, 0.86, 0.4)
+const BETTER_COLOR := Color(0.35, 0.95, 0.4)
+const LOCKED_COLOR := Color(1.0, 0.42, 0.38)
+const OTHER_FADE := Color(1, 1, 1, 0.55)
 const DOUBLE_TAP_MSEC := 350
 
 ## "gear" (worn) or "bag".
@@ -29,6 +33,10 @@ var count: int = 0
 var hint: String = ""
 ## Gear slots get a gold frame.
 var is_gear: bool = false
+## "better": a green arrow, wearing it improves the hero with no loss.
+## "locked": the level the hero still needs, in red. "other": another class's
+## gear, faded. "": nothing.
+var mark: String = ""
 var selected: bool = false:
 	set(value):
 		selected = value
@@ -85,7 +93,8 @@ func _draw() -> void:
 	var font: Font = ThemeDB.fallback_font
 	if _icon != null:
 		var pad := size * 0.1
-		draw_texture_rect(_icon, Rect2(pad, size - pad * 2.0), false)
+		var fade: Color = OTHER_FADE if mark == "other" else Color.WHITE
+		draw_texture_rect(_icon, Rect2(pad, size - pad * 2.0), false, fade)
 	elif hint != "":
 		var middle := Vector2(0.0, size.y / 2.0 + 5.0)
 		draw_string(font, middle, tr(hint), HORIZONTAL_ALIGNMENT_CENTER, size.x, 13, HINT_COLOR)
@@ -103,6 +112,28 @@ func _draw() -> void:
 			font, corner, text, HORIZONTAL_ALIGNMENT_RIGHT, width, 17, 5, COUNT_OUTLINE
 		)
 		draw_string(font, corner, text, HORIZONTAL_ALIGNMENT_RIGHT, width, 17, Color.WHITE)
+	_draw_mark(font)
+
+
+func _draw_mark(font: Font) -> void:
+	if item_id == "":
+		return
+	if mark == "better":
+		var tip := Vector2(size.x - 11.0, 5.0)
+		var arrow := PackedVector2Array(
+			[tip, tip + Vector2(7.0, 8.0), tip + Vector2(-7.0, 8.0)]
+		)
+		draw_colored_polygon(arrow, BETTER_COLOR)
+		draw_polyline(arrow + PackedVector2Array([tip]), COUNT_OUTLINE, 1.5)
+		draw_rect(Rect2(tip + Vector2(-2.5, 8.0), Vector2(5.0, 6.0)), BETTER_COLOR)
+	elif mark == "locked":
+		var top := Vector2(0.0, 15.0)
+		var label := "Lv%d" % ItemDb.required_level(item_id)
+		var width: float = size.x - 4.0
+		draw_string_outline(
+			font, top, label, HORIZONTAL_ALIGNMENT_RIGHT, width, 13, 4, COUNT_OUTLINE
+		)
+		draw_string(font, top, label, HORIZONTAL_ALIGNMENT_RIGHT, width, 13, LOCKED_COLOR)
 
 
 ## Texts drawn by hand follow a change of language too.

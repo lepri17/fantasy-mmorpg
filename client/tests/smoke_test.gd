@@ -21,6 +21,7 @@ const SmokeClasses = preload("res://tests/smoke_classes.gd")
 const SmokeUi = preload("res://tests/smoke_ui.gd")
 const SmokeCombat = preload("res://tests/smoke_combat.gd")
 const SmokeProgress = preload("res://tests/smoke_progress.gd")
+const SmokeGear = preload("res://tests/smoke_gear.gd")
 const Settings = preload("res://scripts/settings.gd")
 const SETTINGS_PATH := "user://smoke_test_settings.cfg"
 
@@ -377,8 +378,8 @@ func _run() -> void:
 	inventory.call("_on_slot_tapped", inventory.bag_slots[sharp_index])
 	var details: String = inventory.get("_info_label").text
 	_check(
-		"vs Training Sword" in details and "+7 ATK (+3)" in details,
-		"the details compare it with the worn sword (%s)" % details.replace("\n", " / ")
+		"If worn: +3 ATK, +2% CRIT" in details and "Gives: +7 ATK, +2% CRIT" in details,
+		"the details show its bonuses and what wearing it changes (%s)" % details.replace("\n", " / ")
 	)
 	player.equip_from_bag(sharp_index)
 	_check(
@@ -772,6 +773,7 @@ func _run() -> void:
 	await SmokeUi.new().run(self, main, player, hud)
 	await SmokeCombat.new().run(self, main, player, hud)
 	await SmokeProgress.new().run(self, main, player, hud)
+	await SmokeGear.new().run(self, main, player, hud)
 
 	_remove_test_save()
 	root.remove_child(main)

@@ -155,7 +155,9 @@
         "ember_staff",
         "midnight_robe",
         "crimson_bow",
-        "shadow_vest"
+        "shadow_vest",
+        "swift_boots",
+        "hawk_gloves"
       ]
     }
   },
@@ -227,7 +229,10 @@
         "ember_staff",
         "midnight_robe",
         "crimson_bow",
-        "shadow_vest"
+        "shadow_vest",
+        "swift_boots",
+        "hawk_gloves",
+        "duelist_cape"
       ]
     }
   },
@@ -322,7 +327,10 @@
         "ember_staff",
         "midnight_robe",
         "crimson_bow",
-        "shadow_vest"
+        "shadow_vest",
+        "swift_boots",
+        "hawk_gloves",
+        "duelist_cape"
       ]
     },
     "knockback_resist": 1.0

@@ -273,9 +273,19 @@ func equip_from_bag(index: int) -> void:
 	if not ItemDb.usable_by(piece["id"], stats.class_id):
 		_say("Only %s can use that." % _classes_text(piece["id"]), WARNING_COLOR)
 		return
+	var needed: int = ItemDb.required_level(piece["id"])
+	if stats.level < needed:
+		_say("You need level %d to wear that." % needed, WARNING_COLOR)
+		return
 	if stats.equip(index):
 		_say("Equipped %s." % ItemDb.display_name(piece))
 		_gear_changed()
+
+
+## Puts the bag in order (ItemDb.sorted_bag): gear this hero can wear first.
+func sort_bag(_unused: Variant = null) -> void:
+	stats.bag = ItemDb.sorted_bag(stats.bag, stats.class_id)
+	_progress_changed()
 
 
 ## Moves worn gear (by gear slot, such as "weapon") into the bag.

@@ -48,6 +48,7 @@ const ITEM_ACTIONS := [
 	"upgrade_bag_item",
 	"upgrade_equipped",
 	"cycle_auto_potion",
+	"sort_bag",
 ]
 ## Player methods the character window may ask for.
 const CHARACTER_ACTIONS := ["add_stat_point", "reset_stats", "choose_title"]
@@ -503,7 +504,7 @@ func _build_town_windows() -> void:
 	_place(_dialog, Control.PRESET_CENTER_BOTTOM, Rect2(-360, -340, 720, 320))
 	_shop = ShopPanel.new()
 	_shop.name = "Shop"
-	_place(_shop, Control.PRESET_TOP_RIGHT, Rect2(-352, 100, 336, 600))
+	_place(_shop, Control.PRESET_TOP_RIGHT, Rect2(-396, 100, 380, 600))
 	_storage = StoragePanel.new()
 	_storage.name = "Storage"
 	_place(_storage, Control.PRESET_CENTER, Rect2(-370, -290, 740, 580))

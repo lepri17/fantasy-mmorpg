@@ -468,7 +468,7 @@ class Stats:
             return False
         stack = self.bag[index]
         slot = item_db.items()[stack["id"]].get("slot", "")
-        if slot == "" or not item_db.usable_by(stack["id"], self.class_id):
+        if slot == "" or not item_db.can_wear(stack["id"], self.class_id, self.level):
             return False
         worn = self.equipment.get(slot, {})
         self.equipment[slot] = stack
