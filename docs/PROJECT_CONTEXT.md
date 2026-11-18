@@ -140,7 +140,7 @@
 - שיקוי: מרפא 40% מהחיים. מתחילים עם 2.
 - חיים מתחדשים 2 לשנייה אחרי 5 שניות בלי פגיעה.
 - מוות: הודעה, 2.5 שניות, חזרה לנקודת ההתחלה עם חיים מלאים. לא מאבדים כלום.
-- שמירה מקומית, קובץ לכל משבצת במסך הבחירה (`user://slot_1.cfg` עד 3). זה פתרון זמני, עד שיהיה שרת. בקובץ יש `version` (עכשיו 10). גרסה 2 הוסיפה תיק וציוד, 3 נקודות סטטים, סקילים מספרים, הישגים ותואר, 4 ציוד עם דרגה, שדרוג ותכונות, 5 מפה, 6 מחסן, 7 משימות, 8 כניסות למבוך, 9 מקצוע, שם ושדרוג מקצוע, ו-10 שלב ההדרכה. כל גרסה ישנה נטענת ומומרת.
+- שמירה מקומית, קובץ לכל משבצת במסך הבחירה (`user://slot_1.cfg` עד 3). זה פתרון זמני, עד שיהיה שרת. בקובץ יש `version` (עכשיו 11). גרסה 2 הוסיפה תיק וציוד, 3 נקודות סטטים, סקילים מספרים, הישגים ותואר, 4 ציוד עם דרגה, שדרוג ותכונות, 5 מפה, 6 מחסן, 7 משימות, 8 כניסות למבוך, 9 מקצוע, שם ושדרוג מקצוע, 10 שלב ההדרכה, ו-11 הסטטים החדשים (נקודות ישנות חוזרות לשחקן). כל גרסה ישנה נטענת ומומרת.
 - גרפיקה (מ-2026-11-17): סרט ראש אדום עם לוחית זהב ואבן, כתפיות עם שוליים מזהב, מגני זרוע, חגורה ואבזם, לוחות ירך, מגפיים עם שוליים, עיניים כחולות, גלימה עם שוליים מזהב, חרב עם משמר זהב, אבן וידית עטופה.
 - גיליון `warrior.png`: 4 שורות (down, left, right, up) × 16 עמודות (כולל פריים פגיעה), פריים של 128 פיקסלים, מוצג ב-`scale` 0.75 (אותו גודל במשחק, חד יותר בטלפון). Idle: 4 פריימים ב-4fps. Walk: 6 ב-12fps. Attack: 5 ב-18fps, כלומר 0.28 שנ' (`ATTACK_ANIMATION_SECONDS`). כיוון ימין הוא שמאל במראה.
 - המראה לפי הציוד (מ-2026-11-17): המחולל מצייר כל פריים בחלקים. יש גוף בסיסי (טוניקה, שרוולים, ידיים, נעליים, ראש) ויש חלקים לכל פריט. החלקים נארזים ב-`warrior_parts.png`, ומיקומם, סדר השכבות לכל כיוון והפריט שכל חלק צריך כתובים ב-`warrior_parts.gd`. בזמן משחק, `hero_look.gd` מרכיב גיליון מהחלקים של הציוד הלבוש ומחליף את הטקסטורה של כל הפריימים. `warrior.png` הוא ההרכבה עם כל הציוד, והוא משמש ברירת מחדל ולאייקון. לקוסם ולקשת יש קבצי חלקים משלהם (`mage_parts`, `archer_parts`) באותו מבנה.
@@ -171,7 +171,7 @@
 - `client/scripts/maps/` – `game_map.gd` (בונה מפה מ-JSON), `map_tiles.gd`, `portal.gd`, `npc.gd`, `dungeon_run.gd`. `client/scenes/maps/field.tscn` – האחו.
 - `client/scripts/world/` – `sky.gd` (יום, לילה וגשם), `torch.gd`.
 - `client/data/` – כל הנתונים ב-JSON: פריטים, דמות, מפלצות, קרב, סקילים, הישגים, מפות, אנשי העיר ומשימות. `tools/check_data.py` בודק אותם.
-- `client/scripts/player/` – `class_db.gd` (המקצועות), `hero_look.gd` (בונה את המראה לכל מקצוע; היה `warrior_look.gd`), `spells.gd` (סקילים של קוסם וקשת וסקילי השדרוג), `player.gd` (תנועה, קרב, סקילים), `player_base.gd` (פריטים, עיר ומשימות; `player.gd` יורש ממנו), `player_stats.gd` (רמה, ציוד, תיק, מחסן, נקודות סטטים), `achievement_record.gd` (הישגים ותארים), `quest_log.gd`, `dungeon_log.gd`, `save_file.gd` (שמירה במשבצות, גרסה 10).
+- `client/scripts/player/` – `class_db.gd` (המקצועות), `hero_look.gd` (בונה את המראה לכל מקצוע; היה `warrior_look.gd`), `spells.gd` (סקילים של קוסם וקשת וסקילי השדרוג), `player.gd` (תנועה, קרב, סקילים), `player_base.gd` (פריטים, עיר ומשימות; `player.gd` יורש ממנו), `player_stats.gd` (רמה, ציוד, תיק, מחסן, נקודות סטטים), `leveling.gd` (עקומת EXP ופער רמות), `achievement_record.gd` (הישגים ותארים), `quest_log.gd`, `dungeon_log.gd`, `save_file.gd` (שמירה במשבצות, גרסה 11).
 - `client/scripts/enemies/slime.gd`, `client/scenes/enemies/slime.tscn`.
 - `client/scripts/combat/` – `combat_rules.gd` (חישוב הפגיעה), `combat_log.gd` (מד DPS), `slash_effect.gd`, `hit_spark.gd`, `target_marker.gd`, `status_effects.gd` (רעל, האטה, הלם), `telegraph.gd` (עיגול אזהרה), `projectile.gd` (קליעים של מפלצות), `hero_shot.gd` (חצים וכישופים של הגיבור), `shield_bubble.gd`, `lightning.gd`, `burst.gd` (חלקיקים).
 - `client/scripts/items/pickup.gd` – שלל על הרצפה. `item_db.gd` – טבלת כל הפריטים.
@@ -182,7 +182,7 @@
 - `docs/MAPLESTORY_COMPARISON.md` – השוואה ל-MapleStory הראשון: מה נוסף, ומה לא נוסף ולמה.
 - `client/scripts/ui/` – `hud.gd`, `player_panel.gd`, `hp_bar_world.gd`, `floating_text.gd`, `touch_joystick.gd`, `touch_button.gd`.
 - `client/scripts/audio/sfx.gd` – אפקטים קוליים, דרך הקבוצה `sfx`.
-- `client/tests/smoke_test.gd`, `smoke_world.gd`, `smoke_classes.gd`, `smoke_ui.gd` ו-`smoke_combat.gd` – הבדיקה האוטומטית (האחו, העולם, המקצועות, הממשק, ליבת הקרב). `client/tests/screenshots.gd` – צילומי מסך על מסך וירטואלי.
+- `client/tests/smoke_test.gd`, `smoke_world.gd`, `smoke_classes.gd`, `smoke_ui.gd`, `smoke_combat.gd` ו-`smoke_progress.gd` – הבדיקה האוטומטית (האחו, העולם, המקצועות, הממשק, ליבת הקרב, ההתקדמות). `client/tests/screenshots.gd` – צילומי מסך על מסך וירטואלי.
 - `docs/ROADMAP.md` – רשימת רעיונות לשיפור, עם מזהים, גודל ותלויות. מה שבוצע מסומן **[בוצע]** עם תאריך. סעיף K מכיל פערים שנמצאו בקוד ובלוגים, כולל חתימת APK שמשתנה בכל בנייה (K1).
 - `tools/generate_assets.py`, `tools/generate_sounds.py`, `tools/check_project.py`, `tools/balance.py` (טבלאות האיזון, נכתב אל `docs/BALANCE.md`).
 - `server/` – השרת: `game.py` (הודעות, חשבונות, דמויות), `net.py` (WebSocket), `db.py`, `actions.py` (פריטים ואנשי העיר), `social.py`, `world/` (מפות, מפלצות, גיבור, עותק מפה), `rules/` (החוקים ב-Python), `tests/`. `Dockerfile` לאירוח בענן.
