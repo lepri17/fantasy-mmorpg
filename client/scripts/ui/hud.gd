@@ -56,6 +56,8 @@ var _player: Node = null
 var _banner: Label
 var _menu: PanelContainer
 var _menu_button: Button
+## The quests in the tracker, top to bottom (for tapping one).
+var _tracker_quests: Array = []
 var _dialog
 var _shop
 var _storage
@@ -349,6 +351,11 @@ func _update_action_buttons() -> void:
 			button.set("badge", str(stats.potions))
 			button.set("dimmed", stats.potions == 0)
 			continue
+		if action == "auto_hunt":
+			var auto = _player.get("auto")
+			var walking: bool = not auto.walk_goal.is_empty()
+			button.set("badge", "GO" if walking else ("ON" if auto.hunting else ""))
+			continue
 		button.set("cooldown", _player.call("cooldown_left", action))
 		var skill_id: String = _player.call("skill_for_action", action)
 		if skill_id == "":
@@ -382,6 +389,16 @@ func _refresh_tracker(stats) -> void:
 			line += "  (done)"
 		lines.append(line)
 	_tracker.text = "\n".join(lines)
+	_tracker_quests = stats.quests.active.keys()
+
+
+## U6: tapping a quest in the list walks the hero to its target.
+func _on_tracker_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton and event.pressed):
+		return
+	var line: int = int(event.position.y / maxf(_tracker.get_line_height(), 1.0))
+	if line >= 0 and line < _tracker_quests.size():
+		_player.call("walk_to_quest", _tracker_quests[line])
 
 
 func _style_round_button(button: Button) -> void:
@@ -462,7 +479,8 @@ func _build_town_windows() -> void:
 	_tracker.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_tracker.add_theme_color_override("font_outline_color", Color(0.1, 0.05, 0.12))
 	_tracker.add_theme_constant_override("outline_size", 5)
-	_tracker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tracker.mouse_filter = Control.MOUSE_FILTER_STOP
+	_tracker.gui_input.connect(_on_tracker_input)
 	_place(_tracker, Control.PRESET_TOP_RIGHT, Rect2(-460, 228, 444, 120))
 	add_child(_tracker)
 	_minimap = Minimap.new()

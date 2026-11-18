@@ -221,6 +221,10 @@
       "name": "Green Meadow",
       "levels": "Lv 1-5",
       "scene": "res://scenes/maps/field.tscn",
+      "monsters": [
+        "green_slime",
+        "blue_slime"
+      ],
       "size": [
         2560,
         1536

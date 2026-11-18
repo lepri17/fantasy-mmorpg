@@ -37,8 +37,7 @@ func _ready() -> void:
 		_add_edges()
 	for thing in data.get("objects", []):
 		_add_object(thing)
-	if not is_safe():
-		call_deferred("_bake_navigation")
+	call_deferred("_bake_navigation")
 	if data.has("dungeon"):
 		var run: Node = DungeonRun.new()
 		run.name = "DungeonRun"

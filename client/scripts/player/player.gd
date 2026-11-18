@@ -1,15 +1,18 @@
 extends "res://scripts/player/player_base.gd"
-## The warrior: movement, sword attack with auto-aim, skills, dash, statuses,
-## health / stamina, death and respawn, and arriving on maps. His state and
-## what he does with items and in town are in player_base.gd, which this
-## extends. Progress (level, XP, gold, bag, gear) lives in PlayerStats.
+## The hero, of any class: movement, attack with auto-aim (a swing, or a shot
+## for the mage and the archer), skills, dash, statuses, health / stamina,
+## death and respawn, arriving on maps, auto hunt. Its state and what it does
+## with items and in town are in player_base.gd, which this extends. Progress
+## (class, level, XP, gold, bag, gear) lives in PlayerStats.
 ##
-## Input goes through actions only (move_*, attack, skill, skill_2..4, dash,
-## use_potion), so the touch controls drive the same code as the keyboard.
-## Skills come from res://data/skills.json; each names the action that uses it.
+## Input goes through actions only (move_*, attack, skill, skill_2..5, dash,
+## use_potion, auto_hunt), so the touch controls drive the same code as the
+## keyboard. Skills come from res://data/skills.json; each names its action.
 
 const SkyClock = preload("res://scripts/world/sky.gd")
 const Spells = preload("res://scripts/player/spells.gd")
+const AutoPilot = preload("res://scripts/player/auto_pilot.gd")
+const ACTION_AUTO := "auto_hunt"
 ## A tree hides the warrior when its trunk is this close below him (Q12).
 const TREE_COVER := Vector2(70, 150)
 const SILHOUETTE_SHADER := """shader_type canvas_item;
@@ -19,6 +22,8 @@ void fragment() {
 }
 """
 
+## Auto hunt and walking to a quest's target (auto_pilot.gd).
+var auto = AutoPilot.new()
 var _light: PointLight2D
 var _silhouette: AnimatedSprite2D
 var _silhouette_check: float = 0.0
@@ -28,6 +33,7 @@ var _aura_time: float = 0.0
 
 func _ready() -> void:
 	add_to_group("player")
+	auto.hero = self
 	stats.from_dict(SaveFile.load_data())
 	_load_tuning()
 	stats.record.check(stats.level)
@@ -74,8 +80,12 @@ func _physics_process(delta: float) -> void:
 	_auto_drink(delta)
 	var stunned: bool = statuses.is_active("stun")
 	var direction: Vector2 = Input.get_vector(ACTION_LEFT, ACTION_RIGHT, ACTION_UP, ACTION_DOWN)
+	if direction != Vector2.ZERO and not auto.walk_goal.is_empty():
+		auto.walk_goal = {}  # moving by hand ends a walk
 	if stunned:
 		direction = Vector2.ZERO
+	elif direction == Vector2.ZERO and auto.active():
+		direction = auto.steer(delta)
 	var is_moving: bool = direction != Vector2.ZERO
 	if is_moving:
 		direction = direction.normalized()
@@ -125,6 +135,8 @@ func _physics_process(delta: float) -> void:
 		dash(direction)
 	if Input.is_action_just_pressed(ACTION_POTION):
 		use_potion()
+	if Input.is_action_just_pressed(ACTION_AUTO):
+		toggle_auto_hunt()
 
 
 ## Called by enemies.
@@ -154,6 +166,7 @@ func take_damage(amount: int) -> void:
 ## up after falling, and how far the camera may go.
 func enter_map(map_id: String, point: Vector2, respawn_point: Vector2, limits: Rect2) -> void:
 	global_position = point
+	auto.on_map_changed()
 	velocity = Vector2.ZERO
 	_spawn_position = respawn_point
 	camera_limits = limits
@@ -448,6 +461,25 @@ func cooldown_left(action: String) -> float:
 	return float(_skill_cooldowns.get(skill_id, 0.0)) / cooldown
 
 
+## U5: AUTO starts (or stops) hunting around where the hero stands.
+func toggle_auto_hunt() -> void:
+	if auto.hunting or not auto.walk_goal.is_empty():
+		auto.stop()
+		_say("Auto hunt off.")
+	elif auto.start_hunt():
+		_say("Auto hunt on. Move to take over, or tap AUTO to stop.", QUEST_COLOR)
+	else:
+		_say("Nothing to hunt here.", WARNING_COLOR)
+
+
+## U6: walks to where the quest wants the hero (tap it in the quest list).
+func walk_to_quest(quest_id: String) -> void:
+	if auto.walk_to_quest(quest_id):
+		_say("On the way: %s." % QuestLog.list[quest_id]["name"], QUEST_COLOR)
+	else:
+		_say("No way to walk there from here.", WARNING_COLOR)
+
+
 ## True while War Cry (or another damage boost) is on.
 func has_damage_bonus() -> bool:
 	return _damage_bonus > 0.0
@@ -587,6 +619,7 @@ func _recover(delta: float) -> void:
 
 
 func _die() -> void:
+	auto.stop()
 	is_dead = true
 	velocity = Vector2.ZERO
 	died.emit()

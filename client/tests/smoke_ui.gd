@@ -6,6 +6,9 @@ extends RefCounted
 
 const Settings = preload("res://scripts/settings.gd")
 const SaveFile = preload("res://scripts/player/save_file.gd")
+const MapGuide = preload("res://scripts/maps/map_guide.gd")
+## Where the monsters not in a test wait, frozen.
+const PARK := Vector2(2300, 1350)
 
 var t = null
 
@@ -110,3 +113,81 @@ func run(test, main, player, hud) -> void:
 		"CHANGE HERO saves the hero before leaving"
 	)
 	await t._frames(2)
+	await _check_auto(main, player, hud)
+
+
+## U5 auto hunt and U6 walking to a quest's target.
+func _check_auto(main, player, hud) -> void:
+	t._check(
+		MapGuide.next_map("town", "forest") == "field" and MapGuide.next_map("forest", "town") == "field",
+		"the map guide knows the way between maps"
+	)
+	t._check(
+		MapGuide.map_with_monster("spore_shroom", "town") == "forest"
+		and MapGuide.map_with_npc("merchant") == "town"
+		and MapGuide.monster_dropping("slime_jelly") != "",
+		"and where monsters, townspeople and loot are"
+	)
+	main.change_map("field", "default")
+	await t._frames(20)
+	var enemies: Array = t.get_nodes_in_group("enemies").filter(func(enemy): return not enemy.is_dead)
+	t._freeze(enemies, true)
+	for enemy in enemies:
+		enemy.global_position = PARK
+	var prey: Node2D = enemies[0]
+	prey.global_position = player.global_position + Vector2(260, 0)
+	prey.evasion = 0.0
+	prey.hp = 1
+	player.toggle_auto_hunt()
+	t._check(player.auto.hunting, "AUTO starts hunting")
+	var waited: int = 0
+	while not prey.is_dead and waited < 400:
+		await t._frames(5)
+		waited += 5
+	t._check(prey.is_dead, "auto hunt walks to a slime and defeats it (%d frames)" % waited)
+	hud.call("_update_action_buttons")
+	t._check(_button(hud, "auto_hunt").get("badge") == "ON", "the AUTO button shows ON")
+	player.toggle_auto_hunt()
+	t._check(not player.auto.active(), "tapping AUTO again stops it")
+	t._freeze(t.get_nodes_in_group("enemies"), false)
+
+	player.auto.walk_goal = {"map": "town", "npc": "merchant"}
+	waited = 0
+	while not player.auto.walk_goal.is_empty() and waited < 1800:
+		await t._frames(10)
+		waited += 10
+	var mira: Node2D = null
+	for npc in t.get_nodes_in_group("npcs"):
+		if npc.get("npc_id") == "merchant":
+			mira = npc
+	t._check(
+		(
+			main.map.map_id == "town"
+			and mira != null
+			and player.global_position.distance_to(mira.global_position) < 160.0
+		),
+		"a quest walk goes through the portal to town and stops at Mira (%d frames)" % waited
+	)
+	player.toggle_auto_hunt()
+	t._check(not player.auto.hunting, "there is nothing to hunt in town")
+	player.auto.walk_goal = {"map": "field", "monster": "green_slime", "hunt": true}
+	Input.action_press("move_down")
+	await t._frames(3)
+	Input.action_release("move_down")
+	await t._frames(1)
+	t._check(player.auto.walk_goal.is_empty(), "moving by hand ends a walk")
+	var quest_id: String = "slime_cleanup"
+	if not player.stats.quests.active.is_empty():
+		quest_id = player.stats.quests.active.keys()[0]
+	t._check(
+		player.auto.walk_to_quest(quest_id) and MapGuide.maps().has(player.auto.walk_goal["map"]),
+		"tapping a quest sets out for its target (%s)" % quest_id
+	)
+	player.auto.stop()
+
+
+func _button(hud, action: String) -> Control:
+	for button in hud.get_tree().get_nodes_in_group("action_buttons"):
+		if button.get("action") == action:
+			return button
+	return null

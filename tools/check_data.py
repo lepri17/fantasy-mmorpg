@@ -532,6 +532,10 @@ def check_npcs(npcs: dict, items: dict) -> None:
 def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
     """maps.json: ground rows, spawns, and objects; portals lead to a real spawn."""
     maps = maps_data.get("maps", {})
+    for map_id, data in maps.items():
+        for monster_id in data.get("monsters", []):
+            if monster_id not in monsters:
+                error(f"maps.json: '{map_id}' lists unknown monster '{monster_id}'")
     for key in ("start", "town"):
         if maps_data.get(key) not in maps:
             error(f"maps.json: '{key}' must name a map")
