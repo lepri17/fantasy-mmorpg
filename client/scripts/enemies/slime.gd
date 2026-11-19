@@ -125,6 +125,12 @@ var _rush_hit: bool = false
 var _dig_left: float = 0.0
 var _hover_time: float = 0.0
 var _sprite_y: float = 0.0
+## Lively motion (_animate_body): the sprite's own offset, the hop and lean
+## clock, a squash from a hit and a lunge from an attack, both fading out.
+var _sprite_offset: Vector2 = Vector2.ZERO
+var _bounce_time: float = 0.0
+var _squash: float = 0.0
+var _lunge: Vector2 = Vector2.ZERO
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
 @onready var _collision: CollisionShape2D = $Collision
@@ -152,6 +158,7 @@ func _ready() -> void:
 	_wander_target = global_position
 	_sprite.modulate = tint
 	_sprite_y = _sprite.position.y
+	_sprite_offset = _sprite.offset
 	_hp_bar.set_label("Lv.%d %s" % [level, display_name])
 	_hp_bar.set_values(hp, max_hp)
 	_sprite.play("idle")
@@ -200,6 +207,30 @@ func _physics_process(delta: float) -> void:
 
 	velocity = movement + _knockback
 	move_and_slide()
+	if not stunned:
+		_animate_body(delta, movement)
+
+
+## MapleStory-like life: a squash-and-stretch hop while it walks, leaning the
+## way it goes; slow breathing while it stands; squashed for a moment when hit;
+## a short lunge at the target when it attacks.
+func _animate_body(delta: float, movement: Vector2) -> void:
+	var moving: bool = movement.length() > 5.0
+	_bounce_time += delta * (10.0 if moving else 2.4)
+	var hop: float = 0.0
+	var stretch: float = sin(_bounce_time) * 0.025
+	if moving:
+		var step: float = absf(sin(_bounce_time))
+		hop = step * 5.0
+		stretch = (step - 0.5) * 0.12
+	_squash = move_toward(_squash, 0.0, delta * 1.4)
+	stretch -= _squash
+	_sprite.scale = _sprite_scale * Vector2(1.0 - stretch, 1.0 + stretch)
+	var lean: float = clampf(movement.x / 900.0, -0.12, 0.12) if moving else 0.0
+	_sprite.rotation = lerp_angle(_sprite.rotation, lean, minf(1.0, delta * 8.0))
+	_lunge = _lunge.move_toward(Vector2.ZERO, delta * 90.0)
+	var shift: Vector2 = Vector2(_lunge.x, _lunge.y - hop) / maxf(0.01, _sprite_scale.y)
+	_sprite.offset = _sprite_offset + shift
 
 
 ## Called by the warrior's attacks, after miss / crit / defense were worked out
@@ -213,6 +244,7 @@ func take_damage(
 ) -> void:
 	if is_dead:
 		return
+	_squash = 0.16  # it squashes under the blow (_animate_body)
 	if moves != null:
 		amount = moves.damage_taken(amount)  # less while it hides in its shell
 	hp = maxi(hp - amount, 0)
@@ -354,6 +386,7 @@ func apply_status(effect: String, seconds: float, value: float = 0.0) -> void:
 
 func _attack(target: Node2D) -> void:
 	_attack_ready_in = attack_cooldown
+	_lunge = (target.global_position - global_position).normalized() * 9.0
 	_attack_count += 1
 	_sprite.play("attack")
 	if not special.is_empty() and _attack_count % int(special["every"]) == 0:
