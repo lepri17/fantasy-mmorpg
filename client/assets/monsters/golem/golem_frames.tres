@@ -1,4 +1,4 @@
-[gd_resource type="SpriteFrames" load_steps=9 format=3]
+[gd_resource type="SpriteFrames" load_steps=10 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/monsters/golem/golem.png" id="1_sheet"]
 
@@ -30,14 +30,18 @@ region = Rect2(320, 0, 64, 64)
 atlas = ExtResource("1_sheet")
 region = Rect2(384, 0, 64, 64)
 
+[sub_resource type="AtlasTexture" id="frame_7"]
+atlas = ExtResource("1_sheet")
+region = Rect2(448, 0, 64, 64)
+
 [resource]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("frame_0")
+"texture": SubResource("frame_1")
 }, {
 "duration": 1.0,
-"texture": SubResource("frame_1")
+"texture": SubResource("frame_2")
 }],
 "loop": true,
 "name": &"idle",
@@ -45,10 +49,10 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("frame_2")
+"texture": SubResource("frame_3")
 }, {
 "duration": 1.0,
-"texture": SubResource("frame_3")
+"texture": SubResource("frame_4")
 }],
 "loop": false,
 "name": &"attack",
@@ -56,15 +60,23 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("frame_4")
-}, {
-"duration": 1.0,
 "texture": SubResource("frame_5")
 }, {
 "duration": 1.0,
 "texture": SubResource("frame_6")
+}, {
+"duration": 1.0,
+"texture": SubResource("frame_7")
 }],
 "loop": false,
 "name": &"die",
 "speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("frame_0")
+}],
+"loop": true,
+"name": &"sleep",
+"speed": 4.0
 }]

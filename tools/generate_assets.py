@@ -2374,6 +2374,7 @@ GOLEM_MOSS_LIGHT = (140, 196, 106, 255)
 GOLEM_EYE = (140, 255, 226, 255)
 # (animation, bob down, arms: 1 up / 0 down / -1 slam, face, loose rocks)
 GOLEM_POSES = [
+    ("sleep", 7, 0, "sleep", 2),  # dormant: crouched, eyes shut, like a mossy boulder
     ("idle", 0, 0, "normal", 0),
     ("idle", 1, 0, "normal", 0),
     ("attack", -2, 1, "angry", 0),
@@ -2413,8 +2414,9 @@ def draw_golem(bob: float, arms: int, face: str, rocks: int) -> Image.Image:
     eye_y = top + 3
     for side in (-1, 1):
         ex = cx + side * 4.5
-        if face == "dead":
-            c.line([(ex - 2, eye_y - 1), (ex + 2, eye_y + 1)], width=1.3)
+        if face in ("dead", "sleep"):
+            c.line([(ex - 2.4, eye_y), (ex + 2.4, eye_y)] if face == "sleep"
+                   else [(ex - 2, eye_y - 1), (ex + 2, eye_y + 1)], width=1.3)
             continue
         c.rect(ex - 2.2, eye_y - 1.6, ex + 2.2, eye_y + 1.6, GOLEM_EYE, radius=1, outline=False)
         if face == "angry":

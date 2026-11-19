@@ -106,6 +106,7 @@ func _initialize() -> void:
 	await _ridge(main, player)
 	await _ruins(main, player)
 	await _frost(main, player)
+	await _old_woods(main, player)
 	GameScript.sky_seconds = -1.0
 	main.change_map("cellar")
 	await _frames(240)
@@ -409,6 +410,26 @@ func _frost(main, player) -> void:
 	await _shot("59_frostfang_set")
 	player.stats.equipment = saved_gear
 	player.call("_gear_changed")
+
+
+
+## The older woods, livened up: the ponds with their lilies and reeds, and
+## what stands near them.
+func _old_woods(main, player) -> void:
+	get_first_node_in_group("hud").call("_close_windows")
+	for step in [
+		["forest", Vector2(420, 380), "60_forest_pond"],
+		["twilight", Vector2(420, 340), "61_twilight_pond"],
+		["grove", Vector2(1820, 340), "62_grove_pond"]
+	]:
+		main.change_map(step[0], "south")
+		await _frames(20)
+		for monster in main.map.get_children().filter(func(n): return n.get("monster_id") != null):
+			monster.set_physics_process(false)
+		player.hp = player.max_hp
+		player.global_position = step[1] + Vector2(60, 230)
+		await _frames(30)
+		await _shot(step[2])
 
 
 func _nearest_enemy(monster_id: String, point: Vector2):

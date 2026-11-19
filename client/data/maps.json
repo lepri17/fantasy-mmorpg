@@ -279,6 +279,134 @@
           ],
           "to": "forest",
           "spawn": "west"
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            2043,
+            1284
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            676,
+            465
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            1141,
+            252
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            1073,
+            404
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            1210,
+            362
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            493,
+            735
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            1824,
+            1148
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            745,
+            311
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            1604,
+            1092
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            2251,
+            442
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            473,
+            967
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            1711,
+            1076
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            1970,
+            1297
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            1744,
+            305
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            2037,
+            890
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            461,
+            1318
+          ]
         }
       ],
       "teleport_price": 0,
@@ -347,6 +475,115 @@
         ]
       },
       "objects": [
+        {
+          "type": "water",
+          "points": [
+            [
+              663.0,
+              380.0
+            ],
+            [
+              648.0,
+              411.0
+            ],
+            [
+              623.0,
+              438.0
+            ],
+            [
+              589.0,
+              461.0
+            ],
+            [
+              545.0,
+              479.0
+            ],
+            [
+              496.0,
+              489.0
+            ],
+            [
+              446.0,
+              497.0
+            ],
+            [
+              393.0,
+              503.0
+            ],
+            [
+              334.0,
+              503.0
+            ],
+            [
+              279.0,
+              491.0
+            ],
+            [
+              239.0,
+              467.0
+            ],
+            [
+              217.0,
+              438.0
+            ],
+            [
+              204.0,
+              409.0
+            ],
+            [
+              196.0,
+              380.0
+            ],
+            [
+              198.0,
+              350.0
+            ],
+            [
+              217.0,
+              322.0
+            ],
+            [
+              249.0,
+              297.0
+            ],
+            [
+              289.0,
+              277.0
+            ],
+            [
+              336.0,
+              260.0
+            ],
+            [
+              392.0,
+              253.0
+            ],
+            [
+              447.0,
+              257.0
+            ],
+            [
+              497.0,
+              269.0
+            ],
+            [
+              542.0,
+              284.0
+            ],
+            [
+              589.0,
+              299.0
+            ],
+            [
+              632.0,
+              319.0
+            ],
+            [
+              659.0,
+              348.0
+            ]
+          ]
+        },
         {
           "type": "exit",
           "side": "south",
@@ -528,13 +765,6 @@
         {
           "type": "rock",
           "pos": [
-            650,
-            380
-          ]
-        },
-        {
-          "type": "rock",
-          "pos": [
             980,
             380
           ]
@@ -659,6 +889,310 @@
           ],
           "to": "twilight",
           "spawn": "south"
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            428,
+            433
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            349,
+            421
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            383,
+            360
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            546,
+            386
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            416,
+            417
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "cattails",
+          "pos": [
+            674,
+            411
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            621,
+            476
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            429,
+            531
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "cattails",
+          "pos": [
+            292,
+            512
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            171,
+            423
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            165,
+            350
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "cattails",
+          "pos": [
+            303,
+            245
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            504,
+            237
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            621,
+            284
+          ]
+        },
+        {
+          "type": "shrine",
+          "pos": [
+            1573,
+            627
+          ],
+          "gift": "heal"
+        },
+        {
+          "type": "chest",
+          "pos": [
+            777,
+            1265
+          ],
+          "level": 6
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            1600,
+            900
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            553,
+            643
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            1403,
+            984
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            2021,
+            1086
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            695,
+            256
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            656,
+            1272
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            772,
+            495
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            1063,
+            465
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            2092,
+            514
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            1515,
+            391
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            1847,
+            822
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            242,
+            1257
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            864,
+            285
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            2097,
+            1277
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "twin_slime",
+          "pos": [
+            1854,
+            363
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "twin_slime",
+          "pos": [
+            1227,
+            834
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "mossback_beetle",
+          "pos": [
+            634,
+            568
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "mossback_beetle",
+          "pos": [
+            2057,
+            299
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "mossback_beetle",
+          "pos": [
+            714,
+            967
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "puffcap",
+          "pos": [
+            1070,
+            599
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "puffcap",
+          "pos": [
+            611,
+            721
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "puffcap",
+          "pos": [
+            1183,
+            692
+          ]
         }
       ],
       "pvp_zone": [
@@ -1881,6 +2415,115 @@
       },
       "objects": [
         {
+          "type": "water",
+          "points": [
+            [
+              614.0,
+              340.0
+            ],
+            [
+              609.0,
+              367.0
+            ],
+            [
+              601.0,
+              394.0
+            ],
+            [
+              580.0,
+              421.0
+            ],
+            [
+              543.0,
+              442.0
+            ],
+            [
+              497.0,
+              457.0
+            ],
+            [
+              447.0,
+              465.0
+            ],
+            [
+              393.0,
+              465.0
+            ],
+            [
+              344.0,
+              455.0
+            ],
+            [
+              305.0,
+              435.0
+            ],
+            [
+              275.0,
+              414.0
+            ],
+            [
+              246.0,
+              392.0
+            ],
+            [
+              218.0,
+              368.0
+            ],
+            [
+              202.0,
+              340.0
+            ],
+            [
+              207.0,
+              310.0
+            ],
+            [
+              231.0,
+              283.0
+            ],
+            [
+              264.0,
+              261.0
+            ],
+            [
+              302.0,
+              242.0
+            ],
+            [
+              346.0,
+              228.0
+            ],
+            [
+              395.0,
+              222.0
+            ],
+            [
+              445.0,
+              223.0
+            ],
+            [
+              495.0,
+              228.0
+            ],
+            [
+              544.0,
+              237.0
+            ],
+            [
+              587.0,
+              256.0
+            ],
+            [
+              612.0,
+              282.0
+            ],
+            [
+              618.0,
+              312.0
+            ]
+          ]
+        },
+        {
           "type": "exit",
           "side": "east",
           "span": [
@@ -2574,20 +3217,6 @@
         {
           "type": "tree",
           "pos": [
-            533,
-            416
-          ],
-          "tint": [
-            0.62,
-            0.7,
-            0.82,
-            1.0
-          ],
-          "scale": 1.16
-        },
-        {
-          "type": "tree",
-          "pos": [
             330,
             626
           ],
@@ -2813,14 +3442,6 @@
         {
           "type": "glowcap",
           "pos": [
-            600,
-            230
-          ],
-          "color": "teal"
-        },
-        {
-          "type": "glowcap",
-          "pos": [
             2000,
             980
           ],
@@ -2845,6 +3466,270 @@
           ],
           "to": "grove",
           "spawn": "south"
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            343,
+            297
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            455,
+            271
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            412,
+            270
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            502,
+            349
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            513,
+            320
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "cattails",
+          "pos": [
+            657,
+            364
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            626,
+            415
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            465,
+            483
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "cattails",
+          "pos": [
+            323,
+            473
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            193,
+            387
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            197,
+            286
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "cattails",
+          "pos": [
+            260,
+            231
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            433,
+            194
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            589,
+            236
+          ]
+        },
+        {
+          "type": "shrine",
+          "pos": [
+            788,
+            895
+          ],
+          "gift": "power"
+        },
+        {
+          "type": "chest",
+          "pos": [
+            2028,
+            323
+          ],
+          "level": 11
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            1115,
+            529
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            208,
+            1081
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            1576,
+            512
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "bones",
+          "pos": [
+            2003,
+            870
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            866,
+            1223
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            739,
+            335
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            2068,
+            1309
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "bones",
+          "pos": [
+            254,
+            1042
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            1901,
+            341
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            2084,
+            1178
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            680,
+            1131
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "bones",
+          "pos": [
+            1194,
+            561
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "dusk_imp",
+          "pos": [
+            2288,
+            532
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "dusk_imp",
+          "pos": [
+            2229,
+            349
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "dusk_imp",
+          "pos": [
+            1363,
+            1023
+          ]
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            178,
+            292
+          ],
+          "color": "violet"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            640,
+            262
+          ],
+          "color": "cyan"
         }
       ],
       "teleport_price": 80,
@@ -3908,6 +4793,115 @@
       },
       "objects": [
         {
+          "type": "water",
+          "points": [
+            [
+              2081.0,
+              340.0
+            ],
+            [
+              2060.0,
+              372.0
+            ],
+            [
+              2030.0,
+              400.0
+            ],
+            [
+              2000.0,
+              426.0
+            ],
+            [
+              1962.0,
+              451.0
+            ],
+            [
+              1911.0,
+              470.0
+            ],
+            [
+              1851.0,
+              477.0
+            ],
+            [
+              1790.0,
+              475.0
+            ],
+            [
+              1731.0,
+              466.0
+            ],
+            [
+              1678.0,
+              451.0
+            ],
+            [
+              1637.0,
+              428.0
+            ],
+            [
+              1609.0,
+              400.0
+            ],
+            [
+              1590.0,
+              371.0
+            ],
+            [
+              1573.0,
+              340.0
+            ],
+            [
+              1565.0,
+              306.0
+            ],
+            [
+              1579.0,
+              272.0
+            ],
+            [
+              1620.0,
+              244.0
+            ],
+            [
+              1677.0,
+              228.0
+            ],
+            [
+              1734.0,
+              218.0
+            ],
+            [
+              1791.0,
+              212.0
+            ],
+            [
+              1849.0,
+              212.0
+            ],
+            [
+              1905.0,
+              219.0
+            ],
+            [
+              1958.0,
+              232.0
+            ],
+            [
+              2007.0,
+              251.0
+            ],
+            [
+              2051.0,
+              274.0
+            ],
+            [
+              2079.0,
+              305.0
+            ]
+          ]
+        },
+        {
           "type": "exit",
           "side": "east",
           "span": [
@@ -4538,20 +5532,6 @@
         {
           "type": "tree",
           "pos": [
-            1796,
-            365
-          ],
-          "tint": [
-            0.5,
-            0.62,
-            0.54,
-            1.0
-          ],
-          "scale": 1.54
-        },
-        {
-          "type": "tree",
-          "pos": [
             1663,
             1206
           ],
@@ -4686,26 +5666,10 @@
         {
           "type": "glowcap",
           "pos": [
-            1860,
-            340
-          ],
-          "color": "cyan"
-        },
-        {
-          "type": "glowcap",
-          "pos": [
             980,
             250
           ],
           "color": "teal"
-        },
-        {
-          "type": "glowcap",
-          "pos": [
-            1600,
-            250
-          ],
-          "color": "violet"
         },
         {
           "type": "glowcap",
@@ -4748,6 +5712,246 @@
           ],
           "to": "twilight",
           "spawn": "north"
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            1733,
+            351
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            1911,
+            398
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            1923,
+            342
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            1867,
+            321
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "lily",
+          "pos": [
+            1712,
+            319
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "cattails",
+          "pos": [
+            2095,
+            309
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            2043,
+            437
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            1845,
+            500
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "cattails",
+          "pos": [
+            1685,
+            481
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            1549,
+            381
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            1546,
+            307
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "cattails",
+          "pos": [
+            1654,
+            210
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            1823,
+            179
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "reeds",
+          "pos": [
+            2035,
+            237
+          ]
+        },
+        {
+          "type": "shrine",
+          "pos": [
+            1069,
+            550
+          ],
+          "gift": "heal"
+        },
+        {
+          "type": "chest",
+          "pos": [
+            1567,
+            594
+          ],
+          "level": 16
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            630,
+            247
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            729,
+            750
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "bones",
+          "pos": [
+            1095,
+            923
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            580,
+            1289
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            738,
+            1167
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            1186,
+            1114
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "bones",
+          "pos": [
+            1994,
+            831
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            734,
+            932
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            367,
+            539
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            787,
+            577
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "bones",
+          "pos": [
+            1080,
+            826
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            1098,
+            451
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            1462,
+            996
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            2051,
+            1074
+          ]
         }
       ],
       "teleport_price": 120,

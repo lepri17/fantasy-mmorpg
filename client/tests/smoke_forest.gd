@@ -17,6 +17,7 @@ func run(test, main, player, _hud) -> void:
 	await _check_charge(main, player)
 	await _check_blink(main, player)
 	await _check_dig(main, player)
+	await _check_old_maps(main, player)
 	main.change_map("town")
 	await t._frames(3)
 
@@ -49,7 +50,7 @@ func _check_maps(main) -> void:
 		if map_id == "forest":
 			continue
 		var monsters := {}
-		for enemy in t.get_nodes_in_group("enemies"):
+		for enemy in main.map.get_children().filter(func(n): return n.get("monster_id") != null):
 			monsters[enemy.monster_id] = int(monsters.get(enemy.monster_id, 0)) + 1
 		var glowcaps: int = main.map.get_children().filter(func(n): return n is Glowcap).size()
 		var tinted: int = t.get_nodes_in_group("trees").filter(
@@ -64,7 +65,7 @@ func _check_maps(main) -> void:
 			"%s has dark trees, glowing mushrooms and fireflies" % main.map.display_name()
 		)
 		t._check(
-			monsters == ({"bramble_boar": 5, "lantern_wisp": 5} if map_id == "twilight" else {
+			monsters == ({"bramble_boar": 5, "lantern_wisp": 5, "dusk_imp": 3} if map_id == "twilight" else {
 				"rootling": 5, "moss_golem": 4
 			}),
 			"%s has its own monsters (%s)" % [main.map.display_name(), str(monsters)]
@@ -144,6 +145,73 @@ func _check_dig(main, player) -> void:
 			and player.hp < hp_before
 		),
 		"it bursts out next to the hero and hits him (%d -> %d HP)" % [hp_before, player.hp]
+	)
+
+
+## The older woods, livened up: a pond, a chest and a shrine in each, new
+## monsters (a slime that splits, a beetle that rolls, a mushroom that lies in
+## wait, an imp that throws rocks), and Moss Golems that sleep like boulders.
+func _check_old_maps(main, player) -> void:
+	for map_id in ["forest", "twilight", "grove"]:
+		main.change_map(map_id, "south" if map_id != "forest" else "north")
+		await t._frames(3)
+		var ponds: int = main.map.get_children().filter(func(n): return n.get("islands") != null).size()
+		t._check(
+			(
+				ponds == 1
+				and t.get_nodes_in_group("chests").size() == 1
+				and t.get_nodes_in_group("shrines").size() == 1
+			),
+			"%s has a pond, a treasure chest and a shrine" % main.map.display_name()
+		)
+	main.change_map("forest", "north")
+	await t._frames(3)
+	var all: Array = main.map.get_children().filter(func(n): return n.get("monster_id") != null)
+	var counts := {}
+	for monster in all:
+		counts[monster.monster_id] = int(counts.get(monster.monster_id, 0)) + 1
+	t._check(
+		[counts.get("twin_slime"), counts.get("mossback_beetle"), counts.get("puffcap")] == [2, 3, 3],
+		"Mossy Woods has new monsters (%s)" % str(counts)
+	)
+	t._freeze(t.get_nodes_in_group("enemies"), true)
+	var beetle = _monster("mossback_beetle")
+	t._check(
+		beetle != null and not beetle.moves.get("roll").is_empty(),
+		"a Mossback Beetle can curl up and roll"
+	)
+	var twin = _monster("twin_slime")
+	var spot: Vector2 = twin.global_position
+	twin.take_damage(99999, Vector2.ZERO, false, player)
+	await t._frames(3)
+	var halves: Array = t.get_nodes_in_group("enemies").filter(
+		func(e): return e.monster_id == "blue_slime" and e.get("respawns") == false
+	)
+	halves = halves.filter(func(e): return e.global_position.distance_to(spot) < 140.0)
+	t._check(halves.size() == 2, "a Twin Slime splits into two blue slimes (%d)" % halves.size())
+	var puff = all.filter(func(m): return m.monster_id == "puffcap")[0]
+	t._check(
+		puff.moves.dormant() and not puff.is_in_group("enemies"),
+		"a Puffcap lies in wait, looking like a mushroom"
+	)
+	_heal(player)
+	player.global_position = puff.global_position + Vector2(70, 0)
+	await t._frames(6)
+	t._check(not puff.moves.dormant(), "the Puffcap wakes when the hero comes close")
+	main.change_map("twilight", "south")
+	await t._frames(3)
+	var imp = _monster("dusk_imp")
+	t._check(
+		imp != null and not imp.moves.get("lob").is_empty(), "Dusk Imps throw rocks in Twilight Woods"
+	)
+	main.change_map("grove", "south")
+	await t._frames(3)
+	var golems: Array = main.map.get_children().filter(
+		func(n): return n.get("monster_id") == "moss_golem"
+	)
+	t._check(
+		golems.size() == 4 and golems.all(func(g): return g.moves.dormant()),
+		"Moss Golems sleep like mossy boulders until someone comes near"
 	)
 
 

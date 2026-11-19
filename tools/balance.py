@@ -27,14 +27,16 @@ from server.rules.stats import (  # noqa: E402
 OUT = ROOT / "docs" / "BALANCE.md"
 LEVELS = (1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 18)
 # Where a hero of each level hunts (the monster used for "time to kill").
-HUNT = [(1, "green_slime"), (3, "blue_slime"), (4, "spore_shroom"), (6, "bubble_slime"), (8, "slime_king"),
+HUNT = [(1, "green_slime"), (3, "blue_slime"), (4, "spore_shroom"), (4, "twin_slime"), (5, "puffcap"),
+        (6, "bubble_slime"), (6, "mossback_beetle"), (8, "slime_king"), (11, "dusk_imp"),
         (8, "snapjaw_turtle"), (9, "bramble_boar"), (9, "marsh_frog"), (10, "lantern_wisp"),
         (13, "rootling"), (14, "rock_beetle"), (15, "moss_golem"), (15, "crag_imp"),
         (16, "gale_harpy"), (17, "stormcrest_roc"), (17, "stone_gargoyle"), (18, "ruin_sentinel"),
         (19, "snow_wolf"), (20, "frost_wraith"), (21, "ice_golem"), (23, "frost_wyrm")]
 MAIN_STAT = {"warrior": "strength", "archer": "dexterity", "mage": "energy"}
 # Monsters a hero hunts for XP (not the boss nor the event's golden slimes).
-REGULAR = ("green_slime", "blue_slime", "spore_shroom", "bubble_slime", "snapjaw_turtle", "bramble_boar",
+REGULAR = ("green_slime", "blue_slime", "spore_shroom", "twin_slime", "puffcap", "mossback_beetle",
+           "dusk_imp", "bubble_slime", "snapjaw_turtle", "bramble_boar",
            "marsh_frog", "lantern_wisp", "rootling", "rock_beetle", "moss_golem", "crag_imp",
            "gale_harpy", "stone_gargoyle", "ruin_sentinel", "snow_wolf", "frost_wraith", "ice_golem")
 BUILD_LEVEL = 10
