@@ -35,195 +35,344 @@
       "name": "Willow Town",
       "levels": "Safe town",
       "safe": true,
+      "street_top": 300,
       "ground": [
-        "gggggggggggggggg",
-        "gggggggggggggggg",
-        "ggggssssssssgggg",
-        "ggggssssssssgggg",
-        "ggggssssssssgggg",
-        "ggggsssssssspppp",
-        "ggggssssssssgggg",
-        "ggggssssssssgggg",
-        "gggggggggggggggg",
-        "gggggggggggggggg"
+        "gggggggggggggggggggggggggg",
+        "gggggggggggggggggggggggggg",
+        "ssssssssssssssssssssssssss",
+        "pppppppppppppppppppppppppp",
+        "pppppppppppppppppppppppppp",
+        "gggggggggggggggggggggggggg"
       ],
       "spawns": {
         "default": [
-          1024,
-          640
+          1600,
+          560
         ],
         "east": [
-          1850,
-          704
+          3150,
+          560
         ]
       },
       "objects": [
         {
-          "type": "tree",
+          "type": "house",
+          "look": "willow_home",
           "pos": [
-            150,
-            150
+            250,
+            300
           ]
         },
         {
-          "type": "tree",
+          "type": "house",
+          "look": "willow_shop",
           "pos": [
-            420,
-            120
+            620,
+            300
           ]
         },
         {
-          "type": "tree",
+          "type": "house",
+          "look": "willow_chapel",
           "pos": [
-            800,
-            110
+            990,
+            300
           ]
         },
         {
-          "type": "tree",
+          "type": "house",
+          "look": "willow_hall",
           "pos": [
-            1250,
-            120
+            1400,
+            300
           ]
         },
         {
-          "type": "tree",
+          "type": "house",
+          "look": "willow_home2",
           "pos": [
-            1650,
-            140
+            1790,
+            300
           ]
         },
         {
-          "type": "tree",
+          "type": "house",
+          "look": "willow_guard",
           "pos": [
-            1920,
-            200
+            2120,
+            300
           ]
         },
         {
-          "type": "tree",
+          "type": "house",
+          "look": "willow_storage",
           "pos": [
-            120,
-            480
+            2500,
+            300
           ]
         },
         {
-          "type": "tree",
+          "type": "house",
+          "look": "willow_tower",
           "pos": [
-            140,
-            900
+            2870,
+            300
           ]
         },
         {
-          "type": "tree",
+          "type": "house",
+          "look": "willow_home",
           "pos": [
-            300,
-            1150
-          ]
-        },
-        {
-          "type": "tree",
-          "pos": [
-            700,
-            1180
-          ]
-        },
-        {
-          "type": "tree",
-          "pos": [
-            1150,
-            1170
-          ]
-        },
-        {
-          "type": "tree",
-          "pos": [
-            1600,
-            1150
-          ]
-        },
-        {
-          "type": "tree",
-          "pos": [
-            1920,
-            1050
-          ]
-        },
-        {
-          "type": "tree",
-          "pos": [
-            1880,
-            420
-          ]
-        },
-        {
-          "type": "rock",
-          "pos": [
-            420,
-            820
-          ]
-        },
-        {
-          "type": "rock",
-          "pos": [
-            1700,
-            950
+            3170,
+            300
           ]
         },
         {
           "type": "npc",
           "id": "merchant",
           "pos": [
-            700,
-            430
+            620,
+            372
           ]
         },
         {
           "type": "npc",
           "id": "healer",
           "pos": [
-            1350,
-            430
-          ]
-        },
-        {
-          "type": "npc",
-          "id": "keeper",
-          "pos": [
-            700,
-            860
-          ]
-        },
-        {
-          "type": "npc",
-          "id": "guide",
-          "pos": [
-            1350,
-            860
-          ]
-        },
-        {
-          "type": "npc",
-          "id": "captain",
-          "pos": [
-            1024,
-            380
+            990,
+            372
           ]
         },
         {
           "type": "npc",
           "id": "master",
           "pos": [
-            1024,
-            900
+            1400,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "captain",
+          "pos": [
+            2120,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "keeper",
+          "pos": [
+            2500,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "guide",
+          "pos": [
+            2870,
+            372
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            435,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            805,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1195,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1595,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1955,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            2310,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            2685,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            3020,
+            332
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            150,
+            722
+          ],
+          "scale": 0.9
+        },
+        {
+          "type": "tree",
+          "pos": [
+            700,
+            722
+          ],
+          "scale": 0.9
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1250,
+            722
+          ],
+          "scale": 0.9
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1850,
+            722
+          ],
+          "scale": 0.9
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2400,
+            722
+          ],
+          "scale": 0.9
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2950,
+            722
+          ],
+          "scale": 0.9
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            330,
+            676
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            480,
+            692
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            900,
+            708
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            1060,
+            676
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            1500,
+            692
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            1640,
+            708
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            2050,
+            676
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            2240,
+            692
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            2600,
+            708
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            2760,
+            676
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            3100,
+            692
           ]
         },
         {
           "type": "exit",
           "side": "east",
           "span": [
-            608,
-            800
+            420,
+            700
           ],
           "to": "field",
           "spawn": "west"
@@ -887,8 +1036,8 @@
             1120,
             1440
           ],
-          "to": "twilight",
-          "spawn": "south"
+          "to": "lanternhold",
+          "spawn": "west"
         },
         {
           "type": "decor",
@@ -1214,6 +1363,512 @@
         ]
       ],
       "leaves": 26
+    },
+    "lanternhold": {
+      "name": "Lanternhold",
+      "levels": "Safe town",
+      "safe": true,
+      "street_top": 300,
+      "ground": [
+        "tttttttttttttttttttttttt",
+        "tttttttttttttttttttttttt",
+        "ssssssssssssssssssssssss",
+        "pppppppppppppppppppppppp",
+        "pppppppppppppppppppppppp",
+        "tttttttttttttttttttttttt"
+      ],
+      "spawns": {
+        "default": [
+          1500,
+          560
+        ],
+        "west": [
+          230,
+          560
+        ],
+        "east": [
+          2840,
+          560
+        ]
+      },
+      "objects": [
+        {
+          "type": "house",
+          "look": "lantern_home",
+          "pos": [
+            250,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "lantern_shop",
+          "pos": [
+            620,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "lantern_chapel",
+          "pos": [
+            990,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "lantern_hall",
+          "pos": [
+            1440,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "lantern_storage",
+          "pos": [
+            1900,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "lantern_tower",
+          "pos": [
+            2300,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "lantern_home",
+          "pos": [
+            2700,
+            300
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "lh_merchant",
+          "pos": [
+            620,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "lh_healer",
+          "pos": [
+            990,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "lh_warden",
+          "pos": [
+            1270,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "lh_keeper",
+          "pos": [
+            1900,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "lh_guide",
+          "pos": [
+            2300,
+            372
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            435,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            805,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1215,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1670,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            2100,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            2500,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            2880,
+            332
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            150,
+            722
+          ],
+          "scale": 0.9,
+          "tint": [
+            0.72,
+            0.82,
+            0.92,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            760,
+            722
+          ],
+          "scale": 0.9,
+          "tint": [
+            0.72,
+            0.82,
+            0.92,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1380,
+            722
+          ],
+          "scale": 0.9,
+          "tint": [
+            0.72,
+            0.82,
+            0.92,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2000,
+            722
+          ],
+          "scale": 0.9,
+          "tint": [
+            0.72,
+            0.82,
+            0.92,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2600,
+            722
+          ],
+          "scale": 0.9,
+          "tint": [
+            0.72,
+            0.82,
+            0.92,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2980,
+            722
+          ],
+          "scale": 0.9,
+          "tint": [
+            0.72,
+            0.82,
+            0.92,
+            1.0
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            330,
+            676
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            560,
+            692
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            1100,
+            708
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            1560,
+            676
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            2200,
+            692
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "log",
+          "pos": [
+            2760,
+            708
+          ]
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            460,
+            704
+          ],
+          "color": "cyan"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            1180,
+            704
+          ],
+          "color": "violet"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            1720,
+            704
+          ],
+          "color": "teal"
+        },
+        {
+          "type": "glowcap",
+          "pos": [
+            2420,
+            704
+          ],
+          "color": "cyan"
+        },
+        {
+          "type": "portal",
+          "pos": [
+            1440,
+            336
+          ],
+          "to": "lantern_arena"
+        },
+        {
+          "type": "exit",
+          "side": "west",
+          "span": [
+            420,
+            700
+          ],
+          "to": "forest",
+          "spawn": "north"
+        },
+        {
+          "type": "exit",
+          "side": "east",
+          "span": [
+            420,
+            700
+          ],
+          "to": "twilight",
+          "spawn": "south"
+        }
+      ],
+      "teleport_price": 60,
+      "music": "music_town",
+      "shade": [
+        0.82,
+        0.84,
+        0.95
+      ],
+      "fireflies": 24
+    },
+    "lantern_arena": {
+      "name": "Lantern Arena",
+      "levels": "Arena, Lv 8+",
+      "teleport_price": 0,
+      "no_teleport": true,
+      "ground": [
+        "tttttttttttttttt",
+        "tsssssssssssssst",
+        "tsppppppppppppst",
+        "tsppppppppppppst",
+        "tsppppppppppppst",
+        "tsppppppppppppst",
+        "tsppppppppppppst",
+        "tsppppppppppppst",
+        "tsssssssssssssst",
+        "tttttttttttttttt"
+      ],
+      "spawns": {
+        "default": [
+          300,
+          640
+        ]
+      },
+      "objects": [
+        {
+          "type": "torch",
+          "pos": [
+            300,
+            250
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1024,
+            200
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1750,
+            250
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            300,
+            1030
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1024,
+            1080
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1750,
+            1030
+          ]
+        }
+      ],
+      "dungeon": {
+        "entries_per_day": 3,
+        "area": [
+          600,
+          300,
+          1800,
+          1000
+        ],
+        "waves": [
+          [
+            {
+              "monster": "bramble_boar",
+              "count": 3
+            }
+          ],
+          [
+            {
+              "monster": "lantern_wisp",
+              "count": 3
+            },
+            {
+              "monster": "dusk_imp",
+              "count": 1
+            }
+          ],
+          [
+            {
+              "monster": "bramble_boar",
+              "count": 2
+            },
+            {
+              "monster": "dusk_imp",
+              "count": 2
+            }
+          ]
+        ],
+        "boss": "moss_golem",
+        "reward": {
+          "xp": 2400,
+          "gold": 900,
+          "items": [
+            {
+              "id": "moon_stone",
+              "count": 1
+            }
+          ]
+        },
+        "exit": {
+          "to": "lanternhold",
+          "spawn": "default",
+          "pos": [
+            1024,
+            640
+          ]
+        }
+      },
+      "music": "music_twilight",
+      "shade": [
+        0.82,
+        0.84,
+        0.95
+      ],
+      "fireflies": 12
     },
     "cellar": {
       "name": "Old Cellar",
@@ -3444,8 +4099,8 @@
             1120,
             1440
           ],
-          "to": "forest",
-          "spawn": "north"
+          "to": "lanternhold",
+          "spawn": "east"
         },
         {
           "type": "exit",
@@ -6015,8 +6670,8 @@
             1220,
             1500
           ],
-          "to": "frostfang",
-          "spawn": "south"
+          "to": "frostgate",
+          "spawn": "west"
         },
         {
           "type": "cliff",
@@ -6883,6 +7538,475 @@
       ],
       "dust": 16
     },
+    "frostgate": {
+      "name": "Frostgate",
+      "levels": "Safe town",
+      "safe": true,
+      "street_top": 300,
+      "ground": [
+        "wwwwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwwwww",
+        "ssssssssssssssssssssssss",
+        "pppppppppppppppppppppppp",
+        "pppppppppppppppppppppppp",
+        "wwwwwwwwwwwwwwwwwwwwwwww"
+      ],
+      "spawns": {
+        "default": [
+          1500,
+          560
+        ],
+        "west": [
+          230,
+          560
+        ],
+        "east": [
+          2840,
+          560
+        ]
+      },
+      "objects": [
+        {
+          "type": "house",
+          "look": "frost_home",
+          "pos": [
+            250,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "frost_shop",
+          "pos": [
+            620,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "frost_chapel",
+          "pos": [
+            990,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "frost_hall",
+          "pos": [
+            1440,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "frost_storage",
+          "pos": [
+            1900,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "frost_tower",
+          "pos": [
+            2300,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "frost_home",
+          "pos": [
+            2700,
+            300
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "fg_merchant",
+          "pos": [
+            620,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "fg_healer",
+          "pos": [
+            990,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "fg_warden",
+          "pos": [
+            1270,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "fg_keeper",
+          "pos": [
+            1900,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "fg_guide",
+          "pos": [
+            2300,
+            372
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            435,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            805,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1215,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1670,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            2100,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            2500,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            2880,
+            332
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            150,
+            722
+          ],
+          "scale": 0.9,
+          "tint": [
+            0.8,
+            1.0,
+            1.45,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            760,
+            722
+          ],
+          "scale": 0.9,
+          "tint": [
+            0.8,
+            1.0,
+            1.45,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1380,
+            722
+          ],
+          "scale": 0.9,
+          "tint": [
+            0.8,
+            1.0,
+            1.45,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2000,
+            722
+          ],
+          "scale": 0.9,
+          "tint": [
+            0.8,
+            1.0,
+            1.45,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2600,
+            722
+          ],
+          "scale": 0.9,
+          "tint": [
+            0.8,
+            1.0,
+            1.45,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2980,
+            722
+          ],
+          "scale": 0.9,
+          "tint": [
+            0.8,
+            1.0,
+            1.45,
+            1.0
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            330,
+            676
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "crystals",
+          "pos": [
+            560,
+            692
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            1100,
+            708
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "crystals",
+          "pos": [
+            1560,
+            676
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "pebbles",
+          "pos": [
+            2200,
+            692
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "crystals",
+          "pos": [
+            2760,
+            708
+          ]
+        },
+        {
+          "type": "portal",
+          "pos": [
+            1440,
+            336
+          ],
+          "to": "frost_arena"
+        },
+        {
+          "type": "exit",
+          "side": "west",
+          "span": [
+            420,
+            700
+          ],
+          "to": "ruins",
+          "spawn": "north"
+        },
+        {
+          "type": "exit",
+          "side": "east",
+          "span": [
+            420,
+            700
+          ],
+          "to": "frostfang",
+          "spawn": "south"
+        }
+      ],
+      "teleport_price": 140,
+      "music": "music_town",
+      "shade": [
+        0.95,
+        0.97,
+        1.0
+      ],
+      "snowfall": 40
+    },
+    "frost_arena": {
+      "name": "Frost Arena",
+      "levels": "Arena, Lv 18+",
+      "teleport_price": 0,
+      "no_teleport": true,
+      "ground": [
+        "wwwwwwwwwwwwwwww",
+        "wssssssssssssssw",
+        "wsiiiiiiiiiiiisw",
+        "wsiiiiiiiiiiiisw",
+        "wsiiiiiiiiiiiisw",
+        "wsiiiiiiiiiiiisw",
+        "wsiiiiiiiiiiiisw",
+        "wsiiiiiiiiiiiisw",
+        "wssssssssssssssw",
+        "wwwwwwwwwwwwwwww"
+      ],
+      "spawns": {
+        "default": [
+          300,
+          640
+        ]
+      },
+      "objects": [
+        {
+          "type": "torch",
+          "pos": [
+            300,
+            250
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1024,
+            200
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1750,
+            250
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            300,
+            1030
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1024,
+            1080
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1750,
+            1030
+          ]
+        }
+      ],
+      "dungeon": {
+        "entries_per_day": 3,
+        "area": [
+          600,
+          300,
+          1800,
+          1000
+        ],
+        "waves": [
+          [
+            {
+              "monster": "snow_wolf",
+              "count": 3
+            }
+          ],
+          [
+            {
+              "monster": "frost_wraith",
+              "count": 2
+            },
+            {
+              "monster": "snow_wolf",
+              "count": 2
+            }
+          ],
+          [
+            {
+              "monster": "frost_wraith",
+              "count": 2
+            },
+            {
+              "monster": "snow_wolf",
+              "count": 3
+            }
+          ]
+        ],
+        "boss": "ice_golem",
+        "reward": {
+          "xp": 9000,
+          "gold": 2600,
+          "items": [
+            {
+              "id": "moon_stone",
+              "count": 2
+            }
+          ]
+        },
+        "exit": {
+          "to": "frostgate",
+          "spawn": "default",
+          "pos": [
+            1024,
+            640
+          ]
+        }
+      },
+      "music": "music_grove",
+      "snowfall": 25
+    },
     "frostfang": {
       "name": "Frostfang Hollow",
       "levels": "Lv 19-23",
@@ -6926,8 +8050,8 @@
             1220,
             1500
           ],
-          "to": "ruins",
-          "spawn": "north"
+          "to": "frostgate",
+          "spawn": "east"
         },
         {
           "type": "water",

@@ -3205,6 +3205,186 @@ FOREST_MONSTERS = {
 }
 
 
+# Town houses (house.gd): a row of them stands above each town's street. One
+# drawing per town style and role; the ground line is at design y HOUSE_BASE.
+HOUSE_BASE = 120
+HOUSE_THEMES = {
+    "willow": {"wall": (242, 230, 206, 255), "trim": (146, 100, 66, 255), "door": (122, 80, 52, 255),
+               "roofs": [(200, 86, 74, 255), (84, 122, 188, 255), (98, 158, 94, 255), (216, 142, 66, 255)]},
+    "lantern": {"wall": (132, 100, 76, 255), "trim": (82, 60, 46, 255), "door": (70, 50, 40, 255),
+                "roofs": [(72, 86, 128, 255), (102, 74, 128, 255), (62, 108, 104, 255)]},
+    "frost": {"wall": (186, 194, 206, 255), "trim": (112, 120, 136, 255), "door": (96, 76, 62, 255),
+              "roofs": [(86, 112, 154, 255), (124, 98, 146, 255), (72, 130, 144, 255)]},
+}
+# role: (wall width, wall height, roof height, roof shape)
+HOUSE_SHAPES = {
+    "home": (70, 44, 30, "gable"), "home2": (62, 40, 36, "gable"), "shop": (82, 46, 26, "hip"),
+    "chapel": (66, 50, 34, "gable"), "storage": (88, 42, 24, "hip"), "tower": (40, 80, 26, "cone"),
+    "guard": (72, 46, 26, "hip"), "hall": (104, 50, 30, "hip"),
+}
+HOUSE_SETS = {
+    "willow": ["shop", "chapel", "storage", "tower", "guard", "hall", "home", "home2"],
+    "lantern": ["shop", "chapel", "storage", "tower", "hall", "home"],
+    "frost": ["shop", "chapel", "storage", "tower", "hall", "home"],
+}
+WINDOW_LIGHT = (255, 224, 132, 255)
+SNOW_WHITE = (246, 249, 255, 255)
+ICICLE = (196, 226, 248, 255)
+HOUSE_LANTERN = (255, 168, 72, 255)
+
+
+def _roof_points(cx, top, w, rh, shape):
+    eave = w / 2 + 7
+    if shape == "cone":
+        return [(cx - eave + 1, top + 3), (cx, top - rh), (cx + eave - 1, top + 3)]
+    if shape == "hip":
+        return [(cx - eave, top + 3), (cx - w / 4, top - rh), (cx + w / 4, top - rh), (cx + eave, top + 3)]
+    return [(cx - eave, top + 3), (cx, top - rh), (cx + eave, top + 3)]
+
+
+def _roof_half_width(w, rh, shape, rise):
+    """Half the roof's width at a height `rise` above the eaves."""
+    eave = w / 2 + 7
+    t = rise / (rh + 3)
+    return eave + (w / 4 - eave) * t if shape == "hip" else eave * (1 - t)
+
+
+def _house_window(c, x, y, trim, round_window=False):
+    if round_window:
+        c.ellipse(x, y, 6, 6, WINDOW_LIGHT)
+        c.line([(x - 6, y), (x + 6, y)], fill=trim, width=1.2)
+        return
+    c.rect(x - 6.5, y - 6, x + 6.5, y + 6, WINDOW_LIGHT, radius=1.5)
+    c.line([(x, y - 6), (x, y + 6)], fill=trim, width=1.2)
+    c.line([(x - 6.5, y), (x + 6.5, y)], fill=trim, width=1.2)
+    c.ellipse(x - 3, y - 3, 1.6, 1.2, (255, 248, 214, 255), outline=False)
+
+
+def draw_house(theme: str, role: str) -> Image.Image:
+    """A chibi town house: walls, a roof, a door with a step, lit windows, and
+    what shows its role (a shop's awning and sign, a chapel's bell, crates by
+    the storage, a teleport tower's crystal, a guard's banner, a hall's
+    pillars and crossed swords). Frost houses wear snow and icicles, lantern
+    houses hang lanterns, willow houses keep flower boxes."""
+    look = HOUSE_THEMES[theme]
+    w, h, rh, shape = HOUSE_SHAPES[role]
+    roof = look["roofs"][list(HOUSE_SHAPES).index(role) % len(look["roofs"])]
+    roof_dark = tuple(int(v * 0.72) for v in roof[:3]) + (255,)
+    wall, trim, door = look["wall"], look["trim"], look["door"]
+    c = Canvas(128)
+    cx, base = 64, HOUSE_BASE
+    top = base - h
+    c.ellipse(cx, base + 1, w / 2 + 12, 5, SHADOW, outline=False)
+    if role in ("home", "home2", "shop"):  # a chimney behind the roof
+        c.rect(cx + w / 4 - 4, top - rh * 0.75, cx + w / 4 + 5, top, trim, radius=1)
+        c.rect(cx + w / 4 - 5.5, top - rh * 0.75 - 3, cx + w / 4 + 6.5, top - rh * 0.75 + 1, trim, radius=1)
+    c.rect(cx - w / 2, top, cx + w / 2, base, wall, radius=2)
+    if theme == "frost":  # stone blocks in courses
+        for row, y in enumerate(range(top + 8, base, 8)):
+            c.line([(cx - w / 2 + 1, y), (cx + w / 2 - 1, y)], fill=trim, width=0.8)
+            for x in range(int(cx - w / 2) + (6 if row % 2 else 12), int(cx + w / 2) - 2, 12):
+                c.line([(x, y - 8), (x, y)], fill=trim, width=0.8)
+    elif theme == "lantern":  # dark planks
+        for y in range(top + 6, base, 6):
+            c.line([(cx - w / 2 + 1, y), (cx + w / 2 - 1, y)], fill=trim, width=0.8)
+    else:  # timber frame
+        for x in (cx - w / 2 + 2.5, cx + w / 2 - 2.5):
+            c.rect(x - 1.8, top, x + 1.8, base, trim, radius=0.5, outline=False)
+        c.rect(cx - w / 2, top + h * 0.48 - 1.5, cx + w / 2, top + h * 0.48 + 1.5, trim, radius=0, outline=False)
+    c.rect(cx - w / 2 + 1, top, cx + w / 2 - 1, top + 5, tuple(int(v * 0.8) for v in wall[:3]) + (255,),
+           radius=0, outline=False)  # the shade under the eaves
+    points = _roof_points(cx, top, w, rh, shape)
+    c.polygon(points, roof)
+    for i in (1, 2, 3):  # rows of shingles
+        rise = (rh + 3) * i / 4
+        half = _roof_half_width(w, rh, shape, rise) - 3
+        if half > 4:
+            c.line([(cx - half, top + 3 - rise), (cx + half, top + 3 - rise)], fill=roof_dark, width=1.1)
+    if theme == "frost":  # snow on the roof, icicles under it
+        snow = [(x, y - 2.5) for x, y in points]
+        c.polygon(snow[:1] + [(points[0][0] + 6, points[0][1] - 1)] + snow[1:-1]
+                  + [(points[-1][0] - 6, points[-1][1] - 1)] + snow[-1:], SNOW_WHITE, outline=False)
+        c.line(snow, fill=OUTLINE, width=1.2)
+        for x in range(int(cx - w / 2 - 2), int(cx + w / 2) + 3, 7):
+            c.polygon([(x - 2, top + 3), (x + 2, top + 3), (x, top + 9)], ICICLE, outline=False)
+    door_half = 14 if role == "storage" else 8
+    c.rect(cx - door_half, base - 23, cx + door_half, base, door, radius=6 if role != "storage" else 2)
+    if role == "storage":
+        c.line([(cx - door_half, base - 22), (cx + door_half, base)], fill=trim, width=1.2)
+        c.line([(cx + door_half, base - 22), (cx - door_half, base)], fill=trim, width=1.2)
+        c.line([(cx, base - 23), (cx, base)], fill=trim, width=1.2)
+    else:
+        c.ellipse(cx + door_half - 3.5, base - 11, 1.3, 1.3, (236, 204, 120, 255), outline=False)
+    c.rect(cx - door_half - 3, base - 2, cx + door_half + 3, base + 2.5, (172, 162, 152, 255), radius=1)
+    if role == "tower":
+        _house_window(c, cx, top + 20, trim, round_window=True)
+        _house_window(c, cx, top + 44, trim)
+        c.polygon([(cx, top - rh - 14), (cx + 5, top - rh - 5), (cx, top - rh + 2), (cx - 5, top - rh - 5)],
+                  (110, 226, 255, 255))
+        c.ellipse(cx - 1.5, top - rh - 7, 1.4, 2.2, (230, 252, 255, 255), outline=False)
+    else:
+        for side in (-1, 1):
+            _house_window(c, cx + side * (w / 2 - 14), top + 18, trim, round_window=(role == "chapel"))
+            if theme == "willow" and role in ("home", "home2", "shop", "guard"):
+                bx = cx + side * (w / 2 - 14)
+                c.rect(bx - 7.5, top + 25, bx + 7.5, top + 29, (124, 160, 74, 255), radius=1)
+                for k, color in enumerate(((236, 92, 96, 255), (255, 214, 92, 255), (236, 120, 190, 255))):
+                    c.ellipse(bx - 4.5 + k * 4.5, top + 24.5, 1.7, 1.7, color, outline=False)
+    if role == "home2":
+        _house_window(c, cx, top - rh * 0.45, trim, round_window=True)
+    if role == "shop":  # a striped awning over the door, and a sign with a potion
+        stripes = 6
+        left, right, y0 = cx - 14, cx + 14, base - 31  # over the door
+        for k in range(stripes):
+            x0 = left + (right - left) * k / stripes
+            x1 = left + (right - left) * (k + 1) / stripes
+            color = (226, 72, 72, 255) if k % 2 == 0 else (250, 244, 232, 255)
+            c.polygon([(x0, y0), (x1, y0), (x1 + 1.2, y0 + 6), (x0 + 1.2, y0 + 6)], color, outline=False)
+        c.line([(left, y0), (right, y0)], width=1.2)
+        c.line([(left + 1.2, y0 + 6), (right + 1.2, y0 + 6)], width=1.2)
+        c.line([(cx + w / 2, top + 10), (cx + w / 2 + 12, top + 10)], fill=trim, width=1.6)
+        c.rect(cx + w / 2 + 3, top + 12, cx + w / 2 + 17, top + 25, (226, 196, 140, 255), radius=1.5)
+        c.ellipse(cx + w / 2 + 10, top + 20, 3.5, 3.5, (220, 60, 70, 255))
+        c.rect(cx + w / 2 + 8.8, top + 14.5, cx + w / 2 + 11.2, top + 17, (190, 210, 230, 255), radius=0.5)
+    if role == "chapel":  # a little bell tower on the ridge, a heart over the door
+        apex = top - rh
+        c.rect(cx - 6, apex - 12, cx + 6, apex + 3, wall, radius=1)
+        c.polygon([(cx - 8, apex - 11), (cx, apex - 20), (cx + 8, apex - 11)], roof)
+        c.ellipse(cx, apex - 5, 3, 3.4, (244, 200, 80, 255))
+        c.ellipse(cx - 2.6, base - 30, 3, 3, (240, 110, 140, 255), outline=False)
+        c.ellipse(cx + 2.6, base - 30, 3, 3, (240, 110, 140, 255), outline=False)
+        c.polygon([(cx - 5.4, base - 29), (cx + 5.4, base - 29), (cx, base - 23.5)], (240, 110, 140, 255), outline=False)
+    if role == "storage":  # crates and a barrel by the wall
+        for x0, size in ((cx + w / 2 + 1, 13), (cx + w / 2 + 3, 10)):
+            y1 = base if size == 13 else base - 13
+            c.rect(x0, y1 - size, x0 + size, y1, (176, 128, 80, 255), radius=1)
+            c.line([(x0, y1 - size), (x0 + size, y1)], fill=(120, 84, 52, 255), width=1)
+        c.rect(cx - w / 2 - 12, base - 15, cx - w / 2 - 1, base, (150, 100, 62, 255), radius=4)
+        for y in (base - 11, base - 4):
+            c.line([(cx - w / 2 - 12, y), (cx - w / 2 - 1, y)], fill=(90, 90, 96, 255), width=1.2)
+    if role == "guard":  # a banner by the door and a flag on the roof
+        c.rect(cx - door_half - 16, top + 22, cx - door_half - 6, base - 6, (186, 52, 58, 255), radius=1)
+        c.ellipse(cx - door_half - 11, top + 30, 2.6, 2.6, (246, 204, 88, 255))
+        c.line([(cx + w / 4, top - rh), (cx + w / 4, top - rh - 18)], fill=trim, width=1.4)
+        c.polygon([(cx + w / 4, top - rh - 18), (cx + w / 4 + 12, top - rh - 14), (cx + w / 4, top - rh - 10)],
+                  (186, 52, 58, 255))
+    if role == "hall":  # pillars by the door, crossed swords over it
+        for side in (-1, 1):
+            x = cx + side * 14
+            c.rect(x - 3, base - 30, x + 3, base, (226, 222, 214, 255), radius=1)
+        for side in (-1, 1):
+            c.line([(cx - side * 7, base - 40), (cx + side * 7, base - 28)], fill=(212, 220, 236, 255), width=2)
+            c.line([(cx - side * 7, base - 40), (cx + side * 7, base - 28)], width=0.8)
+        c.ellipse(cx, base - 34, 2.2, 2.2, (246, 204, 88, 255))
+    if theme == "lantern":  # lanterns at the eaves
+        for side in (-1, 1):
+            x = cx + side * (w / 2 + 3)
+            c.line([(x, top + 2), (x, top + 8)], fill=trim, width=1)
+            c.rect(x - 3, top + 8, x + 3, top + 16, HOUSE_LANTERN, radius=2)
+            c.ellipse(x, top + 12, 1.4, 2, (255, 236, 170, 255), outline=False)
+    return c.finish(256)
+
+
 def build_monster_sheet(draw, poses) -> Image.Image:
     sheet = Image.new("RGBA", (MONSTER_PX * len(poses), MONSTER_PX), (0, 0, 0, 0))
     for col, pose in enumerate(poses):
@@ -3281,6 +3461,11 @@ def main() -> None:
     )
     build_grass_tile().save(environment_dir / "grass.png")
     build_tiles().save(environment_dir / "tiles.png")
+    houses_dir = environment_dir / "houses"
+    houses_dir.mkdir(parents=True, exist_ok=True)
+    for theme, roles in HOUSE_SETS.items():
+        for role in roles:
+            draw_house(theme, role).save(houses_dir / f"{theme}_{role}.png")
     build_tree().save(environment_dir / "tree.png")
     build_rock().save(environment_dir / "rock.png")
 

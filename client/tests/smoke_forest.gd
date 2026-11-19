@@ -25,7 +25,8 @@ func run(test, main, player, _hud) -> void:
 func _check_gates(main, player) -> void:
 	main.change_map("forest", "west")
 	await t._frames(30)
-	for step in [["twilight", "Mossy Woods has a gate north, into Twilight Woods"],
+	for step in [["lanternhold", "Mossy Woods has a road north, into the town of Lanternhold"],
+			["twilight", "Lanternhold's road goes on into Twilight Woods"],
 			["grove", "Twilight Woods has a gate north, into Elder Grove"]]:
 		var gate = _portal_to(step[0])
 		t._check(gate != null, step[1])

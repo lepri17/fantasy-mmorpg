@@ -20,15 +20,21 @@ func run(test, main, player, _hud) -> void:
 func _check_frost_road(main, player) -> void:
 	main.change_map("ruins", "south")
 	await t._frames(30)
-	var road = _portal_to("frostfang")
-	t._check(road != null, "Moonfall Ruins has a road north, to Frostfang Hollow")
+	var road = _portal_to("frostgate")
+	t._check(road != null, "Moonfall Ruins has a road north, to the town of Frostgate")
 	if road == null:
 		return
 	_heal(player)
 	player.global_position = road.global_position
 	await t._frames(30)
+	road = _portal_to("frostfang")
+	t._check(main.map.map_id == "frostgate" and road != null, "and from Frostgate a road goes on")
+	if road == null:
+		return
+	player.global_position = road.global_position
+	await t._frames(30)
 	t._check(main.map.map_id == "frostfang", "walking along it reaches the hollow")
-	t._check(_portal_to("ruins") != null, "and the hollow has the road back")
+	t._check(_portal_to("frostgate") != null, "and the hollow has the road back")
 
 
 func _check_hollow(main) -> void:

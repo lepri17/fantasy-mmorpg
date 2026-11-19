@@ -107,6 +107,7 @@ func _initialize() -> void:
 	await _ruins(main, player)
 	await _frost(main, player)
 	await _old_woods(main, player)
+	await _towns(main, player)
 	GameScript.sky_seconds = -1.0
 	main.change_map("cellar")
 	await _frames(240)
@@ -419,6 +420,25 @@ func _old_woods(main, player) -> void:
 		player.hp = player.max_hp
 		player.global_position = step[1] + Vector2(60, 230)
 		await _frames(30)
+		await _shot(step[2])
+
+
+
+## The towns as streets: Willow Town, Lanternhold and Frostgate, and the
+## Lantern Arena's first wave.
+func _towns(main, player) -> void:
+	get_first_node_in_group("hud").call("_close_windows")
+	for step in [
+		["town", Vector2(1000, 560), "63_willow_street"],
+		["lanternhold", Vector2(1300, 560), "64_lanternhold"],
+		["frostgate", Vector2(1300, 560), "65_frostgate"],
+		["lantern_arena", Vector2(700, 640), "66_lantern_arena"]
+	]:
+		main.change_map(step[0], "default")
+		await _frames(20)
+		player.hp = player.max_hp
+		player.global_position = step[1]
+		await _frames(40)
 		await _shot(step[2])
 
 

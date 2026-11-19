@@ -30,6 +30,7 @@ const SmokeRidge = preload("res://tests/smoke_ridge.gd")
 const SmokeRuins = preload("res://tests/smoke_ruins.gd")
 const SmokeFrost = preload("res://tests/smoke_frost.gd")
 const SmokeBosses = preload("res://tests/smoke_bosses.gd")
+const SmokeTowns = preload("res://tests/smoke_towns.gd")
 const RoamingBosses = preload("res://scripts/world/roaming_bosses.gd")
 const Settings = preload("res://scripts/settings.gd")
 const SETTINGS_PATH := "user://smoke_test_settings.cfg"
@@ -746,6 +747,7 @@ func _run() -> void:
 	await SmokeRuins.new().run(self, main, player, hud)
 	await SmokeFrost.new().run(self, main, player, hud)
 	await SmokeBosses.new().run(self, main, player, hud)
+	await SmokeTowns.new().run(self, main, player, hud)
 
 	_remove_test_save()
 	root.remove_child(main)

@@ -73,7 +73,7 @@ def maps() -> dict:
                 x, y = _exit_spot(thing["side"], thing["span"], width, height)
                 place.portals.append({"pos": (x, y), "to": thing["to"], "spawn": thing.get("spawn", "default")})
                 continue
-            if kind in ("water", "cliff", "icefall"):  # the paused online rules do not know these yet
+            if kind in ("water", "cliff", "icefall", "house"):  # the paused online rules do not know these yet
                 continue
             x, y = float(thing["pos"][0]), float(thing["pos"][1])
             if kind in OBSTACLES:

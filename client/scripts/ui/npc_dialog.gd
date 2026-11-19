@@ -68,8 +68,12 @@ func option(text: String) -> Button:
 
 func _add_travel_options() -> void:
 	var maps: Dictionary = GameData.table("maps")
+	var here: String = maps["town"]
+	var game = get_tree().get_first_node_in_group("game")
+	if game != null and game.map != null:
+		here = game.map.map_id  # a guide in any town sends you anywhere but here
 	for map_id in maps["maps"]:
-		if map_id == maps["town"]:
+		if map_id == here or maps["maps"][map_id].get("no_teleport", false):
 			continue
 		var cost: int = int(maps["maps"][map_id].get("teleport_price", 0))
 		var fare: String = "free" if cost == 0 else "%d G" % cost

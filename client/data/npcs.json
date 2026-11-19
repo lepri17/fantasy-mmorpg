@@ -71,5 +71,111 @@
     "services": [
       "quests"
     ]
+  },
+  "lh_merchant": {
+    "name": "Rook",
+    "title": "Merchant",
+    "look": "merchant",
+    "greeting": "Lantern oil, potions and steel for the deep woods.",
+    "services": [
+      "shop"
+    ],
+    "shop": [
+      "red_potion",
+      "blue_potion",
+      "ember_stone",
+      "moon_stone",
+      "duelist_cape",
+      "hawk_gloves",
+      "swift_boots",
+      "crimson_bow",
+      "shadow_vest",
+      "ember_staff",
+      "midnight_robe"
+    ]
+  },
+  "lh_healer": {
+    "name": "Brother Wick",
+    "title": "Healer",
+    "look": "healer",
+    "greeting": "Rest a while by the lanterns, traveller.",
+    "services": [
+      "heal"
+    ]
+  },
+  "lh_keeper": {
+    "name": "Moss",
+    "title": "Storage",
+    "look": "keeper",
+    "greeting": "Your things are safe with me, even this far from Willow Town.",
+    "services": [
+      "storage"
+    ]
+  },
+  "lh_guide": {
+    "name": "Lyra",
+    "title": "Guide",
+    "look": "guide",
+    "greeting": "The lantern roads reach every town and wood. Where to?",
+    "services": [
+      "teleport"
+    ]
+  },
+  "lh_warden": {
+    "name": "Warden Thorne",
+    "title": "Arena Master",
+    "look": "captain",
+    "greeting": "The Lantern Arena is through the hall's door. Beat three waves and the champion for a prize. Three bouts a day. Bring friends, once the roads to other worlds open.",
+    "services": []
+  },
+  "fg_merchant": {
+    "name": "Sigrid",
+    "title": "Merchant",
+    "look": "merchant",
+    "greeting": "Warm potions and good stones. The cold takes the rest.",
+    "services": [
+      "shop"
+    ],
+    "shop": [
+      "red_potion",
+      "blue_potion",
+      "ember_stone",
+      "moon_stone",
+      "rebirth_scroll"
+    ]
+  },
+  "fg_healer": {
+    "name": "Mother Isolde",
+    "title": "Healer",
+    "look": "healer",
+    "greeting": "Come in from the snow, child.",
+    "services": [
+      "heal"
+    ]
+  },
+  "fg_keeper": {
+    "name": "Old Rune",
+    "title": "Storage",
+    "look": "keeper",
+    "greeting": "Ice keeps everything. So do I.",
+    "services": [
+      "storage"
+    ]
+  },
+  "fg_guide": {
+    "name": "Edda",
+    "title": "Guide",
+    "look": "guide",
+    "greeting": "Frostgate is the end of the road north. Shall I send you back?",
+    "services": [
+      "teleport"
+    ]
+  },
+  "fg_warden": {
+    "name": "Warden Bjorn",
+    "title": "Arena Master",
+    "look": "captain",
+    "greeting": "The Frost Arena waits behind the hall's door. Wolves, wraiths and an Ice Golem to finish. Three bouts a day.",
+    "services": []
   }
 }

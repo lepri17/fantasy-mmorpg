@@ -37,7 +37,11 @@ func run(test, main, player, hud) -> void:
 	)
 	var town_ground = main.map.get_node("Ground")
 	t._check(
-		town_ground is TileMapLayer and town_ground.get_used_cells().size() == 160,
+		(
+			town_ground is TileMapLayer
+			and town_ground.get_used_cells().size()
+			== main.map.data["ground"].size() * String(main.map.data["ground"][0]).length()
+		),
 		"the town ground is a TileMapLayer built from the map rows"
 	)
 	t._check(SaveFile.load_data().get("map", "") == "town", "the town is saved as the current map")

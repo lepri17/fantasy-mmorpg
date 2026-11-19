@@ -41,6 +41,7 @@ const EdgeExit := preload("res://scripts/maps/edge_exit.gd")
 const Water := preload("res://scripts/world/water.gd")
 const Cliff := preload("res://scripts/world/cliff.gd")
 const Icefall := preload("res://scripts/world/icefall.gd")
+const House := preload("res://scripts/world/house.gd")
 const Decor := preload("res://scripts/world/decor.gd")
 const Chest := preload("res://scripts/world/chest.gd")
 const Shrine := preload("res://scripts/world/shrine.gd")
@@ -126,6 +127,12 @@ func _add_object(thing: Dictionary) -> void:
 		return
 	if thing["type"] == "water":
 		_add_water(thing)
+		return
+	if thing["type"] == "house":
+		var house = House.new()
+		house.look = thing["look"]
+		house.position = Vector2(thing["pos"][0], thing["pos"][1])
+		add_child(house)
 		return
 	if thing["type"] == "icefall":
 		var gorge = Icefall.new()
@@ -328,7 +335,7 @@ func _add_edges() -> void:
 	walls.name = "Edges"
 	var sides := [
 		[Vector2.RIGHT, EDGE_MARGINS[0]],
-		[Vector2.DOWN, EDGE_MARGINS[1]],
+		[Vector2.DOWN, float(data.get("street_top", EDGE_MARGINS[1]))],  # a town's street
 		[Vector2.LEFT, -(size.x - EDGE_MARGINS[2])],
 		[Vector2.UP, -(size.y - EDGE_MARGINS[3])],
 	]

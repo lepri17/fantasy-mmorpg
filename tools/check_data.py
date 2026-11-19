@@ -541,7 +541,7 @@ def check_upgrades(items_data: dict) -> None:
         check_bonus(f"{where} per_plus '{slot}'", bonus)
 
 
-OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc", "torch", "glowcap", "decor", "chest",
+OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc", "torch", "glowcap", "decor", "chest", "house",
                 "shrine"}
 GLOW_COLORS = {"cyan", "teal", "violet"}
 DECOR_KINDS = {"reeds", "cattails", "lily", "flowers", "pebbles", "log", "mushrooms", "bones",
@@ -721,6 +721,25 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
         spawns = data.get("spawns", {})
         if "default" not in spawns:
             error(f"{where}: needs a 'default' spawn")
+        street_top = data.get("street_top")  # a town's street: nothing may stand above it
+        if street_top is not None:
+            if not (is_number(street_top) and 80 <= street_top <= 600):
+                error(f"{where}: 'street_top' must be a number from 80 to 600")
+                street_top = None
+        if not isinstance(data.get("no_teleport", False), bool):
+            error(f"{where}: 'no_teleport' must be true or false")
+        for thing in data.get("objects", []):
+            if thing.get("type") == "house":
+                look = thing.get("look")
+                if not (isinstance(look, str) and res_exists(f"res://assets/environment/houses/{look}.png")):
+                    error(f"{where}: house look '{look}' has no drawing")
+            elif (street_top is not None and thing.get("type") in ("npc", "portal", "monster", "chest", "shrine")
+                  and isinstance(thing.get("pos"), list) and thing["pos"][1] <= street_top + 20):
+                error(f"{where}: {thing.get('type')} at {thing.get('pos')} is above the street")
+        if street_top is not None:
+            for spawn_name, point in data.get("spawns", {}).items():
+                if isinstance(point, list) and len(point) == 2 and point[1] <= street_top + 40:
+                    error(f"{where}: spawn '{spawn_name}' is above the street")
         boss_spots = data.get("boss_spots", [])
         if not isinstance(boss_spots, list):
             error(f"{where}: 'boss_spots' must be a list of [x, y]")
