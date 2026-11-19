@@ -305,6 +305,8 @@
   - נתונים בערך פי 1.4–1.5 מ-Elderwood. למשל Moonfall Blade: ‎+19 התקפה ו-‎+10% Crit Damage.
   - בונוס הסט: 2 פריטים = ‎+35 HP. 4 פריטים = ‎+6 ATK ו-‎+4% קריטי. 6 פריטים = ‎+10% מהירות התקפה ו-‎+15% Crit Damage.
   - קובץ ההשוואה של השרת (`godot_stats.json`) נוצר מחדש, כי `drop_pool` השתנה.
+- **לשים לב:** במחולל, שמות צבעים כלליים (כמו `WOOD` או `GOLD`) כבר תפוסים. שם חדש שחוזר על קיים משנה בשקט פריטים ודמויות, לכן לצבעים של מפלצת חדשה יש קידומת (`MIMIC_WOOD`).
+
 **Frostfang Hollow (2026-11-19)** – האזור הרביעי, רמות 19–23. מגיעים מהקצה הצפוני של חורבות Moonfall.
 - **המפה:** עמק מושלג עם אריחים חדשים (`snow`, `ice`) ושלג שיורד (`"snowfall"` במפה, כמו הגחליליות). עצים קפואים, אבני קרח, גבישים ועצמות. מקדש ריפוי ליד הכניסה, מקדש כוח בצפון, ושתי תיבות.
 - **אגם קפוא:** `water.gd` עם `"style": "frozen"`. קרח שהולכים עליו, בלי קירות. `check_data.py` לא בודק "במים" על אגם קפוא.
@@ -317,8 +319,6 @@
   - **Frost Wyrm** (רמה 23, בוס): דרקון קרח. נשיפת קרח לאורך נתיב רחב (`beam`), מכת קרקע, ובחצי חיים מזמן רוחות. זורק 3 פריטים לפחות Rare (כרגע מסט Moonfall).
   - הציור (זאב, רוח, דרקון, אריחי שלג וקרח) נוצר במחולל.
 - **קצב** (`docs/BALANCE.md`): לרמה 20 מגיעים אחרי כ-186 דקות (היה 192).
-
-- **לשים לב:** במחולל, שמות צבעים כלליים (כמו `WOOD` או `GOLD`) כבר תפוסים. שם חדש שחוזר על קיים משנה בשקט פריטים ודמויות, לכן לצבעים של מפלצת חדשה יש קידומת (`MIMIC_WOOD`).
 
 **אונליין (שלב 9, חלקי, מוקפא)**
 - שרת Python ב-`server/` (asyncio + websockets). הסבר מלא ב-`docs/SERVER.md`. מריצים מהתיקייה הראשית: `pip install -r server/requirements.txt` ואז `python -m server`.
@@ -360,7 +360,7 @@
 - המפלצות עוקפות עצים וסלעים (NavigationAgent2D). מה יש בכל מפה כתוב ב-`data/maps.json`.
 
 **מפה**
-- תשע מפות ב-`data/maps.json`, מחוברות בקצוות (ראו "עולם פתוח"):
+- עשר מפות ב-`data/maps.json`, מחוברות בקצוות (ראו "עולם פתוח"):
   - Willow Town: עיר בטוחה בלי מפלצות. 5 אנשים: Mira (חנות), Sister Lune (ריפוי), Old Bram (מחסן), Tessa (טלפורט), Captain Rowan (משימות).
   - Green Meadow (רמות 1–5): האחו המקורי, 2560×1536, נשאר סצנה (`scenes/maps/field.tscn`). פלישת Golden Slime כל 30 דקות ל-5 דקות.
   - Mossy Woods (רמות 3–8): Spore Shroom וה-Slime King. שער במזרח למרתף, דרך בצפון ליער העמוק ודרך בדרום לאגם.
@@ -377,10 +377,10 @@
 ## קבצים מרכזיים
 - `client/scenes/main.tscn` – `Main` עם `World`, הלוחם וה-HUD. `client/scripts/game.gd` – החלפת מפות, פלישה, יום ולילה, מוזיקה.
 - `client/scripts/maps/` – `game_map.gd` (בונה מפה מ-JSON), `map_tiles.gd`, `portal.gd`, `edge_exit.gd` (דרך בקצה המפה), `npc.gd`, `dungeon_run.gd`. `client/scenes/maps/field.tscn` – האחו.
-- `client/scripts/world/` – `sky.gd` (יום, לילה וגשם), `torch.gd`, `glowcap.gd` (פטריות זוהרות), `water.gd` (אגמים, נהרות, תהומות, גשרים ואיים), `cliff.gd` (צוקים וחומות), `decor.gd`, `chest.gd`, `shrine.gd`.
+- `client/scripts/world/` – `sky.gd` (יום, לילה וגשם), `torch.gd`, `glowcap.gd` (פטריות זוהרות), `water.gd` (אגמים, נהרות, תהומות, גשרים ואיים), `cliff.gd` (צוקים, חומות וצוקי קרח), `icefall.gd` (ערוץ הנטיפים), `decor.gd`, `chest.gd`, `shrine.gd`.
 - `client/data/` – כל הנתונים ב-JSON: פריטים, דמות, מפלצות, קרב, סקילים, הישגים, מפות, אנשי העיר ומשימות. `tools/check_data.py` בודק אותם.
 - `client/scripts/player/` – `class_db.gd` (המקצועות), `hero_look.gd` (בונה את המראה לכל מקצוע; היה `warrior_look.gd`), `spells.gd` (סקילים של קוסם וקשת וסקילי השדרוג), `player.gd` (תנועה, קרב, סקילים), `player_base.gd` (פריטים, עיר ומשימות; `player.gd` יורש ממנו), `player_stats.gd` (רמה, ציוד, תיק, מחסן, נקודות סטטים), `leveling.gd` (עקומת EXP ופער רמות), `achievement_record.gd` (הישגים ותארים), `quest_log.gd`, `dungeon_log.gd`, `save_file.gd` (שמירה במשבצות, גרסה 11).
-- `client/scripts/enemies/slime.gd`, `client/scenes/enemies/slime.tscn`. `monster_moves.gd` – המהלכים של העולם הפתוח (שריון, קפיצה, התפצלות, גלגול, זריקת סלע, צלילה, מארב, קרן). `client/scripts/combat/lobbed_rock.gd` – הסלע של ה-Crag Imp. `beam_flash.gd` – הקרן של ה-Sentinel.
+- `client/scripts/enemies/slime.gd`, `client/scenes/enemies/slime.tscn`. `monster_moves.gd` – המהלכים של העולם הפתוח (שריון, קפיצה, התפצלות, גלגול, זריקת סלע, צלילה, מארב, קרן). `client/scripts/combat/lobbed_rock.gd` – הסלע של ה-Crag Imp. `beam_flash.gd` – הקרן של ה-Sentinel. `icicle.gd` – נטיף שנופל בערוץ.
 - `client/scripts/combat/` – `combat_rules.gd` (חישוב הפגיעה), `combat_log.gd` (מד DPS), `slash_effect.gd`, `hit_spark.gd`, `target_marker.gd`, `status_effects.gd` (רעל, האטה, הלם), `telegraph.gd` (עיגול אזהרה), `projectile.gd` (קליעים של מפלצות), `hero_shot.gd` (חצים וכישופים של הגיבור), `shield_bubble.gd`, `lightning.gd`, `burst.gd` (חלקיקים).
 - `client/scripts/items/pickup.gd` – שלל על הרצפה, ועמוד אור מעל פריט נדיר. `item_db.gd` – טבלת כל הפריטים, דרישת רמה, סידור התיק, הציוד שכל מפלצת זורקת (`drop_pool`) וטווחי הבונוסים (`option_range`). `gear_preview.gd` – מה ישתנה אצל הגיבור אם ילבש פריט.
 - `client/scripts/settings.gd` – ההגדרות. `client/scripts/i18n/language.gd` – הגופן. `client/scripts/player/auto_pilot.gd` – ציד אוטומטי והליכה למשימה. `client/scripts/maps/map_guide.gd` – מה נמצא איפה ואיך מגיעים.
@@ -390,7 +390,7 @@
 - `docs/MAPLESTORY_COMPARISON.md` – השוואה ל-MapleStory הראשון: מה נוסף, ומה לא נוסף ולמה.
 - `client/scripts/ui/` – `hud.gd`, `player_panel.gd`, `hp_bar_world.gd`, `floating_text.gd`, `touch_joystick.gd`, `touch_button.gd`.
 - `client/scripts/audio/sfx.gd` – אפקטים קוליים, דרך הקבוצה `sfx`.
-- `client/tests/smoke_test.gd`, `smoke_world.gd`, `smoke_classes.gd`, `smoke_ui.gd`, `smoke_combat.gd`, `smoke_progress.gd`, `smoke_gear.gd`, `smoke_forest.gd`, `smoke_loot.gd`, `smoke_upgrade.gd`, `smoke_lake.gd`, `smoke_ridge.gd` ו-`smoke_ruins.gd` – הבדיקה האוטומטית (האחו, העולם, המקצועות, הממשק, ליבת הקרב, ההתקדמות, הציוד, היער העמוק, השלל, השדרוג, האגם, הרכס, החורבות). `client/tests/screenshots.gd` – צילומי מסך על מסך וירטואלי.
+- `client/tests/smoke_test.gd`, `smoke_world.gd`, `smoke_classes.gd`, `smoke_ui.gd`, `smoke_combat.gd`, `smoke_progress.gd`, `smoke_gear.gd`, `smoke_forest.gd`, `smoke_loot.gd`, `smoke_upgrade.gd`, `smoke_lake.gd`, `smoke_ridge.gd`, `smoke_ruins.gd` ו-`smoke_frost.gd` – הבדיקה האוטומטית (האחו, העולם, המקצועות, הממשק, ליבת הקרב, ההתקדמות, הציוד, היער העמוק, השלל, השדרוג, האגם, הרכס, החורבות, עמק השלג). `client/tests/screenshots.gd` – צילומי מסך על מסך וירטואלי.
 - `docs/ROADMAP.md` – רשימת רעיונות לשיפור, עם מזהים, גודל ותלויות. מה שבוצע מסומן **[בוצע]** עם תאריך. סעיף K מכיל פערים שנמצאו בקוד ובלוגים, כולל חתימת APK שמשתנה בכל בנייה (K1).
 - `tools/generate_assets.py`, `tools/generate_sounds.py`, `tools/check_project.py`, `tools/balance.py` (טבלאות האיזון, נכתב אל `docs/BALANCE.md`).
 - `server/` – השרת: `game.py` (הודעות, חשבונות, דמויות), `net.py` (WebSocket), `db.py`, `actions.py` (פריטים ואנשי העיר), `social.py`, `world/` (מפות, מפלצות, גיבור, עותק מפה), `rules/` (החוקים ב-Python), `tests/`. `Dockerfile` לאירוח בענן.
@@ -486,6 +486,7 @@
 - הלוחם החדש בטלפון: איך נראות האנימציות בתנועה ואם התקיפה מרגישה בזמן.
 - הרכס בטלפון: האם הצוקים נראים גבוהים ומובנים, והאם קל לברוח מחיפושית מתגלגלת במעבר צר.
 - החורבות בטלפון: האם ברור שהפסלים והתיבות עלולים להתעורר, והאם הקרן של העין הוגנת. איזון ה-Colossus (12,000 חיים).
+- Frostfang Hollow בטלפון: האם רואים טוב את עיגולי האזהרה על השלג הלבן, הביצועים של השלג שיורד, והאם ההאטה מהקור לא מתסכלת. איזון ה-Frost Wyrm (15,000 חיים).
 - האגם בטלפון: האם הדרכים בקצוות ברורות, האם הגשרים נוחים להליכה עם הג'ויסטיק, הביצועים של המים המצוירים, והאם הקפיצה של הצפרדע והשריון של הצב קלים להבנה. איזון הבוס החדש.
 - חלון ה-Inventory על מסך טלפון: הפריסה נראתה רק בצילומי מסך במחשב. גודל המשבצות למגע אצבע לא נבדק. גם מיקום יומן ההודעות והמספר על POT לא נבדקו.
 - חלון CHARACTER, וחלון ה-Inventory המוגדל (כפתורי UPGRADE ו-AUTO), לא נראו על מסך של טלפון.
