@@ -27,7 +27,7 @@ import random
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "client" / "assets"
@@ -85,6 +85,7 @@ ROPE = (170, 124, 80, 255)
 SHOE = (104, 70, 50, 255)
 
 SLIME_FRAME = 64
+MONSTER_PX = SLIME_FRAME * 2  # monster frames come out at twice the design grid: crisp on phones
 SLIME_FEET_Y = 56
 
 
@@ -327,6 +328,83 @@ class Canvas:
     def finish(self, out_size: int | None = None) -> Image.Image:
         out = out_size or self.size
         return self.image.resize((out, out), Image.LANCZOS)
+
+
+def _shadeable(fill) -> bool:
+    """A colour that gets cel shading: solid, and not near black (outlines, pupils)."""
+    return isinstance(fill, tuple) and len(fill) == 4 and fill[3] == 255 and sum(fill[:3]) > 90
+
+
+def _tone(color, dark: float = 1.0, light: float = 0.0) -> tuple:
+    """A colour darker (a cool shadow: blue fades less) or lighter (towards white)."""
+    r, g, b, a = color
+    if light:
+        return (round(r + (255 - r) * light), round(g + (255 - g) * light), round(b + (255 - b) * light), a)
+    return (round(r * dark), round(g * dark), round(min(255, b * (dark + 0.08))), a)
+
+
+class MonsterCanvas(Canvas):
+    """A monster's canvas. Every outlined shape gets a cel shadow on the side away
+    from the light (top left) and a soft light spot towards it, so the monsters
+    look round, like the chibi heroes. Frames come out at twice the design grid
+    (MONSTER_PX); the game draws them at half size (slime.gd ART_SCALE), so they
+    stay crisp on a phone's screen."""
+
+    LIGHT = (-0.3, -0.34)  # how far the lit copy of a shape moves, in its radii
+
+    def ellipse(self, cx, cy, rx, ry, fill, outline=True) -> None:
+        if not (outline and _shadeable(fill) and min(rx, ry) >= 2.5):
+            super().ellipse(cx, cy, rx, ry, fill, outline)
+            return
+        self._shaded(lambda d, dx, dy: d.ellipse(self._box(cx + dx, cy + dy, rx, ry), fill=255),
+                     fill, rx, ry, (cx, cy))
+        self.draw.ellipse(self._box(cx, cy, rx, ry), outline=OUTLINE, width=self.line_width)
+
+    def rect(self, x0, y0, x1, y1, fill, radius=3.0, outline=True) -> None:
+        rx, ry = abs(x1 - x0) / 2, abs(y1 - y0) / 2
+        if not (outline and _shadeable(fill) and min(rx, ry) >= 2.5):
+            super().rect(x0, y0, x1, y1, fill, radius, outline)
+            return
+
+        def shape(d, dx, dy):
+            d.rounded_rectangle([self._s(x0 + dx), self._s(y0 + dy), self._s(x1 + dx), self._s(y1 + dy)],
+                                radius=self._s(radius), fill=255)
+
+        self._shaded(shape, fill, rx, ry, ((x0 + x1) / 2, (y0 + y1) / 2))
+        self.draw.rounded_rectangle([self._s(x0), self._s(y0), self._s(x1), self._s(y1)], radius=self._s(radius),
+                                    outline=OUTLINE, width=self.line_width)
+
+    def polygon(self, points, fill, outline=True) -> None:
+        xs, ys = [x for x, _ in points], [y for _, y in points]
+        rx, ry = (max(xs) - min(xs)) / 2, (max(ys) - min(ys)) / 2
+        if not (outline and _shadeable(fill) and min(rx, ry) >= 2.5):
+            super().polygon(points, fill, outline)
+            return
+
+        def shape(d, dx, dy):
+            d.polygon([(self._s(x + dx), self._s(y + dy)) for x, y in points], fill=255)
+
+        self._shaded(shape, fill, rx, ry, ((max(xs) + min(xs)) / 2, (max(ys) + min(ys)) / 2))
+        scaled = [(self._s(x), self._s(y)) for x, y in points]
+        self.draw.line(scaled + scaled[:2], fill=OUTLINE, width=self.line_width, joint="curve")
+
+    def _shaded(self, shape, fill, rx, ry, centre) -> None:
+        """Paints a shape (shape(draw, dx, dy) draws it into a mask, moved by dx, dy
+        design pixels): its colour, a darker band where the lit copy does not reach,
+        and a soft light spot near the lit side, kept inside the shape."""
+        whole = Image.new("L", self.image.size, 0)
+        shape(ImageDraw.Draw(whole), 0, 0)
+        self.image.paste(fill, mask=whole)
+        lit = Image.new("L", self.image.size, 0)
+        shape(ImageDraw.Draw(lit), rx * self.LIGHT[0], ry * self.LIGHT[1])
+        self.image.paste(_tone(fill, dark=0.7), mask=ImageChops.subtract(whole, lit))
+        spot = Image.new("L", self.image.size, 0)
+        ImageDraw.Draw(spot).ellipse(
+            self._box(centre[0] - rx * 0.36, centre[1] - ry * 0.42, rx * 0.3, ry * 0.2), fill=140)
+        self.image.paste(_tone(fill, light=0.6), mask=ImageChops.multiply(spot, whole))
+
+    def finish(self, out_size: int | None = None) -> Image.Image:
+        return super().finish(out_size or self.size * 2)
 
 
 def arc_points(cx, cy, rx, ry, start_deg, end_deg, count=24):
@@ -2082,7 +2160,7 @@ SLIME_ANIMATIONS = [("idle", 3.0, True), ("attack", 8.0, False), ("die", 8.0, Fa
 
 def draw_slime(rx: float, ry: float, face: str = "normal", droplets: int = 0) -> Image.Image:
     """One slime frame. Its bottom stays on the ground; rx / ry give the squash."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, cy = 32, SLIME_FEET_Y - ry
     c.ellipse(cx, SLIME_FEET_Y + 1, max(20, rx - 2), 4, SHADOW, outline=False)
     top = cy - ry
@@ -2119,9 +2197,9 @@ def draw_slime(rx: float, ry: float, face: str = "normal", droplets: int = 0) ->
 
 
 def build_slime_sheet() -> Image.Image:
-    sheet = Image.new("RGBA", (SLIME_FRAME * len(SLIME_POSES), SLIME_FRAME), (0, 0, 0, 0))
+    sheet = Image.new("RGBA", (MONSTER_PX * len(SLIME_POSES), MONSTER_PX), (0, 0, 0, 0))
     for col, (_, rx, ry, face, droplets) in enumerate(SLIME_POSES):
-        sheet.paste(draw_slime(rx, ry, face, droplets), (col * SLIME_FRAME, 0))
+        sheet.paste(draw_slime(rx, ry, face, droplets), (col * MONSTER_PX, 0))
     return sheet
 
 
@@ -2143,7 +2221,7 @@ SHROOM_POSES = [
 
 def draw_shroom(cap_rx: float, cap_ry: float, stem: float, face: str, spores: int) -> Image.Image:
     """One Spore Shroom frame: a spotted cap on a stem with a face; spores when it shoots."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 15, 4, SHADOW, outline=False)
     rng = random.Random(spores * 7 + int(cap_rx))
@@ -2191,9 +2269,9 @@ def build_crown(out_size: int = 64) -> Image.Image:
 
 
 def build_shroom_sheet() -> Image.Image:
-    sheet = Image.new("RGBA", (SLIME_FRAME * len(SHROOM_POSES), SLIME_FRAME), (0, 0, 0, 0))
+    sheet = Image.new("RGBA", (MONSTER_PX * len(SHROOM_POSES), MONSTER_PX), (0, 0, 0, 0))
     for col, (_, rx, ry, stem, face, spores) in enumerate(SHROOM_POSES):
-        sheet.paste(draw_shroom(rx, ry, stem, face, spores), (col * SLIME_FRAME, 0))
+        sheet.paste(draw_shroom(rx, ry, stem, face, spores), (col * MONSTER_PX, 0))
     return sheet
 
 
@@ -2227,7 +2305,10 @@ def _eyes(c, cx, eye_y, gap, face, size=1.0, color=EYE):
             c.line([(ex - 2 * size, eye_y + 2 * size), (ex + 2 * size, eye_y - 2 * size)], width=1.3)
             continue
         c.ellipse(ex, eye_y, 2.2 * size, 2.8 * size, color, outline=False)
-        c.ellipse(ex - 0.7 * size, eye_y - 1.2 * size, 0.9 * size, 0.9 * size, WHITE, outline=False)
+        if len(color) == 4:  # a glow at the bottom of the eye, as in anime eyes
+            c.ellipse(ex, eye_y + 1.0 * size, 1.5 * size, 1.3 * size, _tone(color, light=0.3), outline=False)
+        c.ellipse(ex - 0.7 * size, eye_y - 1.2 * size, 1.05 * size, 1.05 * size, WHITE, outline=False)
+        c.ellipse(ex + 0.8 * size, eye_y + 1.0 * size, 0.45 * size, 0.45 * size, WHITE, outline=False)
         if face == "angry":
             c.line([(ex + side * 3.6 * size, eye_y - 5 * size), (ex - side * 1.6 * size, eye_y - 3.2 * size)],
                    width=1.3)
@@ -2235,7 +2316,7 @@ def _eyes(c, cx, eye_y, gap, face, size=1.0, color=EYE):
 
 def draw_boar(rx: float, ry: float, face: str, dust: int) -> Image.Image:
     """Bramble Boar: a round boar with a thorny bramble mane, a pink snout and tusks."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 20, 4, SHADOW, outline=False)
     rng = random.Random(dust * 5 + int(rx))
@@ -2292,7 +2373,7 @@ WISP_POSES = [
 
 def draw_wisp(size: float, sway: float, face: str, sparks: int) -> Image.Image:
     """Lantern Wisp: a little floating flame with a soft glow round it."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, cy = 32, 32
     c.ellipse(cx, SLIME_FEET_Y + 1, 9, 2.6, SHADOW, outline=False)
     rng = random.Random(sparks * 3 + 1)
@@ -2328,7 +2409,7 @@ ROOTLING_POSES = [
 
 def draw_rootling(height: float, arms: int, face: str, chips: int) -> Image.Image:
     """Rootling: a walking stump on root legs, with a sprout on its head and glowing eyes."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 15, 3.6, SHADOW, outline=False)
     rng = random.Random(chips * 7 + int(height))
@@ -2387,7 +2468,7 @@ GOLEM_POSES = [
 
 def draw_golem(bob: float, arms: int, face: str, rocks: int) -> Image.Image:
     """Moss Golem: a chunky stone body with moss on the head and shoulders, glowing eyes."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 20, 4, SHADOW, outline=False)
     rng = random.Random(rocks * 11 + int(bob))
@@ -2448,7 +2529,7 @@ TREANT_POSES = [
 
 def draw_treant(sway: float, branches: int, face: str, leaves: int) -> Image.Image:
     """Elder Treant: an old tree with a face, branch arms, a mossy beard and a leafy crown."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 21, 4, SHADOW, outline=False)
     rng = random.Random(leaves * 13 + 5)
@@ -2519,7 +2600,7 @@ TURTLE_POSES = [
 def draw_turtle(head: float, lunge: float, face: str, bits: int) -> Image.Image:
     """Snapjaw Turtle: a domed, plated shell, stubby legs and a beaked head that
     snaps forward. Hidden, only the shell shows (with eyes peeking out)."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 22, 4.5, SHADOW, outline=False)
     if face == "none":  # only bits of shell are left
@@ -2581,7 +2662,7 @@ FROG_POSES = [
 def draw_frog(rx: float, ry: float, face: str, legs: float) -> Image.Image:
     """Marsh Frog: a squat green frog with a pale belly, spots and big golden
     eyes on top. It crouches flat before a leap and stretches out in the air."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 18, 4, SHADOW, outline=False)
     if face == "none":
@@ -2639,7 +2720,7 @@ BEETLE_POSES = [
 def draw_beetle(jaws: float, face: str, rolled: int, bits: int) -> Image.Image:
     """Rock Beetle: a stony shell split down the back with glinting crystals, six
     little legs and pincer jaws. It curls into a striped ball to roll."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 19, 4.5, SHADOW, outline=False)
     if rolled:
@@ -2707,7 +2788,7 @@ IMP_POSES = [
 def draw_imp(arm: float, face: str, bob: float, bits: int) -> Image.Image:
     """Crag Imp: a little red imp with curled horns, bat ears and a pointed tail,
     holding a rock that it heaves over its head to throw."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 14, 3.6, SHADOW, outline=False)
     if face == "none":
@@ -2766,7 +2847,7 @@ HARPY_POSES = [
 def draw_harpy(wings: float, face: str, drop: float, bits: int) -> Image.Image:
     """Gale Harpy: a round, fluffy storm bird with a teal crest, big wings and
     golden talons. It soars with its wings spread and dives with them folded."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 14, 3.6, SHADOW, outline=False)
     if face == "none":
@@ -2822,7 +2903,7 @@ GARGOYLE_POSES = [
 def draw_gargoyle(wings: float, face: str, claws: float, bits: int) -> Image.Image:
     """Stone Gargoyle: a horned, winged imp of grey stone that sits on a plinth
     like a statue, eyes shut, until someone comes close; awake, its eyes glow."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 18, 4.2, SHADOW, outline=False)
     rng = random.Random(bits * 7 + 1)
@@ -2887,7 +2968,7 @@ MIMIC_POSES = [
 def draw_mimic(lid: float, face: str, hop: float, bits: int) -> Image.Image:
     """Mimic: a treasure chest, wood with gold bands and a lock, just like a real
     one; until someone walks up, when its lid gapes open on teeth and a tongue."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 19, 4.2, SHADOW, outline=False)
     rng = random.Random(bits * 3 + 2)
@@ -2943,7 +3024,7 @@ SENTINEL_POSES = [
 def draw_sentinel(glow: float, face: str, bob: float, bits: int) -> Image.Image:
     """Ruin Sentinel: a floating ball of carved stone with one great glowing eye
     and two stones circling it. Its eye flares as it charges its beam."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 13, 3.4, SHADOW, outline=False)
     rng = random.Random(bits * 5 + 3)
@@ -2991,7 +3072,7 @@ WOLF_POSES = [
 def draw_wolf(stride: float, face: str, crouch: float, bits: int) -> Image.Image:
     """Snow Wolf: a fluffy white wolf with frosty blue markings, pointed ears
     and a bushy tail; it crouches low before it pounces."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 20, 4.4, SHADOW, outline=False)
     if face == "none":
@@ -3034,7 +3115,7 @@ WRAITH_POSES = [
 def draw_wraith(sway: float, face: str, fade: float, bits: int) -> Image.Image:
     """Frost Wraith: a floating ghost of ice mist with a tattered hem, frost
     shards circling it and pale glowing eyes."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 12, 3, SHADOW, outline=False)
     if face == "none":
@@ -3078,7 +3159,7 @@ WYRM_POSES = [
 def draw_wyrm(jaw: float, face: str, coil: float, bits: int) -> Image.Image:
     """Frost Wyrm: a coiled serpent dragon of pale blue scales, with icy horns,
     a frilled crest and small wings; it rears up and breathes frost."""
-    c = Canvas(SLIME_FRAME)
+    c = MonsterCanvas(SLIME_FRAME)
     cx, feet = 32, SLIME_FEET_Y
     c.ellipse(cx, feet + 1, 22, 4.6, SHADOW, outline=False)
     if face == "none":
@@ -3125,9 +3206,9 @@ FOREST_MONSTERS = {
 
 
 def build_monster_sheet(draw, poses) -> Image.Image:
-    sheet = Image.new("RGBA", (SLIME_FRAME * len(poses), SLIME_FRAME), (0, 0, 0, 0))
+    sheet = Image.new("RGBA", (MONSTER_PX * len(poses), MONSTER_PX), (0, 0, 0, 0))
     for col, pose in enumerate(poses):
-        sheet.paste(draw(*pose[1:]), (col * SLIME_FRAME, 0))
+        sheet.paste(draw(*pose[1:]), (col * MONSTER_PX, 0))
     return sheet
 
 
@@ -3146,7 +3227,7 @@ def build_slime_frames(sheet_res_path: str, poses=SLIME_POSES) -> str:
         lines += [
             f'[sub_resource type="AtlasTexture" id="frame_{col}"]',
             'atlas = ExtResource("1_sheet")',
-            f"region = Rect2({col * SLIME_FRAME}, 0, {SLIME_FRAME}, {SLIME_FRAME})",
+            f"region = Rect2({col * MONSTER_PX}, 0, {MONSTER_PX}, {MONSTER_PX})",
             "",
         ]
     blocks = []

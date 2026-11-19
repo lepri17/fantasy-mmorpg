@@ -21,6 +21,9 @@ const MonsterMoves := preload("res://scripts/enemies/monster_moves.gd")
 const CROWN := preload("res://assets/monsters/slime/crown.png")
 const SLIME_SCENE_PATH := "res://scenes/enemies/slime.tscn"
 const BAR_HEIGHT := 56.0
+## Monster frames are drawn at twice the design size (generate_assets.py
+## MONSTER_PX), so they are shown at half size: crisp on a phone's screen.
+const ART_SCALE := 0.5
 ## How often the path to a moving target is worked out again.
 const PATH_REFRESH_SECONDS := 0.25
 
@@ -105,7 +108,7 @@ var _is_returning: bool = false
 var _player: Node2D = null
 ## Attacker -> damage it has done: the slime goes after whoever hurt it most.
 var _threat: Dictionary = {}
-var _sprite_scale: Vector2 = Vector2.ONE
+var _sprite_scale: Vector2 = Vector2.ONE * ART_SCALE
 var _attack_count: int = 0
 var _casting_left: float = 0.0
 var _glow: Tween = null
@@ -549,6 +552,8 @@ func set_bar_visible(on: bool) -> void:
 ## For monster_moves.gd: raises the picture off the ground (a leap).
 func lift(height: float) -> void:
 	_sprite.position.y = _sprite_y - height
+	if _crown != null:  # the Slime King's crown goes up with him in a leap
+		_crown.position.y = -40.0 * size_scale - height
 
 
 ## For monster_moves.gd: off while it flies over things in a leap.
@@ -630,7 +635,7 @@ func make_elite() -> void:
 	drops = drops + elite.get("extra_drops", [])
 	knockback_resist = maxf(knockback_resist, float(elite.get("knockback_resist", 0.0)))
 	display_name = "Elite " + display_name
-	_sprite_scale = Vector2.ONE * size_scale * float(elite["scale"])
+	_sprite_scale = Vector2.ONE * ART_SCALE * size_scale * float(elite["scale"])
 	if is_node_ready():
 		_sprite.scale = _sprite_scale
 		_hp_bar.set_label("Lv.%d %s" % [level, display_name])
@@ -652,7 +657,7 @@ func _roll_elite() -> void:
 
 func _clear_elite() -> void:
 	is_elite = false
-	_sprite_scale = Vector2.ONE * size_scale
+	_sprite_scale = Vector2.ONE * ART_SCALE * size_scale
 	_sprite.scale = _sprite_scale
 	if _glow != null:
 		_glow.kill()
@@ -699,7 +704,7 @@ func _load_monster_data() -> void:
 
 ## Draws and sizes it by size_scale: sprite, body, health bar; a boss gets a crown.
 func _apply_size() -> void:
-	_sprite_scale = Vector2.ONE * size_scale
+	_sprite_scale = Vector2.ONE * ART_SCALE * size_scale
 	_sprite.scale = _sprite_scale
 	_hp_bar.position.y = -BAR_HEIGHT * size_scale
 	if size_scale != 1.0 and _collision.shape is CircleShape2D:
