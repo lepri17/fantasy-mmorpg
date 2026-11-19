@@ -273,6 +273,9 @@ func _bake(blend: Node2D) -> void:
 	picture.texture = viewport.get_texture()
 	picture.centered = false
 	picture.z_index = -9  # just over the ground, as the shapes were
+	# Shown at 1:1. Smooth filtering with the camera between pixels mixed in the
+	# clear pixels beside each band: a faint line of road along every border.
+	picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(picture)
 
 

@@ -74,12 +74,19 @@ func _edges_of(cell: Vector2i) -> void:
 			_band(cell, side, other)
 	for corner in CORNERS:
 		var other: int = _kind(cell + corner)
-		if (
-			_rank(other) > mine
-			and _kind(cell + Vector2i(corner.x, 0)) != other
-			and _kind(cell + Vector2i(0, corner.y)) != other
-		):
+		if _has_corner(cell, corner, other):
 			_round_corner(cell, corner, other)
+
+
+## True when the neighbour's ground touches this cell only at `corner`, so the
+## cell gets a rounded corner of it.
+func _has_corner(cell: Vector2i, corner: Vector2i, other: int) -> bool:
+	return (
+		_rank(other) > _rank(_kind(cell))
+		and _kind(cell + corner) == other
+		and _kind(cell + Vector2i(corner.x, 0)) != other
+		and _kind(cell + Vector2i(0, corner.y)) != other
+	)
 
 
 ## A wavy band of the neighbour's ground along one side of this cell. It runs
@@ -90,8 +97,8 @@ func _band(cell: Vector2i, side: Vector2i, other: int) -> void:
 	var inward := -Vector2(side)
 	var origin := Vector2(cell) * _size
 	var start: Vector2 = origin + Vector2(maxi(side.x, 0), maxi(side.y, 0)) * _size
-	var thin_start: bool = not _runs_on(cell - along_cell, side, other)
-	var thin_end: bool = not _runs_on(cell + along_cell, side, other)
+	var thin_start: bool = not _runs_on(cell, cell - along_cell, side, other)
+	var thin_end: bool = not _runs_on(cell, cell + along_cell, side, other)
 	var line: float = start.x if side.x != 0 else start.y  # the border's place, for its waves
 	var points := PackedVector2Array([start])
 	var rim := PackedVector2Array()
@@ -113,28 +120,41 @@ func _band(cell: Vector2i, side: Vector2i, other: int) -> void:
 	_add_shape(points, origin, other, cell + side, rim)
 
 
-## True when the border goes on through this cell too (or the neighbour's
-## ground fills it), so a band need not thin out there.
-func _runs_on(next: Vector2i, side: Vector2i, other: int) -> bool:
+## True when the border goes on through the next cell too (or the neighbour's
+## ground fills it, or turns round a corner there), so a band need not thin
+## out there. At an outer corner (where two roads meet, say) the band runs on
+## into the next cell's rounded corner; thinned out, it left the tile's square
+## corner showing.
+func _runs_on(cell: Vector2i, next: Vector2i, side: Vector2i, other: int) -> bool:
 	if _kind(next) < 0:
 		return true  # it runs off the map
-	return _kind(next) == other or _kind(next + side) == other
+	if _kind(next) == other or _kind(next + side) == other:
+		return true
+	return _has_corner(next, cell + side - next, other)
 
 
 ## A rounded corner of the neighbour's ground, where it touches this cell only
-## at a corner.
+## at a corner. It reaches as far as the bands beside it end, so they join it
+## without a step: across as far as the band in the cell above or below goes,
+## down or up as far as the band in the cell beside.
 func _round_corner(cell: Vector2i, corner: Vector2i, other: int) -> void:
 	var origin := Vector2(cell) * _size
 	var at: Vector2 = origin + Vector2(maxi(corner.x, 0), maxi(corner.y, 0)) * _size
 	var inward := -Vector2(corner)
-	var radius: float = 22.0 + 6.0 * sin(at.x * 0.031 + at.y * 0.047)
+	var fallback: float = 22.0 + 6.0 * sin(at.x * 0.031 + at.y * 0.047)
+	var across: float = fallback  # the band in the cell above or below runs down a side
+	if _rank(other) > _rank(_kind(cell + Vector2i(0, corner.y))):
+		across = _wave(at.y, at.x)
+	var down: float = fallback  # the band in the cell beside runs along a top or bottom
+	if _rank(other) > _rank(_kind(cell + Vector2i(corner.x, 0))):
+		down = _wave(at.x, at.y)
 	var points := PackedVector2Array([at])
 	var rim := PackedVector2Array()
 	for i in 9:
 		var angle: float = PI * 0.5 * i / 8.0
+		var bulge: float = 1.0 + 0.12 * sin(PI * i / 8.0)  # rounder in the middle, exact at the ends
 		var point: Vector2 = (
-			at + Vector2(cos(angle) * inward.x, sin(angle) * inward.y) * radius
-			* (1.0 + 0.1 * sin(i * 1.9 + at.x))
+			at + Vector2(cos(angle) * inward.x * across, sin(angle) * inward.y * down) * bulge
 		)
 		points.append(point)
 		rim.append(point)
