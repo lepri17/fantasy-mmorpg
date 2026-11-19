@@ -574,8 +574,8 @@ func _update_boss_bar() -> void:
 	var shown: Node2D = null
 	for boss in get_tree().get_nodes_in_group("bosses"):
 		var near: bool = boss.global_position.distance_to(_player.global_position) < BOSS_VIEW
-		if not boss.get("is_dead") and near:
-			shown = boss
+		if not boss.get("is_dead") and near and boss.is_in_group("enemies"):
+			shown = boss  # (not while it sleeps as a statue: a surprise)
 	_boss_bar.visible = shown != null
 	if shown != null:
 		var max_hp: int = maxi(1, int(shown.get("max_hp")))

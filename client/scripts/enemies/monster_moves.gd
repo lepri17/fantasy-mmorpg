@@ -15,6 +15,11 @@ extends Node
 ## - "swoop" (Gale Harpy, Stormcrest Roc): it flies up out of reach, glides
 ##   over to the hero (over cliffs and rifts too), marks a circle under itself
 ##   and dives onto it.
+## - "ambush" (Stone Gargoyle, Mimic): placed on a map, it sleeps as a statue or
+##   a chest: still, no health bar, nothing can aim at it. When the hero comes
+##   within "wake_range" (or hits it) it wakes with a warned blow all round it.
+## - "beam" (Ruin Sentinel): a lane lights up toward the hero, then its eye
+##   fires along it (beam_flash.gd), hitting him if he is still in the lane.
 ## slime.gd owns it (a child named "Moves") and asks it each frame: busy(),
 ## step() while busy, try_start() when a move could begin; damage_taken() when
 ## hit; on_death() when it dies; reset() when it comes back.
@@ -22,7 +27,11 @@ extends Node
 const Telegraph := preload("res://scripts/combat/telegraph.gd")
 const Burst := preload("res://scripts/combat/burst.gd")
 const LobbedRock := preload("res://scripts/combat/lobbed_rock.gd")
-const MOVES := ["shell", "leap", "split", "roll", "lob", "swoop"]
+const BeamFlash := preload("res://scripts/combat/beam_flash.gd")
+const MOVES := ["shell", "leap", "split", "roll", "lob", "swoop", "ambush", "beam"]
+## The moves it starts itself, in the order they are tried.
+const STARTED := ["shell", "leap", "roll", "swoop", "beam", "lob"]
+const STONE_CHIPS := Color(0.74, 0.75, 0.8)
 const DIVE_SECONDS := 0.18
 const FEATHERS := Color(0.84, 0.8, 0.96)
 const THROW_SECONDS := 0.4  # it stands still while it throws
@@ -36,6 +45,8 @@ var split: Dictionary = {}
 var roll: Dictionary = {}
 var lob: Dictionary = {}
 var swoop: Dictionary = {}
+var ambush: Dictionary = {}
+var beam: Dictionary = {}
 var _ready_in: float = 0.0
 var _shell_left: float = 0.0
 var _crouch_left: float = 0.0
@@ -51,6 +62,9 @@ var _glide_left: float = 0.0
 var _mark_left: float = 0.0
 var _dive_left: float = 0.0
 var _swoop_to := Vector2.ZERO
+var _dormant: bool = false
+var _beam_left: float = 0.0
+var _beam_dir := Vector2.RIGHT
 
 
 ## True if a monster's data asks for any of these moves.
@@ -66,6 +80,8 @@ func setup(owner_monster, data: Dictionary) -> void:
 	roll = data.get("roll", {})
 	lob = data.get("lob", {})
 	swoop = data.get("swoop", {})
+	ambush = data.get("ambush", {})
+	beam = data.get("beam", {})
 	reset()
 
 
@@ -76,7 +92,10 @@ func reset() -> void:
 	_air_left = 0.0
 	_roll_left = 0.0
 	_throw_left = 0.0
+	_beam_left = 0.0
 	_land_from_sky()
+	if not ambush.is_empty() and monster.get("respawns") != false:
+		_sleep()  # placed on the map (not summoned): a statue again
 
 
 ## In the middle of a move: the monster neither walks nor attacks by itself.
@@ -87,8 +106,15 @@ func busy() -> bool:
 		or _air_left > 0.0
 		or _roll_left > 0.0
 		or _throw_left > 0.0
+		or _beam_left > 0.0
+		or _dormant
 		or in_sky()
 	)
+
+
+## Asleep as a statue or a chest, waiting for the hero.
+func dormant() -> bool:
+	return _dormant
 
 
 ## Up in the air in a swoop: out of reach.
@@ -123,6 +149,8 @@ func try_start(target: Node2D, distance: float) -> bool:
 			_take_wing()
 		"lob":
 			_throw(target)
+		"beam":
+			_charge_beam(target)
 		_:
 			return false
 	return true
@@ -130,26 +158,20 @@ func try_start(target: Node2D, distance: float) -> bool:
 
 ## Which of its moves suits the hero's distance now ("" for none).
 func _move_for(distance: float) -> String:
-	if not shell.is_empty() and distance <= float(shell["range"]):
-		return "shell"
-	if not leap.is_empty() and _within(distance, leap):
-		return "leap"
-	if not roll.is_empty() and distance <= float(roll["range"]):
-		return "roll"
-	if not swoop.is_empty() and distance <= float(swoop["range"]):
-		return "swoop"
-	if not lob.is_empty() and _within(distance, lob):
-		return "lob"
+	for move in STARTED:
+		var data: Dictionary = get(move)
+		if data.is_empty():
+			continue
+		if float(data.get("min_range", 0.0)) <= distance and distance <= float(data["range"]):
+			return move
 	return ""
-
-
-static func _within(distance: float, move: Dictionary) -> bool:
-	return float(move["min_range"]) <= distance and distance <= float(move["range"])
 
 
 ## The movement while busy (none: it hides, crouches, or flies on its own).
 func step(delta: float) -> Vector2:
-	if _shell_left > 0.0:
+	if _dormant:
+		_watch()
+	elif _shell_left > 0.0:
 		_shell_left -= delta
 		if _shell_left <= 0.0:
 			_come_out()
@@ -170,11 +192,17 @@ func step(delta: float) -> Vector2:
 		_throw_left -= delta
 	elif in_sky():
 		return _swoop_step(delta)
+	elif _beam_left > 0.0:
+		_beam_left -= delta
+		if _beam_left <= 0.0:
+			_fire_beam()
 	return Vector2.ZERO
 
 
 ## Less damage while it hides in its shell.
 func damage_taken(amount: int) -> int:
+	if _dormant:
+		_wake()  # something hit the statue after all: it wakes up
 	if _shell_left > 0.0:
 		return maxi(1, roundi(amount * float(shell["damage_taken"])))
 	if _roll_left > 0.0:
@@ -362,3 +390,66 @@ func _back_down() -> void:
 	if not monster.is_in_group("enemies"):
 		monster.add_to_group("enemies")
 	monster.play_move("idle")
+
+
+func _sleep() -> void:
+	_dormant = true
+	monster.remove_from_group("enemies")
+	monster.set_bar_visible(false)
+	monster.play_move("sleep")
+
+
+## Asleep: wakes when a hero comes close.
+func _watch() -> void:
+	monster.play_move("sleep")  # (nothing else may change its pose while it sleeps)
+	for hero in monster.get_tree().get_nodes_in_group("player"):
+		if hero.get("is_dead"):
+			continue
+		var gap: float = hero.global_position.distance_to(monster.global_position)
+		if gap <= float(ambush["wake_range"]):
+			_wake()
+			return
+
+
+func _wake() -> void:
+	_dormant = false
+	monster.add_to_group("enemies")
+	monster.set_bar_visible(true)
+	monster.play_move("attack")
+	Burst.spawn(monster.get_parent(), monster.position, STONE_CHIPS, 14, 130.0)
+	monster.area_attack(
+		float(ambush["radius"]), float(ambush["warning_seconds"]), float(ambush["damage_multiplier"])
+	)
+
+
+func _charge_beam(target: Node2D) -> void:
+	_ready_in = float(beam["cooldown"])
+	_beam_left = float(beam["warning_seconds"])
+	_beam_dir = monster.global_position.direction_to(target.global_position)
+	monster.play_move("attack")
+	var lane: Node2D = Telegraph.new()
+	lane.radius = float(beam["width"]) * 0.5
+	lane.length = float(beam["length"])
+	lane.rotation = _beam_dir.angle()
+	lane.seconds = _beam_left
+	lane.z_index = -1
+	lane.position = monster.position
+	monster.get_parent().add_child(lane)
+
+
+func _fire_beam() -> void:
+	_beam_left = 0.0
+	var flash: Node2D = BeamFlash.new()
+	flash.position = monster.position
+	flash.rotation = _beam_dir.angle()
+	flash.length = float(beam["length"])
+	flash.width = float(beam["width"])
+	monster.get_parent().add_child(flash)
+	var target: Node2D = monster.chase_target()
+	if target == null:
+		return
+	var offset: Vector2 = target.global_position - monster.global_position
+	var along: float = offset.dot(_beam_dir)
+	var across: float = absf(offset.cross(_beam_dir))
+	if along >= 0.0 and along <= float(beam["length"]) and across <= float(beam["width"]) * 0.5 + 14.0:
+		monster.hit_hard(target, float(beam["damage_multiplier"]))

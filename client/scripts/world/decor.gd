@@ -1,14 +1,27 @@
 extends Node2D
 ## Small things that make a map look lived in (a maps.json object "decor":
 ## "kind" and "pos"): reeds, cattails, lily pads, flowers, pebbles, a log,
-## mushrooms, bones, crystals. Drawn here; nothing to bump into. Each is a little
+## mushrooms, bones, crystals, rubble, and broken pillars. Drawn here;
+## nothing to bump into, but for a pillar. Each is a little
 ## different (seeded by where it stands).
 
 const KINDS := [
-	"reeds", "cattails", "lily", "flowers", "pebbles", "log", "mushrooms", "bones", "crystals"
+	"reeds",
+	"cattails",
+	"lily",
+	"flowers",
+	"pebbles",
+	"log",
+	"mushrooms",
+	"bones",
+	"crystals",
+	"rubble",
+	"pillar"
 ]
 ## These lie flat, under the feet of whoever walks by; the rest stand up.
-const FLAT := ["lily", "flowers", "pebbles", "bones", "mushrooms"]
+const FLAT := ["lily", "flowers", "pebbles", "bones", "mushrooms", "rubble"]
+const MARBLE := Color(0.78, 0.79, 0.84)
+const MARBLE_DARK := Color(0.58, 0.59, 0.66)
 const STALK := Color(0.36, 0.6, 0.3)
 const STALK_LIGHT := Color(0.5, 0.74, 0.38)
 const CATTAIL := Color(0.45, 0.29, 0.17)
@@ -28,6 +41,15 @@ var kind: String = "reeds"
 func _ready() -> void:
 	if kind in FLAT:
 		z_index = -4
+	if kind == "pillar":  # this one is in the way
+		var body := StaticBody2D.new()
+		body.add_to_group("obstacles")
+		var shape := CollisionShape2D.new()
+		var circle := CircleShape2D.new()
+		circle.radius = 18.0
+		shape.shape = circle
+		body.add_child(shape)
+		add_child(body)
 
 
 func _draw() -> void:
@@ -52,6 +74,45 @@ func _draw() -> void:
 			_bones(rng)
 		"crystals":
 			_crystals(rng)
+		"rubble":
+			_rubble(rng)
+		"pillar":
+			_pillar(rng)
+
+
+## Broken blocks of old stone lying about (Moonfall Ruins).
+func _rubble(rng: RandomNumberGenerator) -> void:
+	for i in rng.randi_range(3, 5):
+		var spot := Vector2(rng.randf_range(-22.0, 22.0), rng.randf_range(-8.0, 8.0))
+		var size := Vector2(rng.randf_range(9.0, 16.0), rng.randf_range(6.0, 10.0))
+		draw_rect(Rect2(spot - size * 0.5 + Vector2(2, 3), size), Color(0, 0, 0, 0.18))
+		draw_rect(Rect2(spot - size * 0.5, size), MARBLE_DARK if i % 2 else MARBLE)
+
+
+## A broken pillar of the old temple, standing on its base.
+func _pillar(rng: RandomNumberGenerator) -> void:
+	var height: float = rng.randf_range(54.0, 92.0)
+	draw_set_transform(Vector2(0, 2), 0.0, Vector2(1.0, 0.4))
+	draw_circle(Vector2.ZERO, 26.0, Color(0, 0, 0, 0.22))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	draw_rect(Rect2(-22, -10, 44, 12), MARBLE_DARK)
+	draw_rect(Rect2(-16, -height, 32, height - 8), MARBLE)
+	for x in [-8.0, 0.0, 8.0]:  # fluting
+		draw_line(Vector2(x, -height + 4), Vector2(x, -12), MARBLE_DARK, 2.0)
+	var break_y: float = -height
+	draw_colored_polygon(
+		PackedVector2Array(
+			[
+				Vector2(-16, break_y),
+				Vector2(-6, break_y - rng.randf_range(6.0, 14.0)),
+				Vector2(4, break_y - 3),
+				Vector2(16, break_y - rng.randf_range(8.0, 16.0)),
+				Vector2(16, break_y + 2),
+				Vector2(-16, break_y + 2)
+			]
+		),
+		MARBLE
+	)
 
 
 ## A cluster of glowing crystal shards in the rock (Galeclaw Ridge).

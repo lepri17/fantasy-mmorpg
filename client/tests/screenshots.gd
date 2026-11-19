@@ -101,6 +101,7 @@ func _initialize() -> void:
 	await _boss_loot(player, hud)
 	await _lake(main, player)
 	await _ridge(main, player)
+	await _ruins(main, player)
 	GameScript.sky_seconds = -1.0
 	main.change_map("cellar")
 	await _frames(240)
@@ -301,6 +302,36 @@ func _ridge(main, player) -> void:
 	player.global_position = roc.global_position + Vector2(-250, -60)
 	await _frames(20)
 	await _shot("49_stormcrest_roc")
+
+
+## Moonfall Ruins: the temple with the sleeping Colossus, a gargoyle waking,
+## a Mimic biting and a Sentinel's beam.
+func _ruins(main, player) -> void:
+	main.change_map("ruins", "south")
+	await _frames(20)
+	var all: Array = main.map.get_children().filter(func(n): return n.get("monster_id") != null)
+	for monster in all:
+		monster.set_physics_process(false)
+	player.global_position = Vector2(1350, 960)
+	await _frames(20)
+	await _shot("50_temple")
+	for step in [["stone_gargoyle", Vector2(420, 840), Vector2(110, 30), "51_gargoyle_wakes"],
+			["mimic", Vector2(2440, 840), Vector2(-60, 10), "52_mimic"],
+			["ruin_sentinel", Vector2(2150, 1100), Vector2(0, -280), "53_sentinel_beam"]]:
+		var picked = null
+		for monster in all:
+			if monster.monster_id == step[0]:
+				if picked == null or monster.global_position.distance_to(step[1]) < (
+					picked.global_position.distance_to(step[1])
+				):
+					picked = monster
+		picked.set_physics_process(true)
+		picked.moves.set("_ready_in", 0.0)
+		player.hp = player.max_hp
+		player.global_position = picked.global_position + step[2]
+		await _frames(16)
+		await _shot(step[3])
+		picked.set_physics_process(false)
 
 
 func _nearest_enemy(monster_id: String, point: Vector2):

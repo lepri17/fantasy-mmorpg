@@ -541,6 +541,11 @@ func play_move(animation: String) -> void:
 		_sprite.play(animation)
 
 
+## For monster_moves.gd: hides the health bar and name of a sleeping statue.
+func set_bar_visible(on: bool) -> void:
+	_hp_bar.visible = on
+
+
 ## For monster_moves.gd: raises the picture off the ground (a leap).
 func lift(height: float) -> void:
 	_sprite.position.y = _sprite_y - height

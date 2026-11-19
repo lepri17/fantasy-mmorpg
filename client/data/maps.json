@@ -11,7 +11,8 @@
     "twilight",
     "grove",
     "sand",
-    "crag"
+    "crag",
+    "ruin"
   ],
   "legend": {
     "g": "grass",
@@ -22,7 +23,8 @@
     "t": "twilight",
     "e": "grove",
     "d": "sand",
-    "k": "crag"
+    "k": "crag",
+    "r": "ruin"
   },
   "maps": {
     "town": {
@@ -2858,6 +2860,10 @@
         "west": [
           230,
           960
+        ],
+        "north": [
+          1050,
+          260
         ]
       },
       "objects": [
@@ -2870,6 +2876,16 @@
           ],
           "to": "twilight",
           "spawn": "east"
+        },
+        {
+          "type": "exit",
+          "side": "north",
+          "span": [
+            920,
+            1180
+          ],
+          "to": "ruins",
+          "spawn": "south"
         },
         {
           "type": "water",
@@ -3833,7 +3849,7 @@
         "eeeeeeeeeeeeeeeeeeee",
         "eeeeeeeeppppeeeeeeee",
         "eeeeeeeeeppeeeeeeeee",
-        "eeeeeeeeeppeeeeeeeee",
+        "eeeeeeeeeppppppppppp",
         "eeeeeeeeeppeeeeeeeee",
         "eeeeeeeeeppeeeeeeeee",
         "eeeeeeeeeppeeeeeeeee",
@@ -3847,9 +3863,23 @@
         "south": [
           1280,
           1400
+        ],
+        "east": [
+          2330,
+          960
         ]
       },
       "objects": [
+        {
+          "type": "exit",
+          "side": "east",
+          "span": [
+            832,
+            1088
+          ],
+          "to": "ruins",
+          "spawn": "west"
+        },
         {
           "type": "monster",
           "id": "rootling",
@@ -4032,7 +4062,7 @@
           "type": "tree",
           "pos": [
             2422,
-            802
+            720
           ],
           "tint": [
             0.5,
@@ -4060,7 +4090,7 @@
           "type": "tree",
           "pos": [
             2434,
-            1040
+            1200
           ],
           "tint": [
             0.5,
@@ -4438,7 +4468,7 @@
           "type": "tree",
           "pos": [
             2057,
-            827
+            720
           ],
           "tint": [
             0.5,
@@ -4452,7 +4482,7 @@
           "type": "tree",
           "pos": [
             1794,
-            910
+            720
           ],
           "tint": [
             0.5,
@@ -4699,6 +4729,938 @@
         0.64
       ],
       "fireflies": 56
+    },
+    "ruins": {
+      "name": "Moonfall Ruins",
+      "levels": "Lv 16-20",
+      "teleport_price": 140,
+      "music": "music_twilight",
+      "shade": [
+        0.82,
+        0.84,
+        0.96
+      ],
+      "fireflies": 30,
+      "ground": [
+        "gggggggggggggggggggg",
+        "gggggggggggggggggggg",
+        "gggggggggggggggggggg",
+        "gggggggrrrrrrrgggggg",
+        "gggggggrrrrrrrrrrrrr",
+        "gggggggrrrrrrrgggggg",
+        "gggggggrrrrrrrgggggg",
+        "rrrrrrrrrrrrrrgggggg",
+        "gggggggrrrrrrrgggggg",
+        "ggggggggrrgggggggggg",
+        "ggggggggrrgggggggggg",
+        "ggggggggrrgggggggggg"
+      ],
+      "spawns": {
+        "default": [
+          1050,
+          1300
+        ],
+        "south": [
+          1050,
+          1300
+        ],
+        "west": [
+          230,
+          960
+        ]
+      },
+      "objects": [
+        {
+          "type": "exit",
+          "side": "south",
+          "span": [
+            920,
+            1180
+          ],
+          "to": "ridge",
+          "spawn": "north"
+        },
+        {
+          "type": "exit",
+          "side": "west",
+          "span": [
+            832,
+            1088
+          ],
+          "to": "grove",
+          "spawn": "east"
+        },
+        {
+          "type": "cliff",
+          "style": "wall",
+          "points": [
+            [
+              900,
+              300
+            ],
+            [
+              940,
+              300
+            ],
+            [
+              980,
+              292
+            ],
+            [
+              1020,
+              300
+            ],
+            [
+              1060,
+              300
+            ],
+            [
+              1100,
+              292
+            ],
+            [
+              1140,
+              300
+            ],
+            [
+              1180,
+              300
+            ],
+            [
+              1220,
+              292
+            ],
+            [
+              1260,
+              300
+            ],
+            [
+              1300,
+              300
+            ],
+            [
+              1300,
+              336
+            ],
+            [
+              900,
+              336
+            ]
+          ]
+        },
+        {
+          "type": "cliff",
+          "style": "wall",
+          "points": [
+            [
+              1420,
+              300
+            ],
+            [
+              1462,
+              292
+            ],
+            [
+              1504,
+              300
+            ],
+            [
+              1546,
+              300
+            ],
+            [
+              1588,
+              292
+            ],
+            [
+              1630,
+              300
+            ],
+            [
+              1672,
+              300
+            ],
+            [
+              1714,
+              292
+            ],
+            [
+              1756,
+              300
+            ],
+            [
+              1798,
+              300
+            ],
+            [
+              1840,
+              292
+            ],
+            [
+              1840,
+              336
+            ],
+            [
+              1420,
+              336
+            ]
+          ]
+        },
+        {
+          "type": "cliff",
+          "style": "wall",
+          "points": [
+            [
+              864,
+              300
+            ],
+            [
+              900,
+              300
+            ],
+            [
+              900,
+              860
+            ],
+            [
+              864,
+              860
+            ]
+          ]
+        },
+        {
+          "type": "cliff",
+          "style": "wall",
+          "points": [
+            [
+              864,
+              1060
+            ],
+            [
+              900,
+              1060
+            ],
+            [
+              900,
+              1150
+            ],
+            [
+              864,
+              1150
+            ]
+          ]
+        },
+        {
+          "type": "cliff",
+          "style": "wall",
+          "points": [
+            [
+              1804,
+              336
+            ],
+            [
+              1840,
+              336
+            ],
+            [
+              1840,
+              600
+            ],
+            [
+              1804,
+              600
+            ]
+          ]
+        },
+        {
+          "type": "cliff",
+          "style": "wall",
+          "points": [
+            [
+              1804,
+              720
+            ],
+            [
+              1840,
+              720
+            ],
+            [
+              1840,
+              1150
+            ],
+            [
+              1804,
+              1150
+            ]
+          ]
+        },
+        {
+          "type": "cliff",
+          "style": "wall",
+          "points": [
+            [
+              864,
+              1122
+            ],
+            [
+              908,
+              1130
+            ],
+            [
+              952,
+              1130
+            ],
+            [
+              996,
+              1122
+            ],
+            [
+              1040,
+              1130
+            ],
+            [
+              1040,
+              1166
+            ],
+            [
+              864,
+              1166
+            ]
+          ]
+        },
+        {
+          "type": "cliff",
+          "style": "wall",
+          "points": [
+            [
+              1260,
+              1130
+            ],
+            [
+              1301,
+              1130
+            ],
+            [
+              1343,
+              1122
+            ],
+            [
+              1384,
+              1130
+            ],
+            [
+              1426,
+              1130
+            ],
+            [
+              1467,
+              1122
+            ],
+            [
+              1509,
+              1130
+            ],
+            [
+              1550,
+              1130
+            ],
+            [
+              1591,
+              1122
+            ],
+            [
+              1633,
+              1130
+            ],
+            [
+              1674,
+              1130
+            ],
+            [
+              1716,
+              1122
+            ],
+            [
+              1757,
+              1130
+            ],
+            [
+              1799,
+              1130
+            ],
+            [
+              1840,
+              1122
+            ],
+            [
+              1840,
+              1166
+            ],
+            [
+              1260,
+              1166
+            ]
+          ]
+        },
+        {
+          "type": "cliff",
+          "style": "wall",
+          "points": [
+            [
+              260,
+              380
+            ],
+            [
+              303,
+              372
+            ],
+            [
+              347,
+              380
+            ],
+            [
+              390,
+              380
+            ],
+            [
+              433,
+              372
+            ],
+            [
+              477,
+              380
+            ],
+            [
+              520,
+              380
+            ],
+            [
+              520,
+              414
+            ],
+            [
+              260,
+              414
+            ]
+          ]
+        },
+        {
+          "type": "cliff",
+          "style": "wall",
+          "points": [
+            [
+              2120,
+              1232
+            ],
+            [
+              2163,
+              1240
+            ],
+            [
+              2207,
+              1240
+            ],
+            [
+              2250,
+              1232
+            ],
+            [
+              2293,
+              1240
+            ],
+            [
+              2337,
+              1240
+            ],
+            [
+              2380,
+              1232
+            ],
+            [
+              2380,
+              1274
+            ],
+            [
+              2120,
+              1274
+            ]
+          ]
+        },
+        {
+          "type": "cliff",
+          "style": "wall",
+          "points": [
+            [
+              2200,
+              300
+            ],
+            [
+              2236,
+              300
+            ],
+            [
+              2236,
+              520
+            ],
+            [
+              2200,
+              520
+            ]
+          ]
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1080,
+            520
+          ],
+          "kind": "pillar"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1620,
+            520
+          ],
+          "kind": "pillar"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1080,
+            900
+          ],
+          "kind": "pillar"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1620,
+            900
+          ],
+          "kind": "pillar"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            380,
+            560
+          ],
+          "kind": "pillar"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2380,
+            620
+          ],
+          "kind": "pillar"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1900,
+            1400
+          ],
+          "kind": "pillar"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            660,
+            1300
+          ],
+          "kind": "pillar"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2000,
+            200
+          ],
+          "kind": "pillar"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            300,
+            120
+          ],
+          "kind": "pillar"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1000,
+            700
+          ],
+          "kind": "rubble"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1700,
+            760
+          ],
+          "kind": "rubble"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1350,
+            1000
+          ],
+          "kind": "rubble"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            560,
+            900
+          ],
+          "kind": "rubble"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2050,
+            820
+          ],
+          "kind": "rubble"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1450,
+            200
+          ],
+          "kind": "rubble"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            700,
+            1450
+          ],
+          "kind": "rubble"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2300,
+            1450
+          ],
+          "kind": "rubble"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            150,
+            700
+          ],
+          "kind": "rubble"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1750,
+            1300
+          ],
+          "kind": "rubble"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            450,
+            1050
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2450,
+            400
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1980,
+            1050
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            200,
+            300
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1250,
+            760
+          ],
+          "kind": "bones"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2400,
+            1100
+          ],
+          "kind": "bones"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            320,
+            1350
+          ],
+          "kind": "bones"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            160,
+            1000
+          ],
+          "kind": "crystals"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2480,
+            700
+          ],
+          "kind": "crystals"
+        },
+        {
+          "type": "tree",
+          "pos": [
+            120,
+            160
+          ],
+          "scale": 1.1,
+          "tint": [
+            0.78,
+            0.82,
+            0.92,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2460,
+            120
+          ],
+          "scale": 1.1,
+          "tint": [
+            0.78,
+            0.82,
+            0.92,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            120,
+            1260
+          ],
+          "scale": 1.1,
+          "tint": [
+            0.78,
+            0.82,
+            0.92,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2470,
+            1010
+          ],
+          "scale": 1.1,
+          "tint": [
+            0.78,
+            0.82,
+            0.92,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1960,
+            130
+          ],
+          "scale": 1.1,
+          "tint": [
+            0.78,
+            0.82,
+            0.92,
+            1.0
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            600,
+            120
+          ],
+          "scale": 1.1,
+          "tint": [
+            0.78,
+            0.82,
+            0.92,
+            1.0
+          ]
+        },
+        {
+          "type": "shrine",
+          "pos": [
+            1400,
+            1330
+          ],
+          "gift": "heal"
+        },
+        {
+          "type": "shrine",
+          "pos": [
+            700,
+            960
+          ],
+          "gift": "power"
+        },
+        {
+          "type": "chest",
+          "pos": [
+            2420,
+            230
+          ],
+          "level": 19
+        },
+        {
+          "type": "chest",
+          "pos": [
+            150,
+            1420
+          ],
+          "level": 18
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1180,
+            460
+          ],
+          "id": "stone_gargoyle"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1520,
+            1040
+          ],
+          "id": "stone_gargoyle"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            420,
+            840
+          ],
+          "id": "stone_gargoyle"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2000,
+            640
+          ],
+          "id": "stone_gargoyle"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1950,
+            1300
+          ],
+          "id": "stone_gargoyle"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            620,
+            240
+          ],
+          "id": "mimic"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2300,
+            1400
+          ],
+          "id": "mimic"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2440,
+            840
+          ],
+          "id": "mimic"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            600,
+            640
+          ],
+          "id": "ruin_sentinel"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2100,
+            440
+          ],
+          "id": "ruin_sentinel"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2150,
+            1100
+          ],
+          "id": "ruin_sentinel"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            480,
+            1200
+          ],
+          "id": "ruin_sentinel"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1350,
+            680
+          ],
+          "id": "ruin_colossus"
+        }
+      ]
     }
   }
 }

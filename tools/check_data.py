@@ -535,7 +535,8 @@ OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc", "torch", "glowcap", 
                 "shrine"}
 GLOW_COLORS = {"cyan", "teal", "violet"}
 DECOR_KINDS = {"reeds", "cattails", "lily", "flowers", "pebbles", "log", "mushrooms", "bones",
-               "crystals"}  # decor.gd
+               "crystals", "rubble", "pillar"}  # decor.gd
+CLIFF_STYLES = {"rock", "wall"}  # cliff.gd
 WATER_STYLES = {"water", "chasm"}  # water.gd
 CLIFF_HEIGHT = 56  # cliff.gd HEIGHT: the rock face below a cliff's top
 SHRINE_GIFTS = {"heal", "power"}  # shrine.gd
@@ -554,6 +555,8 @@ MONSTER_MOVES = {
     "lob": ("range", "min_range", "flight_seconds", "radius", "damage_multiplier", "cooldown"),
     "swoop": ("range", "height", "rise_seconds", "glide_speed", "glide_seconds", "warning_seconds",
               "radius", "damage_multiplier", "cooldown"),
+    "ambush": ("wake_range", "radius", "warning_seconds", "damage_multiplier"),
+    "beam": ("range", "length", "width", "warning_seconds", "damage_multiplier", "cooldown"),
 }
 SERVICES = {"shop", "heal", "storage", "teleport", "quests"}
 
@@ -728,6 +731,8 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                 if not (isinstance(top, list) and len(top) >= 3
                         and all(inside(point, "cliff point") for point in top)):
                     error(f"{where}: a cliff needs at least three 'points' on the map")
+                if thing.get("style", "rock") not in CLIFF_STYLES:
+                    error(f"{where}: cliff style must be one of {sorted(CLIFF_STYLES)}")
                 continue
             if kind not in OBJECT_TYPES:
                 error(f"{where}: object type '{kind}' is not one of {sorted(OBJECT_TYPES)}")

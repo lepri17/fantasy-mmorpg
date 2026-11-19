@@ -93,6 +93,7 @@ func _add_object(thing: Dictionary) -> void:
 		return
 	if thing["type"] == "cliff":
 		var cliff = Cliff.new()
+		cliff.style = thing.get("style", "rock")
 		cliff.points = _shape(thing["points"])
 		add_child(cliff)
 		return

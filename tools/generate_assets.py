@@ -1705,7 +1705,7 @@ def build_icon(sheet: Image.Image) -> Image.Image:
 TILE = 128
 # Ground kinds in tiles.png, two seamless variants each, in this column order.
 # client/data/maps.json names them in "tile_kinds".
-TILE_KINDS = ["grass", "path", "stone", "forest", "cellar", "twilight", "grove", "sand", "crag"]
+TILE_KINDS = ["grass", "path", "stone", "forest", "cellar", "twilight", "grove", "sand", "crag", "ruin"]
 
 
 def _seamless(size: int, base, paint, seed: int) -> Image.Image:
@@ -1869,6 +1869,32 @@ def _paint_crag(draw, rng, everywhere, size, scale):
     _tufts(draw, rng, everywhere, size, scale, 5, [(150, 150, 96, 255), (124, 128, 82, 255)])
 
 
+def _paint_ruin(draw, rng, everywhere, size, scale):
+    """Moonfall Ruins: old flagstones, worn and cracked, grass in the joints."""
+    rows = 4
+    step = size / rows
+    for row in range(rows):
+        shift = step * 0.5 if row % 2 else 0
+        for col in range(-1, rows + 1):
+            x0 = (col * step + shift + 2) * scale
+            y0 = (row * step + 2) * scale
+            x1, y1 = x0 + (step - 4) * scale, y0 + (step - 4) * scale
+            color = rng.choice([(170, 172, 180, 255), (158, 160, 170, 255), (180, 180, 186, 255),
+                                (150, 154, 160, 255)])
+            everywhere(lambda ox, oy: draw.rounded_rectangle(
+                [ox + x0, oy + y0, ox + x1, oy + y1], radius=3 * scale, fill=color,
+                outline=(112, 116, 120, 255), width=scale))
+    for _ in range(3):  # cracks
+        x, y = rng.uniform(0, size), rng.uniform(0, size)
+        points = [(x, y), (x + rng.uniform(-10, 10), y + rng.uniform(5, 12)),
+                  (x + rng.uniform(-14, 14), y + rng.uniform(12, 20))]
+        scaled = [(px * scale, py * scale) for px, py in points]
+        everywhere(lambda ox, oy: draw.line([(ox + px, oy + py) for px, py in scaled],
+                                            fill=(110, 112, 118, 255), width=int(1.4 * scale)))
+    _blobs(draw, rng, everywhere, size, scale, 6, [(108, 150, 90, 255), (92, 134, 80, 255)], (4, 9), (2, 4))
+    _tufts(draw, rng, everywhere, size, scale, 7, [(88, 140, 78, 255), (120, 170, 96, 255)])
+
+
 def build_tiles() -> Image.Image:
     """tiles.png: a row of 128 px ground tiles, TILE_KINDS order, two variants each."""
     makers = {
@@ -1881,6 +1907,7 @@ def build_tiles() -> Image.Image:
         "grove": lambda seed: _seamless(TILE, (46, 88, 60, 255), _paint_grove, seed),
         "sand": lambda seed: _seamless(TILE, (228, 200, 144, 255), _paint_sand, seed),
         "crag": lambda seed: _seamless(TILE, (142, 132, 120, 255), _paint_crag, seed),
+        "ruin": lambda seed: _seamless(TILE, (122, 128, 128, 255), _paint_ruin, seed),
     }
     sheet = Image.new("RGBA", (TILE * 2 * len(TILE_KINDS), TILE), (0, 0, 0, 0))
     for i, kind in enumerate(TILE_KINDS):
@@ -2668,6 +2695,176 @@ def draw_harpy(wings: float, face: str, drop: float, bits: int) -> Image.Image:
     return c.finish()
 
 
+STONE = (150, 152, 160, 255)
+STONE_DARK = (112, 114, 124, 255)
+STONE_LIGHT = (186, 188, 196, 255)
+EMBER_EYE = (255, 170, 70, 255)
+# (animation, wings open 0..1, face: "statue" asleep / normal / angry / dead / none, claws up, bits)
+GARGOYLE_POSES = [
+    ("sleep", 0.0, "statue", 0.0, 0),
+    ("idle", 0.6, "normal", 0.0, 0),
+    ("idle", 0.8, "normal", 1.0, 0),
+    ("attack", 1.0, "angry", 1.0, 0),
+    ("attack", 1.0, "angry", 0.0, 0),
+    ("die", 0.4, "dead", 0.0, 2),
+    ("die", 0.2, "dead", 0.0, 5),
+    ("die", 0.0, "none", 0.0, 8),
+]
+
+
+def draw_gargoyle(wings: float, face: str, claws: float, bits: int) -> Image.Image:
+    """Stone Gargoyle: a horned, winged imp of grey stone that sits on a plinth
+    like a statue, eyes shut, until someone comes close; awake, its eyes glow."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 18, 4.2, SHADOW, outline=False)
+    rng = random.Random(bits * 7 + 1)
+    if face == "none":
+        for _ in range(bits):
+            c.polygon(_chip(cx + rng.uniform(-18, 18), feet - rng.uniform(1, 8), rng), STONE)
+        return c.finish()
+    if face == "statue":
+        c.rect(cx - 15, feet - 7, cx + 15, feet + 1, STONE_DARK, radius=1.5)  # the plinth
+    by = feet - (19 if face == "statue" else 16)
+    for side in (-1, 1):  # wings
+        spread = 8 + wings * 14
+        c.polygon([(cx + side * 6, by - 8), (cx + side * (8 + spread), by - 16 - wings * 6),
+                   (cx + side * (6 + spread), by + 2), (cx + side * 8, by + 6)], STONE_DARK)
+    c.ellipse(cx, by + 4, 11, 10, STONE)  # body, crouched
+    for side in (-1, 1):  # arms and claws
+        hand = (cx + side * 11, by + 6 - claws * 12)
+        c.line([(cx + side * 8, by + 1), hand], fill=STONE_DARK, width=3.4)
+        for k in (-1, 0, 1):
+            c.line([hand, (hand[0] + side * 2 + k * 1.6, hand[1] - 3.5)], fill=STONE_LIGHT, width=1.2)
+    hy = by - 10
+    for side in (-1, 1):  # horns
+        c.polygon([(cx + side * 4, hy - 5), (cx + side * 9, hy - 14), (cx + side * 7.5, hy - 3)], STONE_LIGHT)
+    c.ellipse(cx, hy, 9, 8, STONE)
+    if face == "statue":
+        for side in (-1, 1):  # eyes shut, carved
+            c.line([(cx + side * 2, hy - 0.5), (cx + side * 5.5, hy - 0.5)], fill=STONE_DARK, width=1.4)
+        c.line([(cx - 9, by - 2), (cx - 4, by + 4), (cx - 6, by + 9)], fill=STONE_DARK, width=1.0)
+    else:
+        _eyes(c, cx, hy - 0.5, 3.4, face, 0.8, color=EMBER_EYE)
+    c.line(arc_points(cx, hy + 3.2, 3.4, 1.8, 20, 160, 8), fill=STONE_DARK, width=1.2)
+    c.ellipse(cx - 4, by - 1, 3, 1.6, STONE_LIGHT, outline=False)
+    for _ in range(bits):
+        c.polygon(_chip(cx + rng.uniform(-20, 20), feet - rng.uniform(0, 6), rng), STONE)
+    return c.finish()
+
+
+def _chip(x, y, rng):
+    """A little broken bit of stone."""
+    r = rng.uniform(2.0, 3.6)
+    return [(x - r, y), (x - r * 0.3, y - r), (x + r, y - r * 0.4), (x + r * 0.6, y + r * 0.6)]
+
+
+MIMIC_WOOD = (150, 98, 56, 255)
+MIMIC_WOOD_DARK = (110, 70, 40, 255)
+MIMIC_GOLD = (246, 200, 84, 255)
+MIMIC_MOUTH = (90, 30, 44, 255)
+MIMIC_TONGUE = (226, 96, 110, 255)
+# (animation, lid open 0..1, face, hop, bits)
+MIMIC_POSES = [
+    ("sleep", 0.0, "normal", 0.0, 0),
+    ("idle", 0.45, "normal", 0.0, 0),
+    ("idle", 0.35, "normal", 2.0, 0),
+    ("attack", 0.9, "angry", -2.0, 0),
+    ("attack", 1.0, "angry", 0.0, 0),
+    ("die", 0.6, "dead", 0.0, 3),
+    ("die", 0.8, "dead", 0.0, 6),
+    ("die", 0.0, "none", 0.0, 8),
+]
+
+
+def draw_mimic(lid: float, face: str, hop: float, bits: int) -> Image.Image:
+    """Mimic: a treasure chest, wood with gold bands and a lock, just like a real
+    one; until someone walks up, when its lid gapes open on teeth and a tongue."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 19, 4.2, SHADOW, outline=False)
+    rng = random.Random(bits * 3 + 2)
+    if face == "none":
+        for _ in range(bits):
+            x, y = cx + rng.uniform(-18, 18), feet - rng.uniform(1, 7)
+            c.rect(x - 4, y - 1.5, x + 4, y + 1.5, MIMIC_WOOD if rng.random() < 0.7 else MIMIC_GOLD, radius=0.8)
+        return c.finish()
+    base = feet - 2 - hop
+    c.rect(cx - 16, base - 16, cx + 16, base, MIMIC_WOOD, radius=2)  # the box
+    for x in (-11, 8):
+        c.rect(cx + x, base - 16, cx + x + 4, base, MIMIC_GOLD, radius=0.8, outline=False)
+    if lid > 0.05:  # open: the mouth with teeth and tongue
+        gap = 4 + lid * 11
+        c.rect(cx - 15, base - 16 - gap, cx + 15, base - 15, MIMIC_MOUTH, radius=2)
+        c.ellipse(cx, base - 16 - gap * 0.35, 8, gap * 0.3 + 1, MIMIC_TONGUE, outline=False)
+        for k in range(6):
+            x = cx - 13 + k * 5.2
+            c.polygon([(x, base - 16), (x + 2.6, base - 16 - 4), (x + 5.2, base - 16)], (250, 248, 236, 255))
+            c.polygon([(x, base - 16 - gap), (x + 2.6, base - 16 - gap + 4), (x + 5.2, base - 16 - gap)],
+                      (250, 248, 236, 255))
+        top = base - 16 - gap
+    else:
+        top = base - 16
+    c.rect(cx - 17, top - 9, cx + 17, top, MIMIC_WOOD, radius=3)  # the lid
+    for x in (-11, 8):
+        c.rect(cx + x, top - 9, cx + x + 4, top, MIMIC_GOLD, radius=0.8, outline=False)
+    if lid > 0.05:
+        _eyes(c, cx, top - 4.5, 5.5, face, 0.8, color=(255, 236, 120, 255))
+    else:
+        c.rect(cx - 3, top - 3, cx + 3, top + 4, MIMIC_GOLD, radius=1)  # the lock
+    for _ in range(bits):
+        x, y = cx + rng.uniform(-20, 20), feet - rng.uniform(0, 5)
+        c.rect(x - 3, y - 1, x + 3, y + 1, MIMIC_WOOD, radius=0.6)
+    return c.finish()
+
+
+SENTINEL_STONE = (120, 128, 150, 255)
+SENTINEL_DARK = (88, 94, 116, 255)
+SENTINEL_GLOW = (110, 236, 255, 255)
+# (animation, eye glow 0..1, face, bob, bits)
+SENTINEL_POSES = [
+    ("idle", 0.4, "normal", 0.0, 0),
+    ("idle", 0.5, "normal", 2.0, 0),
+    ("attack", 0.9, "angry", 0.0, 0),
+    ("attack", 1.0, "angry", -1.0, 0),
+    ("die", 0.2, "dead", 3.0, 3),
+    ("die", 0.0, "dead", 6.0, 6),
+    ("die", 0.0, "none", 0.0, 8),
+]
+
+
+def draw_sentinel(glow: float, face: str, bob: float, bits: int) -> Image.Image:
+    """Ruin Sentinel: a floating ball of carved stone with one great glowing eye
+    and two stones circling it. Its eye flares as it charges its beam."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 13, 3.4, SHADOW, outline=False)
+    rng = random.Random(bits * 5 + 3)
+    if face == "none":
+        for _ in range(bits):
+            c.polygon(_chip(cx + rng.uniform(-16, 16), feet - rng.uniform(1, 7), rng), SENTINEL_STONE)
+        return c.finish()
+    cy = feet - 26 + bob
+    for side in (-1, 1):  # the circling stones
+        c.ellipse(cx + side * 19, cy + side * 4, 4, 3.4, SENTINEL_DARK)
+    c.ellipse(cx, cy, 15, 15, SENTINEL_STONE)
+    c.line(arc_points(cx, cy, 11.5, 11.5, 200, 340, 12), fill=SENTINEL_DARK, width=1.6)  # carved rings
+    c.line(arc_points(cx, cy, 11.5, 11.5, 20, 160, 12), fill=SENTINEL_DARK, width=1.6)
+    if face == "dead":
+        c.line([(cx - 5, cy - 5), (cx + 5, cy + 5)], width=1.8)
+        c.line([(cx - 5, cy + 5), (cx + 5, cy - 5)], width=1.8)
+    else:
+        c.ellipse(cx, cy, 8 + glow * 2, 8 + glow * 2, (SENTINEL_GLOW[0], SENTINEL_GLOW[1], SENTINEL_GLOW[2], int(90 * glow)), outline=False)
+        c.ellipse(cx, cy, 7, 7, (236, 248, 255, 255))
+        c.ellipse(cx, cy, 4, 4, SENTINEL_GLOW, outline=False)
+        c.ellipse(cx, cy, 1.8, 1.8, (30, 60, 80, 255), outline=False)
+        if face == "angry":
+            c.line([(cx - 8, cy - 9), (cx + 8, cy - 9)], fill=SENTINEL_DARK, width=2.2)
+    for _ in range(bits):
+        c.polygon(_chip(cx + rng.uniform(-18, 18), feet - rng.uniform(0, 6), rng), SENTINEL_STONE)
+    return c.finish()
+
+
 FOREST_MONSTERS = {
     "boar": (draw_boar, BOAR_POSES),
     "wisp": (draw_wisp, WISP_POSES),
@@ -2679,6 +2876,9 @@ FOREST_MONSTERS = {
     "beetle": (draw_beetle, BEETLE_POSES),
     "imp": (draw_imp, IMP_POSES),
     "harpy": (draw_harpy, HARPY_POSES),
+    "gargoyle": (draw_gargoyle, GARGOYLE_POSES),
+    "mimic": (draw_mimic, MIMIC_POSES),
+    "sentinel": (draw_sentinel, SENTINEL_POSES),
 }
 
 
