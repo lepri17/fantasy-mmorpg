@@ -102,6 +102,7 @@ func _initialize() -> void:
 	await _lake(main, player)
 	await _ridge(main, player)
 	await _ruins(main, player)
+	await _frost(main, player)
 	GameScript.sky_seconds = -1.0
 	main.change_map("cellar")
 	await _frames(240)
@@ -345,6 +346,43 @@ func _ruins(main, player) -> void:
 	await _shot("54_moonfall_set")
 	player.stats.equipment = saved_gear
 	player.call("_gear_changed")
+
+
+## Frostfang Hollow: the frozen pond in falling snow, an icicle dropping in the
+## gorge, a pack of Snow Wolves and the Frost Wyrm.
+func _frost(main, player) -> void:
+	main.change_map("frostfang", "south")
+	await _frames(20)
+	var all: Array = main.map.get_children().filter(func(n): return n.get("monster_id") != null)
+	for monster in all:
+		monster.set_physics_process(false)
+	player.hp = player.max_hp
+	player.global_position = Vector2(1300, 1010)
+	await _frames(30)
+	await _shot("55_frozen_pond")
+	player.global_position = Vector2(1920, 760)
+	for _i in 240:
+		await process_frame
+		if not get_nodes_in_group("icefalls")[0].get_parent().get_children().filter(
+			func(n): return n.get("damage") != null and n.has_method("_shatter")
+		).is_empty():
+			break
+	await _frames(14)
+	await _shot("56_icicle_gorge")
+	player.hp = player.max_hp
+	player.global_position = Vector2(560, 880)
+	for monster in all:
+		var pack: bool = monster.global_position.distance_to(Vector2(400, 920)) < 200.0
+		if monster.monster_id == "snow_wolf" and pack:
+			monster.set_physics_process(true)
+	await _frames(30)
+	await _shot("57_wolf_pack")
+	for monster in all:
+		monster.set_physics_process(false)
+	player.hp = player.max_hp
+	player.global_position = Vector2(1700, 230)
+	await _frames(20)
+	await _shot("58_frost_wyrm")
 
 
 func _nearest_enemy(monster_id: String, point: Vector2):

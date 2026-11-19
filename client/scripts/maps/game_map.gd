@@ -14,6 +14,7 @@ const Glowcap := preload("res://scripts/world/glowcap.gd")
 const EdgeExit := preload("res://scripts/maps/edge_exit.gd")
 const Water := preload("res://scripts/world/water.gd")
 const Cliff := preload("res://scripts/world/cliff.gd")
+const Icefall := preload("res://scripts/world/icefall.gd")
 const Decor := preload("res://scripts/world/decor.gd")
 const Chest := preload("res://scripts/world/chest.gd")
 const Shrine := preload("res://scripts/world/shrine.gd")
@@ -47,6 +48,8 @@ func _ready() -> void:
 		_add_object(thing)
 	if int(data.get("fireflies", 0)) > 0:
 		_add_fireflies(int(data["fireflies"]))
+	if int(data.get("snowfall", 0)) > 0:
+		_add_snowfall(int(data["snowfall"]))
 	call_deferred("_bake_navigation")
 	if data.has("dungeon"):
 		var run: Node = DungeonRun.new()
@@ -90,6 +93,14 @@ func _add_object(thing: Dictionary) -> void:
 		return
 	if thing["type"] == "water":
 		_add_water(thing)
+		return
+	if thing["type"] == "icefall":
+		var gorge = Icefall.new()
+		var box: Array = thing["area"]
+		gorge.area = Rect2(box[0], box[1], box[2], box[3])
+		gorge.every = float(thing.get("every", 2.2))
+		gorge.damage = int(thing.get("damage", 70))
+		add_child(gorge)
 		return
 	if thing["type"] == "cliff":
 		var cliff = Cliff.new()
@@ -161,6 +172,29 @@ static func _shape(points: Array) -> PackedVector2Array:
 	for point in points:
 		shape.append(Vector2(point[0], point[1]))
 	return shape
+
+
+## Snow drifting down over the whole map (maps.json "snowfall": how many flakes).
+func _add_snowfall(count: int) -> void:
+	var flakes := CPUParticles2D.new()
+	flakes.name = "Snowfall"
+	flakes.amount = count
+	flakes.lifetime = 9.0
+	flakes.preprocess = 9.0
+	flakes.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	var size: Vector2 = map_size()
+	flakes.position = Vector2(size.x * 0.5, -40.0)
+	flakes.emission_rect_extents = Vector2(size.x * 0.6, 20.0)
+	flakes.direction = Vector2(0.3, 1.0)
+	flakes.spread = 15.0
+	flakes.gravity = Vector2.ZERO
+	flakes.initial_velocity_min = 120.0
+	flakes.initial_velocity_max = 190.0
+	flakes.scale_amount_min = 1.5
+	flakes.scale_amount_max = 3.5
+	flakes.color = Color(1, 1, 1, 0.85)
+	flakes.z_index = 5
+	add_child(flakes)
 
 
 ## Fireflies drifting over the whole map (maps.json "fireflies": how many).

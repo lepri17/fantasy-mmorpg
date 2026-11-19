@@ -5,7 +5,8 @@ extends Node2D
 ## and face, in the "obstacles" group, so monsters path round it too. Between
 ## cliffs are the narrow passes of Galeclaw Ridge.
 ## "style": "wall" makes it a stretch of old ruined wall instead (Moonfall
-## Ruins): lower, of grey blocks laid in courses.
+## Ruins): lower, of grey blocks laid in courses. "ice": a cliff of snow and
+## blue ice (Frostfang Hollow).
 
 const HEIGHT := 56.0  # a rock cliff's face; check_data.py uses it for both
 const SHADOW := Color(0, 0, 0, 0.18)
@@ -27,10 +28,19 @@ const STYLES := {
 		"face_dark": Color(0.36, 0.37, 0.43),
 		"edge": Color(0.88, 0.88, 0.92),
 		"moss": Color(0.44, 0.58, 0.38)
+	},
+	"ice": {
+		"height": 56.0,
+		"top": Color(0.9, 0.94, 1.0),
+		"top_light": Color(0.97, 0.98, 1.0),
+		"face": Color(0.6, 0.77, 0.92),
+		"face_dark": Color(0.43, 0.61, 0.8),
+		"edge": Color(1, 1, 1),
+		"moss": Color(0.8, 0.9, 1.0)
 	}
 }
 
-## "rock", or "wall" (ruins).
+## "rock", "wall" (ruins) or "ice".
 var style: String = "rock"
 var points := PackedVector2Array()
 var _block := PackedVector2Array()  # the top and the face together

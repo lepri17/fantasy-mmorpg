@@ -8,7 +8,8 @@ extends Node2D
 ## it too. All drawn here: a sandy rim, shallow and deep water, the islands,
 ## ripples that come and go, and the bridges.
 ## "style": "chasm" makes it a deep rift in the rock instead (Galeclaw Ridge):
-## a dark drop with wisps of mist, crossed by rope bridges.
+## a dark drop with wisps of mist, crossed by rope bridges. "frozen" makes it a
+## frozen pond (Frostfang Hollow): ice to walk on, so no walls at all.
 
 const RIM := Color(0.86, 0.78, 0.56)
 const SHALLOW := Color(0.38, 0.68, 0.8)
@@ -27,8 +28,16 @@ const CHASM := {
 	"ripple": Color(0.8, 0.82, 0.95),
 	"rail": Color(0.78, 0.68, 0.46)
 }
+const FROZEN := {
+	"rim": Color(0.93, 0.96, 1.0),
+	"shallow": Color(0.74, 0.87, 0.96),
+	"deep": Color(0.65, 0.81, 0.93),
+	"edge": Color(1, 1, 1, 0.85),
+	"ripple": Color.WHITE,
+	"rail": PLANK_DARK
+}
 
-## "water", or "chasm" (a rift in the rock).
+## "water", "chasm" (a rift in the rock) or "frozen" (ice to walk on).
 var style: String = "water"
 var points := PackedVector2Array()
 ## Rect2 boxes of planks across the water.
@@ -47,15 +56,22 @@ var _colors: Dictionary = {}
 func _ready() -> void:
 	add_to_group("water")
 	z_index = -5  # on the ground, under everyone walking by
-	_colors = CHASM if style == "chasm" else {
+	if style == "frozen":
+		_colors = FROZEN
+	elif style == "chasm":
+		_colors = CHASM
+	else:
+		_colors = {
 		"rim": RIM, "shallow": SHALLOW, "deep": DEEP, "edge": EDGE, "ripple": Color.WHITE,
-		"rail": PLANK_DARK
-	}
+			"rail": PLANK_DARK
+		}
 	_rim = Geometry2D.offset_polygon(points, 16.0)
 	_deep = Geometry2D.offset_polygon(points, -40.0)
 	for island in islands:
 		_shoals.append_array(Geometry2D.offset_polygon(island, 30.0))
 	_place_ripples()
+	if style == "frozen":
+		return  # ice to walk on: no walls
 	var body := StaticBody2D.new()
 	body.add_to_group("obstacles")
 	for piece in wall_pieces():
@@ -98,6 +114,8 @@ func wall_pieces() -> Array:
 
 ## True if a point (map pixels) is in the water: not on a bridge or an island.
 func is_wet(point: Vector2) -> bool:
+	if style == "frozen":
+		return false
 	for bridge in bridges:
 		if (bridge as Rect2).has_point(point):
 			return false

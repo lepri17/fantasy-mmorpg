@@ -612,6 +612,36 @@ LOOK_VARIANTS = {
         "leather_boots", "boots", ["boots", "boots_far", "boots_near"], [("hue", 20, 160)]
     ),
     "elderwood_cape": ("red_cape", "cape", ["cape", "scarf"], [("hue", 355, 160)]),
+    # The Moonfall tier (level 18, Moonfall Ruins): moonlit indigo and silver.
+    "moonfall_blade": (
+        "training_sword", "sword", ["sword_back", "sword_body", "sword_front"],
+        [("steel", (190, 205, 255), 0.45), ("hue", 30, 250)],
+    ),
+    "moonfall_bow": (
+        "short_bow", "bow", ["sword_back", "sword_body", "sword_front", "quiver"], [("hue", 26, 250)]
+    ),
+    "moonfall_staff": (
+        "oak_staff", "staff", ["sword_back", "sword_body", "sword_front"], [("hue", 197, 250)]
+    ),
+    "moonfall_plate": (
+        "blue_plate", "armor", ["armor", "armor_arms", "armor_arm_far", "pauldrons"], [("hue", 220, 268)],
+    ),
+    "moonfall_vest": ("ranger_vest", "vest", ["vest"], [("hue", 26, 250)]),
+    "moonfall_robe": (
+        "violet_robe", "robe", ["robe", "robe_arms", "robe_arm_far"], [("hue", 261, 228)]
+    ),
+    "moonfall_band": ("red_headband", "headband", ["headband", "tails"], [("hue", 355, 250)]),
+    "moonfall_hood": ("green_hood", "hood", ["hood"], [("hue", 131, 250)]),
+    "moonfall_hat": ("sage_hat", "hat", ["hat"], [("hue", 261, 228)]),
+    "moonfall_gloves": (
+        "leather_gloves", "gloves",
+        ["gloves", "bracers", "glove_far", "bracer_far", "grip_glove_body", "grip_glove_front"],
+        [("hue", 20, 250)],
+    ),
+    "moonfall_boots": (
+        "leather_boots", "boots", ["boots", "boots_far", "boots_near"], [("hue", 20, 250)]
+    ),
+    "moonfall_cape": ("red_cape", "cape", ["cape", "scarf"], [("hue", 355, 250)]),
     "crimson_plate": (
         "blue_plate", "armor", ["armor", "armor_arms", "armor_arm_far", "pauldrons"],
         [("hue", 220, 355)],
@@ -1705,7 +1735,8 @@ def build_icon(sheet: Image.Image) -> Image.Image:
 TILE = 128
 # Ground kinds in tiles.png, two seamless variants each, in this column order.
 # client/data/maps.json names them in "tile_kinds".
-TILE_KINDS = ["grass", "path", "stone", "forest", "cellar", "twilight", "grove", "sand", "crag", "ruin"]
+TILE_KINDS = ["grass", "path", "stone", "forest", "cellar", "twilight", "grove", "sand", "crag", "ruin",
+              "snow", "ice"]
 
 
 def _seamless(size: int, base, paint, seed: int) -> Image.Image:
@@ -1895,6 +1926,31 @@ def _paint_ruin(draw, rng, everywhere, size, scale):
     _tufts(draw, rng, everywhere, size, scale, 7, [(88, 140, 78, 255), (120, 170, 96, 255)])
 
 
+def _paint_snow(draw, rng, everywhere, size, scale):
+    """Frostfang Hollow: deep, soft snow with drifts, footprints of the wind and sparkles."""
+    _blobs(draw, rng, everywhere, size, scale, 10,
+           [(236, 242, 250, 255), (224, 232, 246, 255), (244, 248, 255, 255)], (18, 36), (10, 20))
+    _blobs(draw, rng, everywhere, size, scale, 6, [(206, 218, 238, 255)], (10, 22), (3, 6))  # drift shadows
+    _blobs(draw, rng, everywhere, size, scale, 14, [(255, 255, 255, 255), (196, 226, 255, 255)],
+           (0.8, 1.6), (0.8, 1.6))
+
+
+def _paint_ice(draw, rng, everywhere, size, scale):
+    """Frostfang Hollow: smooth blue ice with white cracks and frosted patches."""
+    _blobs(draw, rng, everywhere, size, scale, 8,
+           [(160, 204, 232, 255), (148, 196, 228, 255), (172, 214, 238, 255)], (20, 40), (12, 24))
+    for _ in range(4):
+        x, y = rng.uniform(0, size), rng.uniform(0, size)
+        points = [(x, y)]
+        for _ in range(3):
+            x, y = x + rng.uniform(-16, 16), y + rng.uniform(-12, 12)
+            points.append((x, y))
+        scaled = [(px * scale, py * scale) for px, py in points]
+        everywhere(lambda ox, oy: draw.line([(ox + px, oy + py) for px, py in scaled],
+                                            fill=(236, 248, 255, 255), width=int(1.3 * scale)))
+    _blobs(draw, rng, everywhere, size, scale, 5, [(214, 236, 250, 255)], (6, 12), (3, 6))
+
+
 def build_tiles() -> Image.Image:
     """tiles.png: a row of 128 px ground tiles, TILE_KINDS order, two variants each."""
     makers = {
@@ -1908,6 +1964,8 @@ def build_tiles() -> Image.Image:
         "sand": lambda seed: _seamless(TILE, (228, 200, 144, 255), _paint_sand, seed),
         "crag": lambda seed: _seamless(TILE, (142, 132, 120, 255), _paint_crag, seed),
         "ruin": lambda seed: _seamless(TILE, (122, 128, 128, 255), _paint_ruin, seed),
+        "snow": lambda seed: _seamless(TILE, (232, 238, 248, 255), _paint_snow, seed),
+        "ice": lambda seed: _seamless(TILE, (156, 200, 230, 255), _paint_ice, seed),
     }
     sheet = Image.new("RGBA", (TILE * 2 * len(TILE_KINDS), TILE), (0, 0, 0, 0))
     for i, kind in enumerate(TILE_KINDS):
@@ -2865,6 +2923,138 @@ def draw_sentinel(glow: float, face: str, bob: float, bits: int) -> Image.Image:
     return c.finish()
 
 
+WOLF_FUR = (214, 222, 236, 255)
+WOLF_DARK = (150, 162, 188, 255)
+WOLF_LIGHT = (246, 248, 255, 255)
+WOLF_NOSE = (60, 52, 70, 255)
+# (animation, stride -1..1, face, crouch, bits)
+WOLF_POSES = [
+    ("idle", 0.0, "normal", 0.0, 0),
+    ("idle", 0.3, "normal", 1.0, 0),
+    ("attack", 1.0, "angry", 3.0, 0),
+    ("attack", -1.0, "angry", -1.0, 0),
+    ("die", 0.0, "dead", 4.0, 0),
+    ("die", 0.0, "dead", 7.0, 0),
+    ("die", 0.0, "none", 0.0, 0),
+]
+
+
+def draw_wolf(stride: float, face: str, crouch: float, bits: int) -> Image.Image:
+    """Snow Wolf: a fluffy white wolf with frosty blue markings, pointed ears
+    and a bushy tail; it crouches low before it pounces."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 20, 4.4, SHADOW, outline=False)
+    if face == "none":
+        for k in range(4):
+            c.ellipse(cx - 12 + k * 8, feet - 3 - (k % 2) * 2, 3.2, 2.2, WOLF_FUR)
+        return c.finish()
+    by = feet - 14 + crouch
+    c.polygon([(cx + 13, by - 2), (cx + 26, by - 12 + stride * 2), (cx + 24, by + 2)], WOLF_FUR)  # tail
+    for dx in (-10, -4, 6, 12):  # legs
+        lift = stride * (2 if dx in (-10, 6) else -2)
+        c.rect(cx + dx - 2.4, by + 2, cx + dx + 2.4, feet - 1 + min(0, lift), WOLF_DARK, radius=1.2)
+    c.ellipse(cx + 2, by, 15, 9, WOLF_FUR)  # body
+    c.ellipse(cx + 4, by + 3, 9, 4, WOLF_LIGHT, outline=False)
+    hx, hy = cx - 12, by - 7 - crouch * 0.4
+    for side in (-1, 1):  # ears
+        c.polygon([(hx + side * 4 - 2, hy - 5), (hx + side * 6, hy - 14), (hx + side * 8, hy - 4)], WOLF_DARK)
+    c.ellipse(hx, hy, 9, 8, WOLF_FUR)
+    c.ellipse(hx - 5, hy + 3, 5, 3.6, WOLF_LIGHT)  # muzzle
+    c.ellipse(hx - 9, hy + 2.4, 1.6, 1.4, WOLF_NOSE, outline=False)
+    _eyes(c, hx + 1, hy - 1.5, 3.2, face, 0.75, color=(80, 160, 230, 255))
+    if face == "angry":
+        c.polygon([(hx - 8, hy + 5), (hx - 3, hy + 5), (hx - 5.5, hy + 8)], (250, 250, 250, 255))
+    return c.finish()
+
+
+WRAITH = (176, 214, 246, 200)
+WRAITH_DARK = (110, 150, 210, 220)
+# (animation, sway, face, fade, bits)
+WRAITH_POSES = [
+    ("idle", -1.0, "normal", 0.0, 0),
+    ("idle", 1.0, "normal", 0.0, 0),
+    ("attack", 0.0, "angry", 0.0, 0),
+    ("attack", 2.0, "angry", 0.0, 0),
+    ("die", 0.0, "dead", 0.4, 0),
+    ("die", 0.0, "dead", 0.7, 0),
+    ("die", 0.0, "none", 1.0, 0),
+]
+
+
+def draw_wraith(sway: float, face: str, fade: float, bits: int) -> Image.Image:
+    """Frost Wraith: a floating ghost of ice mist with a tattered hem, frost
+    shards circling it and pale glowing eyes."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 12, 3, SHADOW, outline=False)
+    if face == "none":
+        for k in range(5):
+            c.ellipse(cx - 12 + k * 6, feet - 6 - (k % 2) * 4, 2, 2, (220, 240, 255, 160), outline=False)
+        return c.finish()
+    alpha = int(255 * (1.0 - fade))
+    body = (WRAITH[0], WRAITH[1], WRAITH[2], min(WRAITH[3], alpha))
+    cy = feet - 26
+    hem = [(cx - 13 + sway, cy + 6)]
+    for k in range(6):  # the tattered hem, in points
+        hem.append((cx - 11 + k * 4.4 + sway * (1 - k / 5), feet - 6 - (k % 2) * 5))
+    hem.append((cx + 13 + sway, cy + 6))
+    c.polygon(hem, body)
+    c.ellipse(cx, cy, 13, 14, body)
+    for side in (-1, 1):  # arms trailing mist
+        c.polygon([(cx + side * 10, cy), (cx + side * 20, cy + 8 + sway), (cx + side * 11, cy + 9)], body)
+    for k, (dx, dy) in enumerate(((-18, -12), (17, -6), (-15, 10))):  # frost shards
+        c.polygon([(cx + dx, cy + dy - 4), (cx + dx + 2.4, cy + dy), (cx + dx, cy + dy + 4),
+                   (cx + dx - 2.4, cy + dy)], (226, 244, 255, 230))
+    _eyes(c, cx, cy - 1, 4, face, 0.85, color=(236, 252, 255, 255))
+    return c.finish()
+
+
+WYRM = (132, 182, 222, 255)
+WYRM_DARK = (86, 128, 178, 255)
+WYRM_BELLY = (218, 236, 248, 255)
+WYRM_HORN = (236, 244, 252, 255)
+# (animation, jaw open 0..1, face, coil, bits)
+WYRM_POSES = [
+    ("idle", 0.0, "normal", 0.0, 0),
+    ("idle", 0.1, "normal", 1.5, 0),
+    ("attack", 0.7, "angry", -1.0, 0),
+    ("attack", 1.0, "angry", 0.0, 0),
+    ("die", 0.2, "dead", 3.0, 0),
+    ("die", 0.0, "dead", 6.0, 0),
+    ("die", 0.0, "none", 0.0, 0),
+]
+
+
+def draw_wyrm(jaw: float, face: str, coil: float, bits: int) -> Image.Image:
+    """Frost Wyrm: a coiled serpent dragon of pale blue scales, with icy horns,
+    a frilled crest and small wings; it rears up and breathes frost."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 22, 4.6, SHADOW, outline=False)
+    if face == "none":
+        for k in range(5):
+            c.ellipse(cx - 16 + k * 8, feet - 3 - (k % 2) * 2, 3.6, 2.4, WYRM)
+        return c.finish()
+    c.ellipse(cx + 4, feet - 6 + coil * 0.3, 19, 7, WYRM_DARK)  # the coil on the ground
+    c.ellipse(cx + 4, feet - 8 + coil * 0.3, 16, 5, WYRM, outline=False)
+    c.polygon([(cx + 18, feet - 8), (cx + 28, feet - 13), (cx + 22, feet - 4)], WYRM_DARK)  # tail tip
+    for side in (-1, 1):  # little wings
+        c.polygon([(cx + side * 5, feet - 24 + coil), (cx + side * 19, feet - 34 + coil),
+                   (cx + side * 16, feet - 22 + coil)], WYRM_DARK)
+    c.ellipse(cx, feet - 20 + coil, 9, 13, WYRM)  # the neck, rearing up
+    c.ellipse(cx, feet - 17 + coil, 5, 9, WYRM_BELLY, outline=False)
+    hy = feet - 34 + coil
+    for side in (-1, 1):  # horns and the crest frill
+        c.polygon([(cx + side * 4, hy - 4), (cx + side * 10, hy - 14), (cx + side * 7, hy - 3)], WYRM_HORN)
+    c.ellipse(cx, hy, 10, 8, WYRM)
+    c.ellipse(cx, hy + 5 + jaw * 2, 7, 3 + jaw * 3, WYRM_BELLY)  # the snout and jaw
+    if jaw > 0.5:
+        c.ellipse(cx, hy + 6 + jaw * 2, 4.5, 1.8 + jaw * 2, (60, 90, 140, 255), outline=False)
+    _eyes(c, cx, hy - 1.5, 4.2, face, 0.8, color=(150, 240, 255, 255))
+    return c.finish()
+
+
 FOREST_MONSTERS = {
     "boar": (draw_boar, BOAR_POSES),
     "wisp": (draw_wisp, WISP_POSES),
@@ -2879,6 +3069,9 @@ FOREST_MONSTERS = {
     "gargoyle": (draw_gargoyle, GARGOYLE_POSES),
     "mimic": (draw_mimic, MIMIC_POSES),
     "sentinel": (draw_sentinel, SENTINEL_POSES),
+    "wolf": (draw_wolf, WOLF_POSES),
+    "wraith": (draw_wraith, WRAITH_POSES),
+    "wyrm": (draw_wyrm, WYRM_POSES),
 }
 
 

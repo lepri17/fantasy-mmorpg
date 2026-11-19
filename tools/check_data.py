@@ -536,8 +536,8 @@ OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc", "torch", "glowcap", 
 GLOW_COLORS = {"cyan", "teal", "violet"}
 DECOR_KINDS = {"reeds", "cattails", "lily", "flowers", "pebbles", "log", "mushrooms", "bones",
                "crystals", "rubble", "pillar"}  # decor.gd
-CLIFF_STYLES = {"rock", "wall"}  # cliff.gd
-WATER_STYLES = {"water", "chasm"}  # water.gd
+CLIFF_STYLES = {"rock", "wall", "ice"}  # cliff.gd
+WATER_STYLES = {"water", "chasm", "frozen"}  # water.gd ("frozen" is walked on)
 CLIFF_HEIGHT = 56  # cliff.gd HEIGHT: the rock face below a cliff's top
 SHRINE_GIFTS = {"heal", "power"}  # shrine.gd
 # A monster's extra moves (slime.gd) and the numbers each needs.
@@ -712,7 +712,8 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
             error(f"{where}: needs a 'default' spawn")
         for spawn_name, point in spawns.items():
             inside(point, f"spawn '{spawn_name}'")
-        waters = [w for w in data.get("objects", []) if w.get("type") == "water"]
+        waters = [w for w in data.get("objects", []) if w.get("type") == "water"
+                  and w.get("style") != "frozen"]
         cliffs = [cliff_block(c["points"]) for c in data.get("objects", [])
                   if c.get("type") == "cliff" and len(c.get("points", [])) >= 3]
         for spawn_name, point in spawns.items():
@@ -725,6 +726,14 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                 continue
             if kind == "water":
                 check_water(where, thing, inside, spawns)
+                continue
+            if kind == "icefall":
+                area = thing.get("area", [])
+                if not (isinstance(area, list) and len(area) == 4 and inside(area[:2], "icefall corner")
+                        and inside([area[0] + area[2], area[1] + area[3]], "icefall corner")):
+                    error(f"{where}: an icefall 'area' must be [x, y, width, height] on the map")
+                need_number(f"{where} icefall", thing, "every", 0.5, 30)
+                need_number(f"{where} icefall", thing, "damage", 1, 9999)
                 continue
             if kind == "cliff":
                 top = thing.get("points", [])
@@ -819,7 +828,7 @@ def check_water(where: str, water: dict, inside, spawns: dict) -> None:
         error(f"{where}: each island needs a bridge to it (else it is a hole in the water)")
     for spawn_name, point in spawns.items():
         if (isinstance(point, list) and len(point) == 2 and all(is_number(v) for v in point)
-                and wet(point, bridges)):
+                and wet(point, bridges) and water.get("style") != "frozen"):
             error(f"{where}: spawn '{spawn_name}' is in the water")
 
 

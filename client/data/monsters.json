@@ -1326,5 +1326,249 @@
       "chance": 1.0
     },
     "crown": false
+  },
+  "snow_wolf": {
+    "name": "Snow Wolf",
+    "level": 19,
+    "max_hp": 760,
+    "move_speed": 120,
+    "detect_radius": 380,
+    "attack_range": 50,
+    "attack_damage": 58,
+    "attack_cooldown": 1.0,
+    "respawn_seconds": 8,
+    "xp": 380,
+    "gold": [
+      26,
+      50
+    ],
+    "drops": [
+      {
+        "item": "red_potion",
+        "chance": 0.4
+      },
+      {
+        "item": "ember_stone",
+        "chance": 0.15
+      }
+    ],
+    "defense": 10,
+    "evasion": 0.1,
+    "tint": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "frames": "res://assets/monsters/wolf/wolf_frames.tres",
+    "knockback_resist": 0.3,
+    "charge": {
+      "range": 280,
+      "min_range": 90,
+      "warning_seconds": 0.45,
+      "speed": 620,
+      "distance": 260,
+      "damage_multiplier": 1.5,
+      "cooldown": 4.0
+    },
+    "gear_drops": {
+      "chance": 0.06
+    }
+  },
+  "frost_wraith": {
+    "name": "Frost Wraith",
+    "level": 20,
+    "max_hp": 640,
+    "move_speed": 100,
+    "detect_radius": 420,
+    "attack_range": 260,
+    "attack_damage": 54,
+    "attack_cooldown": 1.6,
+    "respawn_seconds": 9,
+    "xp": 400,
+    "gold": [
+      26,
+      52
+    ],
+    "drops": [
+      {
+        "item": "blue_potion",
+        "chance": 0.35
+      },
+      {
+        "item": "moon_stone",
+        "chance": 0.08
+      }
+    ],
+    "defense": 6,
+    "evasion": 0.2,
+    "tint": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "frames": "res://assets/monsters/wraith/wraith_frames.tres",
+    "hover": 8,
+    "ranged": {
+      "keep_distance": 180,
+      "projectile_speed": 300,
+      "color": [
+        0.78,
+        0.92,
+        1.0
+      ],
+      "on_hit": {
+        "status": "slow",
+        "chance": 0.6,
+        "seconds": 2.0,
+        "value": 0.4
+      }
+    },
+    "blink": {
+      "when_closer": 110,
+      "distance": 190,
+      "cooldown": 5.0
+    },
+    "gear_drops": {
+      "chance": 0.06
+    }
+  },
+  "ice_golem": {
+    "name": "Ice Golem",
+    "level": 21,
+    "max_hp": 1500,
+    "move_speed": 55,
+    "detect_radius": 300,
+    "attack_range": 66,
+    "attack_damage": 72,
+    "attack_cooldown": 1.8,
+    "respawn_seconds": 10,
+    "xp": 460,
+    "gold": [
+      32,
+      60
+    ],
+    "drops": [
+      {
+        "item": "red_potion",
+        "chance": 0.5
+      },
+      {
+        "item": "ember_stone",
+        "chance": 0.2
+      },
+      {
+        "item": "moon_stone",
+        "chance": 0.08
+      }
+    ],
+    "defense": 22,
+    "evasion": 0.0,
+    "tint": [
+      0.72,
+      0.88,
+      1.25,
+      1
+    ],
+    "frames": "res://assets/monsters/golem/golem_frames.tres",
+    "scale": 1.5,
+    "knockback_resist": 1.0,
+    "special": {
+      "every": 3,
+      "radius": 150,
+      "warning_seconds": 0.9,
+      "damage_multiplier": 1.6
+    },
+    "on_hit": {
+      "status": "slow",
+      "chance": 0.35,
+      "seconds": 2.0,
+      "value": 0.4
+    },
+    "gear_drops": {
+      "chance": 0.07
+    }
+  },
+  "frost_wyrm": {
+    "name": "Frost Wyrm",
+    "level": 23,
+    "max_hp": 15000,
+    "move_speed": 50,
+    "detect_radius": 500,
+    "attack_range": 100,
+    "attack_damage": 90,
+    "attack_cooldown": 1.6,
+    "respawn_seconds": 420,
+    "xp": 8000,
+    "gold": [
+      600,
+      1200
+    ],
+    "drops": [
+      {
+        "item": "moon_stone",
+        "chance": 1.0
+      },
+      {
+        "item": "ember_stone",
+        "chance": 1.0
+      },
+      {
+        "item": "red_potion",
+        "chance": 1.0
+      },
+      {
+        "item": "blue_potion",
+        "chance": 0.8
+      },
+      {
+        "item": "rebirth_scroll",
+        "chance": 0.25
+      }
+    ],
+    "defense": 24,
+    "evasion": 0.0,
+    "tint": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "frames": "res://assets/monsters/wyrm/wyrm_frames.tres",
+    "scale": 2.6,
+    "knockback_resist": 1.0,
+    "beam": {
+      "range": 520,
+      "min_range": 140,
+      "length": 560,
+      "width": 80,
+      "warning_seconds": 1.0,
+      "damage_multiplier": 2.2,
+      "cooldown": 7.0
+    },
+    "special": {
+      "every": 3,
+      "radius": 190,
+      "warning_seconds": 1.0,
+      "damage_multiplier": 1.7
+    },
+    "boss": {
+      "enrage_at": 0.5,
+      "enrage_speed": 1.3,
+      "rarity_rolls": 3,
+      "summon": {
+        "monster": "frost_wraith",
+        "count": 2,
+        "every": 15.0,
+        "most": 3
+      },
+      "gear_count": 3,
+      "min_rarity": "rare"
+    },
+    "gear_drops": {
+      "chance": 1.0
+    },
+    "crown": false
   }
 }
