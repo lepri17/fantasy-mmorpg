@@ -228,10 +228,13 @@ func run(test, main, player, hud) -> void:
 		t._check(saw_spore, "a Spore Shroom shoots spores")
 		t._check(player.hp < hp_before_spores, "a spore hits the warrior (hp %d)" % player.hp)
 
-	# --- the Slime King (C9)
+	# --- the Slime King (C9): it roams, and is not always in the forest
+	t._check(t.get_nodes_in_group("bosses").is_empty(), "no boss stands in the forest all the time")
+	main.bosses.appear("slime_king", "forest")
 	var kings: Array = t.get_nodes_in_group("bosses")
 	t._check(
-		kings.size() == 1 and kings[0].monster_id == "slime_king", "the Slime King lives in the forest"
+		kings.size() == 1 and kings[0].monster_id == "slime_king",
+		"the Slime King can appear in the forest"
 	)
 	if not kings.is_empty():
 		var king = kings[0]
@@ -257,7 +260,12 @@ func run(test, main, player, hud) -> void:
 			king.is_dead and player.stats.record.earned.has("king_slayer"),
 			"beating the King earns King Slayer"
 		)
-		t._check(is_equal_approx(king.respawn_seconds, 240.0), "the King comes back after 4 minutes")
+		await t._frames(2)
+		var rest: float = float(main.bosses.bosses["slime_king"]["wait"])
+		t._check(
+			not main.bosses.is_out("slime_king") and rest >= 400.0,
+			"beaten, the King stays away for minutes before it comes again (%d s)" % rest
+		)
 
 	# --- a golden slime invasion in the meadow (W7)
 	var window_rule := {"every_minutes": 30, "lasts_minutes": 5}

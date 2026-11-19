@@ -78,18 +78,18 @@ func _check_rolls() -> void:
 func _check_boss(main, player) -> void:
 	main.change_map("grove", "south")
 	await t._frames(3)
-	var treant = null
-	for enemy in t.get_nodes_in_group("enemies"):
-		if enemy.monster_id == "elder_treant":
-			treant = enemy
-	t._check(treant != null, "the Elder Treant is in Elder Grove")
-	if treant == null:
+	main.bosses.appear("stormcrest_roc", "grove")
+	var boss = main.bosses.node_of("stormcrest_roc")
+	t._check(boss != null, "the Stormcrest Roc can come down in Elder Grove")
+	if boss == null:
 		return
-	player.global_position = treant.global_position + Vector2(0, 700)  # out of reach of the loot
-	treant.set("_player", player)
+	boss.set_physics_process(false)
+	player.global_position = boss.global_position + Vector2(0, 700)  # out of reach of the loot
+	boss.set("_player", player)
 	var before: Array = t.get_nodes_in_group("pickups")
-	treant.call("_maybe_drop_gear")
+	boss.call("_maybe_drop_gear")
 	await t._frames(2)
+	main.bosses.leave("stormcrest_roc")
 	var dropped: Array = t.get_nodes_in_group("pickups").filter(
 		func(p): return not p in before and not p.get("stack").is_empty()
 	)
@@ -108,7 +108,7 @@ func _check_boss(main, player) -> void:
 		)
 	t._check(
 		all_good,
-		"the Elder Treant drops 3 pieces for the hero's class, rare or better, in a beam of light"
+		"the Stormcrest Roc drops 3 pieces for the hero's class, rare or better, in a beam of light"
 	)
 	var plain = PICKUP_SCENE.instantiate()
 	plain.set("stack", ItemDb.gear("leather_boots"))

@@ -2,7 +2,8 @@ extends Node2D
 ## The game: the warrior and one map at a time under World. Portals and the
 ## death screen call change_map(); the first map is the one the save names,
 ## else the meadow that main.tscn starts with. W7: on a map with an
-## "invasion" in maps.json, monsters invade at set minutes of the clock.
+## "invasion" in maps.json, monsters invade at set minutes of the clock. The
+## bosses roam, and are not always there (roaming_bosses.gd).
 
 const Settings = preload("res://scripts/settings.gd")
 const Language = preload("res://scripts/i18n/language.gd")
@@ -12,6 +13,7 @@ const SLIME_SCENE := preload("res://scenes/enemies/slime.tscn")
 const INVADERS := "invaders"
 const SkyClock := preload("res://scripts/world/sky.gd")
 const FloatingText := preload("res://scripts/ui/floating_text.gd")
+const RoamingBosses := preload("res://scripts/world/roaming_bosses.gd")
 const MUSIC_DB := -14.0
 ## Rain makes the day a little greyer.
 const RAIN_DIM := Color(0.86, 0.88, 0.94)
@@ -26,6 +28,8 @@ static var fade_seconds: float = 0.3
 
 ## The map node shown now (game_map.gd).
 var map = null
+## The roaming bosses (roaming_bosses.gd).
+var bosses = null
 var _invasion_check: float = 0.0
 var _sky_check: float = 0.0
 var _daylight: CanvasModulate
@@ -48,6 +52,10 @@ func _ready() -> void:
 	pool.name = "TextPool"
 	pool.add_to_group(FloatingText.POOL_GROUP)
 	add_child(pool)
+	bosses = RoamingBosses.new()
+	bosses.name = "RoamingBosses"
+	add_child(bosses)
+	bosses.setup(self)
 	map = _world.get_node("Map")
 	var saved: String = _player.stats.map_id
 	if saved != "" and saved != map.map_id and _maps().has(saved):
@@ -215,7 +223,11 @@ func _arrive(point: Vector2) -> void:
 	_fade_in()
 	_play_music(_maps()[map.map_id].get("music", ""))
 	update_sky()
-	_hud.call("show_banner", map.display_name(), _maps()[map.map_id].get("levels", ""))
+	var subtitle: String = _maps()[map.map_id].get("levels", "")
+	var boss_here: String = bosses.map_arrived(map.map_id)
+	if boss_here != "":
+		subtitle += "  -  %s is here!" % boss_here
+	_hud.call("show_banner", map.display_name(), subtitle)
 
 
 ## The new map comes in from dark (fade_seconds).

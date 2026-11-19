@@ -46,9 +46,7 @@ func _check_lake(main) -> void:
 	for enemy in t.get_nodes_in_group("enemies"):
 		monsters[enemy.monster_id] = int(monsters.get(enemy.monster_id, 0)) + 1
 	t._check(
-		monsters == {
-			"bubble_slime": 6, "snapjaw_turtle": 5, "marsh_frog": 5, "elder_snapjaw": 1
-		},
+		monsters == {"bubble_slime": 6, "snapjaw_turtle": 5, "marsh_frog": 5},
 		"the lake has its own monsters (%s)" % str(monsters)
 	)
 	var water = _water()
@@ -56,11 +54,13 @@ func _check_lake(main) -> void:
 		water != null and water.bridges.size() == 3 and water.islands.size() == 1,
 		"a lake and a river, with three bridges and an island"
 	)
-	var boss = _monster_near("elder_snapjaw", Vector2.ZERO)
+	main.bosses.appear("slime_king", "lake")
+	var boss = main.bosses.node_of("slime_king")
 	t._check(
-		boss != null and boss.is_in_group("bosses") and boss.level == 11,
-		"the Elder Snapjaw is the lake's boss"
+		boss != null and boss.is_in_group("bosses") and boss.level == 8,
+		"the lake has no boss of its own, but the Slime King can come here"
 	)
+	main.bosses.leave("slime_king")
 	t._check(
 		t.get_nodes_in_group("chests").size() == 2 and t.get_nodes_in_group("shrines").size() == 2,
 		"two treasure chests and two shrines to find"

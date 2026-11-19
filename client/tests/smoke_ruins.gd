@@ -16,7 +16,7 @@ func run(test, main, player, _hud) -> void:
 	await _check_mimic(main, player)
 	await _check_beam(main, player)
 	await _check_wall(main, player)
-	await _check_moonfall(main, player)
+	_check_moonfall()
 	main.change_map("town")
 	await t._frames(3)
 
@@ -66,18 +66,17 @@ func _check_ruins(main) -> void:
 	for monster in _all_monsters(main):
 		monsters[monster.monster_id] = int(monsters.get(monster.monster_id, 0)) + 1
 	t._check(
-		monsters == {"stone_gargoyle": 5, "mimic": 3, "ruin_sentinel": 4, "ruin_colossus": 1},
+		monsters == {"stone_gargoyle": 5, "mimic": 3, "ruin_sentinel": 4},
 		"the ruins have their own monsters (%s)" % str(monsters)
 	)
 	var walls: Array = t.get_nodes_in_group("cliffs").filter(func(w): return w.style == "wall")
 	t._check(walls.size() == 11, "old walls stand round the temple (%d)" % walls.size())
-	var colossus = _nearest(
-		_all_monsters(main).filter(func(m): return m.monster_id == "ruin_colossus"), Vector2.ZERO
-	)
+	main.bosses.appear("frost_wyrm", "ruins")
+	var wyrm = main.bosses.node_of("frost_wyrm")
 	t._check(
-		colossus.is_in_group("bosses") and colossus.moves.dormant(),
-		"the Ruin Colossus sleeps as a statue in the temple"
+		wyrm != null and wyrm.is_in_group("bosses"), "the Frost Wyrm can come down in the ruins"
 	)
+	main.bosses.leave("frost_wyrm")
 
 
 func _check_statue(main, player) -> void:
@@ -160,7 +159,7 @@ func _check_wall(main, player) -> void:
 	)
 
 
-func _check_moonfall(main, player) -> void:
+func _check_moonfall() -> void:
 	t._check(
 		ItemDb.set_size("moonfall") == 12 and ItemDb.set_size("moonfall", "warrior") == 6,
 		"the Moonfall set has 12 pieces, 6 that each class can wear"
@@ -169,24 +168,4 @@ func _check_moonfall(main, player) -> void:
 	t._check(
 		"moonfall_blade" in pool and not "elderwood_blade" in pool,
 		"the ruins' strongest monsters drop Moonfall gear, not the older Elderwood"
-	)
-	main.change_map("ruins", "south")
-	await t._frames(3)
-	var colossus = _one(main, "ruin_colossus", Vector2(1350, 680))
-	colossus.set_physics_process(false)
-	_heal(player)
-	player.global_position = colossus.global_position + Vector2(0, 700)  # out of the loot's reach
-	colossus.set("_player", player)
-	var before: Array = t.get_nodes_in_group("pickups")
-	colossus.call("_maybe_drop_gear")
-	await t._frames(2)
-	var dropped: Array = t.get_nodes_in_group("pickups").filter(
-		func(p): return not p in before and not p.get("stack").is_empty()
-	)
-	t._check(
-		(
-			dropped.size() == 3
-			and dropped.all(func(p): return str(p.get("stack")["id"]).begins_with("moonfall_"))
-		),
-		"the Ruin Colossus drops three Moonfall pieces (%d)" % dropped.size()
 	)

@@ -65,7 +65,7 @@ func _check_maps(main) -> void:
 		)
 		t._check(
 			monsters == ({"bramble_boar": 5, "lantern_wisp": 5} if map_id == "twilight" else {
-				"rootling": 5, "moss_golem": 4, "elder_treant": 1
+				"rootling": 5, "moss_golem": 4
 			}),
 			"%s has its own monsters (%s)" % [main.map.display_name(), str(monsters)]
 		)
@@ -76,16 +76,13 @@ func _check_maps(main) -> void:
 			light["forest"], light["twilight"], light["grove"]
 		]
 	)
-	var treant = _monster("elder_treant")
+	main.bosses.appear("stormcrest_roc", "grove")
+	var roc = main.bosses.node_of("stormcrest_roc")
 	t._check(
-		(
-			treant != null
-			and treant.is_in_group("bosses")
-			and treant.get("_crown") == null
-			and treant.level == 18
-		),
-		"the Elder Treant is the boss of the grove, without the Slime King's crown"
+		roc != null and roc.is_in_group("bosses") and roc.get("_crown") == null and roc.level == 17,
+		"the Stormcrest Roc can come down in the grove, without the Slime King's crown"
 	)
+	main.bosses.leave("stormcrest_roc")
 
 
 func _check_charge(main, player) -> void:

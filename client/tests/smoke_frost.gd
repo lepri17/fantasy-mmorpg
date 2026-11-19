@@ -38,7 +38,7 @@ func _check_hollow(main) -> void:
 	for monster in _all_monsters(main):
 		monsters[monster.monster_id] = int(monsters.get(monster.monster_id, 0)) + 1
 	t._check(
-		monsters == {"snow_wolf": 9, "frost_wraith": 4, "ice_golem": 3, "frost_wyrm": 1},
+		monsters == {"snow_wolf": 9, "frost_wraith": 4, "ice_golem": 3},
 		"the hollow has its own monsters (%s)" % str(monsters)
 	)
 	var cliffs: Array = t.get_nodes_in_group("cliffs").filter(func(c): return c.style == "ice")
@@ -52,12 +52,13 @@ func _check_hollow(main) -> void:
 		),
 		"a frozen pond, ice cliffs, an icicle gorge and falling snow"
 	)
-	var wyrm = _nearest(
-		_all_monsters(main).filter(func(m): return m.monster_id == "frost_wyrm"), Vector2.ZERO
-	)
+	main.bosses.appear("frost_wyrm", "frostfang")
+	var wyrm = main.bosses.node_of("frost_wyrm")
 	t._check(
-		wyrm.is_in_group("bosses") and wyrm.level == 23, "the Frost Wyrm is the hollow's boss"
+		wyrm != null and wyrm.is_in_group("bosses") and wyrm.level == 23,
+		"the Frost Wyrm can come to the hollow"
 	)
+	main.bosses.leave("frost_wyrm")
 
 
 func _check_pond(main, player) -> void:
@@ -126,7 +127,8 @@ func _check_frost_set(main, player) -> void:
 	)
 	main.change_map("frostfang", "south")
 	await t._frames(3)
-	var wyrm = _one(main, "frost_wyrm", Vector2(1920, 170))
+	main.bosses.appear("frost_wyrm", "frostfang")
+	var wyrm = main.bosses.node_of("frost_wyrm")
 	wyrm.set_physics_process(false)
 	_heal(player)
 	player.global_position = wyrm.global_position + Vector2(-700, 700)  # out of the loot's reach
@@ -144,3 +146,4 @@ func _check_frost_set(main, player) -> void:
 		),
 		"the Frost Wyrm drops three Frostfang pieces (%d)" % dropped.size()
 	)
+	main.bosses.leave("frost_wyrm")

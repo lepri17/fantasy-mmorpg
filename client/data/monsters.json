@@ -231,13 +231,39 @@
         "every": 12.0,
         "most": 4
       },
-      "gear_count": 2,
-      "min_rarity": "rare"
+      "gear_count": 3,
+      "min_rarity": "rare",
+      "roam": {
+        "maps": [
+          "field",
+          "forest",
+          "lake"
+        ],
+        "first": [
+          120,
+          300
+        ],
+        "wait": [
+          420,
+          840
+        ],
+        "stay": 300
+      }
     },
     "gear_drops": {
       "chance": 1.0
     },
-    "knockback_resist": 1.0
+    "knockback_resist": 1.0,
+    "leap": {
+      "range": 380,
+      "min_range": 150,
+      "warning_seconds": 0.8,
+      "air_seconds": 0.7,
+      "height": 110,
+      "radius": 150,
+      "damage_multiplier": 1.8,
+      "cooldown": 7.0
+    }
   },
   "golden_slime": {
     "name": "Golden Slime",
@@ -499,78 +525,6 @@
       "chance": 0.07
     }
   },
-  "elder_treant": {
-    "name": "Elder Treant",
-    "level": 18,
-    "max_hp": 8000,
-    "move_speed": 50,
-    "detect_radius": 460,
-    "attack_range": 96,
-    "attack_damage": 70,
-    "attack_cooldown": 1.6,
-    "respawn_seconds": 360,
-    "xp": 4000,
-    "gold": [
-      400,
-      800
-    ],
-    "drops": [
-      {
-        "item": "moon_stone",
-        "chance": 1.0
-      },
-      {
-        "item": "ember_stone",
-        "chance": 1.0
-      },
-      {
-        "item": "red_potion",
-        "chance": 1.0
-      },
-      {
-        "item": "blue_potion",
-        "chance": 0.6
-      },
-      {
-        "item": "rebirth_scroll",
-        "chance": 0.15
-      }
-    ],
-    "defense": 18,
-    "evasion": 0.0,
-    "tint": [
-      1,
-      1,
-      1,
-      1
-    ],
-    "frames": "res://assets/monsters/treant/treant_frames.tres",
-    "scale": 2.6,
-    "knockback_resist": 1.0,
-    "special": {
-      "every": 2,
-      "radius": 170,
-      "warning_seconds": 1.1,
-      "damage_multiplier": 1.7
-    },
-    "boss": {
-      "enrage_at": 0.5,
-      "enrage_speed": 1.3,
-      "rarity_rolls": 3,
-      "summon": {
-        "monster": "rootling",
-        "count": 2,
-        "every": 14.0,
-        "most": 4
-      },
-      "gear_count": 3,
-      "min_rarity": "rare"
-    },
-    "gear_drops": {
-      "chance": 1.0
-    },
-    "crown": false
-  },
   "bubble_slime": {
     "name": "Bubble Slime",
     "level": 6,
@@ -751,87 +705,6 @@
     "gear_drops": {
       "chance": 0.05
     }
-  },
-  "elder_snapjaw": {
-    "name": "Elder Snapjaw",
-    "level": 11,
-    "max_hp": 5000,
-    "move_speed": 50,
-    "detect_radius": 440,
-    "attack_range": 90,
-    "attack_damage": 50,
-    "attack_cooldown": 1.6,
-    "respawn_seconds": 300,
-    "xp": 2400,
-    "gold": [
-      250,
-      500
-    ],
-    "drops": [
-      {
-        "item": "moon_stone",
-        "chance": 1.0
-      },
-      {
-        "item": "ember_stone",
-        "chance": 1.0
-      },
-      {
-        "item": "red_potion",
-        "chance": 1.0
-      },
-      {
-        "item": "blue_potion",
-        "chance": 0.5
-      },
-      {
-        "item": "rebirth_scroll",
-        "chance": 0.1
-      }
-    ],
-    "defense": 14,
-    "evasion": 0.0,
-    "tint": [
-      0.8,
-      1.05,
-      0.75,
-      1
-    ],
-    "frames": "res://assets/monsters/turtle/turtle_frames.tres",
-    "scale": 2.3,
-    "knockback_resist": 1.0,
-    "shell": {
-      "range": 220,
-      "seconds": 3.0,
-      "damage_taken": 0.15,
-      "cooldown": 12.0,
-      "radius": 200,
-      "warning_seconds": 0.8,
-      "damage_multiplier": 1.8
-    },
-    "special": {
-      "every": 3,
-      "radius": 160,
-      "warning_seconds": 1.0,
-      "damage_multiplier": 1.6
-    },
-    "boss": {
-      "enrage_at": 0.5,
-      "enrage_speed": 1.3,
-      "rarity_rolls": 3,
-      "summon": {
-        "monster": "snapjaw_turtle",
-        "count": 2,
-        "every": 16.0,
-        "most": 3
-      },
-      "gear_count": 2,
-      "min_rarity": "rare"
-    },
-    "gear_drops": {
-      "chance": 1.0
-    },
-    "crown": false
   },
   "rock_beetle": {
     "name": "Rock Beetle",
@@ -1072,7 +945,23 @@
         "most": 3
       },
       "gear_count": 3,
-      "min_rarity": "rare"
+      "min_rarity": "rare",
+      "roam": {
+        "maps": [
+          "twilight",
+          "grove",
+          "ridge"
+        ],
+        "first": [
+          120,
+          300
+        ],
+        "wait": [
+          420,
+          840
+        ],
+        "stay": 300
+      }
     },
     "gear_drops": {
       "chance": 1.0
@@ -1239,107 +1128,6 @@
     "gear_drops": {
       "chance": 0.06
     }
-  },
-  "ruin_colossus": {
-    "name": "Ruin Colossus",
-    "level": 20,
-    "max_hp": 12000,
-    "move_speed": 45,
-    "detect_radius": 480,
-    "attack_range": 100,
-    "attack_damage": 82,
-    "attack_cooldown": 1.6,
-    "respawn_seconds": 420,
-    "xp": 6000,
-    "gold": [
-      500,
-      1000
-    ],
-    "drops": [
-      {
-        "item": "moon_stone",
-        "chance": 1.0
-      },
-      {
-        "item": "ember_stone",
-        "chance": 1.0
-      },
-      {
-        "item": "red_potion",
-        "chance": 1.0
-      },
-      {
-        "item": "blue_potion",
-        "chance": 0.8
-      },
-      {
-        "item": "rebirth_scroll",
-        "chance": 0.2
-      }
-    ],
-    "defense": 22,
-    "evasion": 0.0,
-    "tint": [
-      0.85,
-      0.9,
-      1.05,
-      1
-    ],
-    "frames": "res://assets/monsters/gargoyle/gargoyle_frames.tres",
-    "scale": 2.8,
-    "knockback_resist": 1.0,
-    "ambush": {
-      "wake_range": 230,
-      "radius": 210,
-      "warning_seconds": 1.0,
-      "damage_multiplier": 1.8
-    },
-    "beam": {
-      "range": 520,
-      "min_range": 150,
-      "length": 560,
-      "width": 70,
-      "warning_seconds": 1.1,
-      "damage_multiplier": 2.2,
-      "cooldown": 8.0
-    },
-    "special": {
-      "every": 3,
-      "radius": 190,
-      "warning_seconds": 1.0,
-      "damage_multiplier": 1.7
-    },
-    "boss": {
-      "enrage_at": 0.5,
-      "enrage_speed": 1.3,
-      "rarity_rolls": 3,
-      "summon": {
-        "monster": "stone_gargoyle",
-        "count": 2,
-        "every": 16.0,
-        "most": 3
-      },
-      "gear_count": 3,
-      "min_rarity": "rare"
-    },
-    "gear_drops": {
-      "chance": 1.0,
-      "items": [
-        "moonfall_blade",
-        "moonfall_bow",
-        "moonfall_staff",
-        "moonfall_plate",
-        "moonfall_vest",
-        "moonfall_robe",
-        "moonfall_band",
-        "moonfall_hood",
-        "moonfall_hat",
-        "moonfall_gloves",
-        "moonfall_boots",
-        "moonfall_cape"
-      ]
-    },
-    "crown": false
   },
   "snow_wolf": {
     "name": "Snow Wolf",
@@ -1578,7 +1366,22 @@
         "most": 3
       },
       "gear_count": 3,
-      "min_rarity": "rare"
+      "min_rarity": "rare",
+      "roam": {
+        "maps": [
+          "ruins",
+          "frostfang"
+        ],
+        "first": [
+          120,
+          300
+        ],
+        "wait": [
+          420,
+          840
+        ],
+        "stay": 300
+      }
     },
     "gear_drops": {
       "chance": 1.0,

@@ -29,6 +29,8 @@ const SmokeLake = preload("res://tests/smoke_lake.gd")
 const SmokeRidge = preload("res://tests/smoke_ridge.gd")
 const SmokeRuins = preload("res://tests/smoke_ruins.gd")
 const SmokeFrost = preload("res://tests/smoke_frost.gd")
+const SmokeBosses = preload("res://tests/smoke_bosses.gd")
+const RoamingBosses = preload("res://scripts/world/roaming_bosses.gd")
 const Settings = preload("res://scripts/settings.gd")
 const SETTINGS_PATH := "user://smoke_test_settings.cfg"
 
@@ -49,6 +51,7 @@ func _run() -> void:
 	SlimeScript.elite_chance_override = 0.0  # random elites would change the numbers below
 	seed(20261118)  # the same drops on every run
 	GameScript.invasions_enabled = false  # the clock must not start one mid-test
+	RoamingBosses.enabled = false  # nor bring a boss
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await _frames(5)
@@ -735,6 +738,7 @@ func _run() -> void:
 	await SmokeRidge.new().run(self, main, player, hud)
 	await SmokeRuins.new().run(self, main, player, hud)
 	await SmokeFrost.new().run(self, main, player, hud)
+	await SmokeBosses.new().run(self, main, player, hud)
 
 	_remove_test_save()
 	root.remove_child(main)

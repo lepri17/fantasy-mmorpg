@@ -234,6 +234,16 @@ def check_monsters(monsters: dict, items: dict) -> None:
             need_number(where + " boss", boss, "enrage_at", 0.05, 0.95)
             need_number(where + " boss", boss, "enrage_speed", 1.0, 3.0)
             need_number(where + " boss", boss, "rarity_rolls", 1, 5)
+            roam = boss.get("roam")  # roaming_bosses.gd
+            if roam is not None:
+                if not (isinstance(roam.get("maps"), list) and roam["maps"]):
+                    error(f"{where}: a roaming boss needs a list of 'maps'")
+                for key in ("first", "wait"):
+                    span = roam.get(key, roam.get("wait"))
+                    if not (isinstance(span, list) and len(span) == 2 and all(is_number(v) for v in span)
+                            and 0 < span[0] <= span[1]):
+                        error(f"{where}: roam '{key}' must be [shortest, longest] seconds")
+                need_number(where + " roam", roam, "stay", 30, 3600)
             summon = boss.get("summon", {})
             if summon:
                 if summon.get("monster") not in monsters or summon.get("monster") == monster_id:
@@ -710,6 +720,12 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
         spawns = data.get("spawns", {})
         if "default" not in spawns:
             error(f"{where}: needs a 'default' spawn")
+        boss_spots = data.get("boss_spots", [])
+        if not isinstance(boss_spots, list):
+            error(f"{where}: 'boss_spots' must be a list of [x, y]")
+            boss_spots = []
+        # A roaming boss appears at one of these: the same rules as for a spawn.
+        spawns = {**spawns, **{f"boss spot {i + 1}": point for i, point in enumerate(boss_spots)}}
         for spawn_name, point in spawns.items():
             inside(point, f"spawn '{spawn_name}'")
         waters = [w for w in data.get("objects", []) if w.get("type") == "water"
@@ -779,6 +795,20 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                     if isinstance(point, list) and len(point) == 2 and all(
                             is_number(v) for v in point) and math.dist(point, thing["pos"]) < 80:
                         error(f"{where}: spawn '{spawn_name}' is too close to a portal")
+
+
+    for monster_id, monster in monsters.items():
+        roam = monster.get("boss", {}).get("roam")
+        if not roam:
+            continue
+        for map_id in roam.get("maps", []):
+            if map_id not in maps:
+                error(f"monsters.json: '{monster_id}' roams to unknown map '{map_id}'")
+            elif not maps[map_id].get("boss_spots"):
+                error(f"maps.json: '{map_id}' needs 'boss_spots' for the roaming '{monster_id}'")
+        for map_id, data in maps.items():
+            if any(o.get("type") == "monster" and o.get("id") == monster_id for o in data.get("objects", [])):
+                error(f"maps.json: '{map_id}' places the roaming boss '{monster_id}' (it comes by itself)")
 
 
 def check_water(where: str, water: dict, inside, spawns: dict) -> None:

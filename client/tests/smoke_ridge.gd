@@ -44,7 +44,7 @@ func _check_ridge(main) -> void:
 	for enemy in t.get_nodes_in_group("enemies"):
 		monsters[enemy.monster_id] = int(monsters.get(enemy.monster_id, 0)) + 1
 	t._check(
-		monsters == {"rock_beetle": 6, "crag_imp": 5, "gale_harpy": 4, "stormcrest_roc": 1},
+		monsters == {"rock_beetle": 6, "crag_imp": 5, "gale_harpy": 4},
 		"the ridge has its own monsters (%s)" % str(monsters)
 	)
 	var rift = _water()
@@ -56,11 +56,13 @@ func _check_ridge(main) -> void:
 		t.get_nodes_in_group("cliffs").size() == 5 and t.get_nodes_in_group("chests").size() == 2,
 		"five cliffs, and two treasure chests to find"
 	)
-	var roc = _monster_near("stormcrest_roc", Vector2.ZERO)
+	main.bosses.appear("stormcrest_roc", "ridge")
+	var roc = main.bosses.node_of("stormcrest_roc")
 	t._check(
 		roc != null and roc.is_in_group("bosses") and roc.level == 17,
-		"the Stormcrest Roc is the ridge's boss"
+		"the Stormcrest Roc can come to the ridge"
 	)
+	main.bosses.leave("stormcrest_roc")
 
 
 func _check_rift(main, player) -> void:

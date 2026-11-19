@@ -9,6 +9,7 @@ const SaveFile = preload("res://scripts/player/save_file.gd")
 const ItemDb = preload("res://scripts/items/item_db.gd")
 const PICKUP_SCENE = preload("res://scenes/items/pickup.tscn")
 const GameScript = preload("res://scripts/game.gd")
+const RoamingBosses = preload("res://scripts/world/roaming_bosses.gd")
 const SAVE_PATH := "user://screenshots_save.cfg"
 const Settings = preload("res://scripts/settings.gd")
 
@@ -23,6 +24,7 @@ func _initialize() -> void:
 	SaveFile.path = SAVE_PATH
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	GameScript.invasions_enabled = false
+	RoamingBosses.enabled = false
 	GameScript.fade_seconds = 0.0
 	Settings.path = "user://screenshots_settings.cfg"
 	Settings.load_file()
@@ -69,6 +71,7 @@ func _initialize() -> void:
 	main.change_map("forest", "west")
 	await _frames(20)
 	await _shot("09_forest")
+	main.bosses.appear("slime_king", "forest")
 	var king = get_first_node_in_group("bosses")
 	player.global_position = king.global_position + Vector2(-260, 40)
 	await _frames(30)
@@ -251,15 +254,16 @@ func _lake(main, player) -> void:
 		if float(frog.moves.get("_air_left")) > 0.25:
 			break
 	await _shot("42_frog_leap")
-	var snapjaw = get_first_node_in_group("bosses")
-	snapjaw.set_physics_process(true)
-	player.global_position = snapjaw.global_position + Vector2(-170, 30)
+	main.bosses.appear("slime_king", "lake")  # the roaming Slime King, leaping
+	var king = main.bosses.node_of("slime_king")
+	king.moves.set("_ready_in", 0.0)
+	player.global_position = king.global_position + Vector2(-260, 30)
 	for _i in 400:
 		player.hp = player.max_hp
 		await process_frame
-		if get_nodes_in_group("telegraphs").any(func(mark): return mark.get("radius") == 200.0):
+		if float(king.moves.get("_air_left")) > 0.3:
 			break
-	await _shot("43_snapjaw")
+	await _shot("43_king_leap")
 
 
 ## Galeclaw Ridge: the canyon between two cliffs, the rift and a rope bridge,
@@ -299,7 +303,9 @@ func _ridge(main, player) -> void:
 			break
 	await _shot("48_harpy_swoop")
 	harpy.set_physics_process(false)
-	var roc = _nearest_enemy("stormcrest_roc", Vector2(2250, 1330))
+	main.bosses.appear("stormcrest_roc", "ridge")
+	var roc = main.bosses.node_of("stormcrest_roc")
+	roc.set_physics_process(false)
 	player.global_position = roc.global_position + Vector2(-250, -60)
 	await _frames(20)
 	await _shot("49_stormcrest_roc")
@@ -380,7 +386,10 @@ func _frost(main, player) -> void:
 	for monster in all:
 		monster.set_physics_process(false)
 	player.hp = player.max_hp
-	player.global_position = Vector2(1700, 230)
+	main.bosses.appear("frost_wyrm", "frostfang")
+	var wyrm = main.bosses.node_of("frost_wyrm")
+	wyrm.set_physics_process(false)
+	player.global_position = wyrm.global_position + Vector2(-220, 60)
 	await _frames(20)
 	await _shot("58_frost_wyrm")
 	var saved_gear: Dictionary = player.stats.equipment.duplicate(true)
@@ -409,17 +418,17 @@ func _nearest_enemy(monster_id: String, point: Vector2):
 	return best
 
 
-## The Elder Treant's reward on the ground (rare pieces stand in a beam of
+## The Stormcrest Roc's reward on the ground (rare pieces stand in a beam of
 ## light), and an Elderwood piece's random bonuses and their ranges in the bag.
 func _boss_loot(player, hud) -> void:
-	var treant = get_nodes_in_group("enemies").filter(
-		func(enemy): return enemy.monster_id == "elder_treant"
-	)[0]
-	treant.set_physics_process(false)
-	treant.set("_player", player)
-	player.global_position = treant.global_position + Vector2(0, 330)
+	var bosses = get_first_node_in_group("game").bosses
+	bosses.appear("stormcrest_roc", "grove")
+	var boss = bosses.node_of("stormcrest_roc")
+	boss.set_physics_process(false)
+	boss.set("_player", player)
+	player.global_position = boss.global_position + Vector2(0, 330)
 	var before: Array = get_nodes_in_group("pickups")
-	treant.call("_maybe_drop_gear")
+	boss.call("_maybe_drop_gear")
 	await _frames(2)
 	# Laid out on the open path in front of the hero (out of the magnet's reach),
 	# next to a common piece, which has no beam.
@@ -431,7 +440,7 @@ func _boss_loot(player, hud) -> void:
 	plain.set("kind", "item")
 	plain.set("item_id", "leather_boots")
 	plain.set("stack", ItemDb.gear("leather_boots"))
-	treant.get_parent().add_child(plain)
+	boss.get_parent().add_child(plain)
 	plain.global_position = player.global_position + Vector2(150, 70)
 	await _frames(40)
 	await _shot("33_boss_loot")
