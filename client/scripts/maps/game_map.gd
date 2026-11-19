@@ -46,6 +46,9 @@ const Prop := preload("res://scripts/world/prop.gd")
 const Decor := preload("res://scripts/world/decor.gd")
 const Chest := preload("res://scripts/world/chest.gd")
 const Shrine := preload("res://scripts/world/shrine.gd")
+const AmbientLife := preload("res://scripts/world/ambient_life.gd")
+## Every tree sways in the wind (one material, each tree in its own time).
+const SWAY := preload("res://shaders/sway.gdshader")
 const SCENES := {
 	"tree": preload("res://scenes/maps/tree.tscn"),
 	"rock": preload("res://scenes/maps/rock.tscn"),
@@ -57,6 +60,8 @@ const SCENES := {
 const NAV_AGENT_RADIUS := 18.0
 ## How far inside the map's edge the invisible walls stand: left, top, right, bottom.
 const EDGE_MARGINS := [24.0, 80.0, 24.0, 20.0]
+
+static var _sway_material: ShaderMaterial = null
 
 @export var map_id: String = ""
 
@@ -91,6 +96,11 @@ func _ready() -> void:
 		if int(data.get(drift, 0)) > 0:
 			_add_drift(drift, int(data[drift]))
 	_dress_scenery()
+	if data.has("life"):
+		var life: Node2D = AmbientLife.new()
+		life.name = "AmbientLife"
+		life.setup(data["life"], bounds(), map_id)
+		add_child(life)
 	call_deferred("_bake_navigation")
 	if data.has("dungeon"):
 		var run: Node = DungeonRun.new()
@@ -297,6 +307,11 @@ func _dress_scenery() -> void:
 				"res://assets/environment/%s/%s_%d.png"
 				% [group, kinds[posmod(pick, kinds.size())], posmod(pick >> 4, 2)]
 			)
+			if group == "trees":
+				if _sway_material == null:
+					_sway_material = ShaderMaterial.new()
+					_sway_material.shader = SWAY
+				sprite.material = _sway_material
 
 
 ## Leaves, pollen or dust drifting over the whole map (DRIFTS), each bit

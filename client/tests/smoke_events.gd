@@ -26,6 +26,7 @@ func run(test, main, player, _hud) -> void:
 	await _check_swarm(main, player, events)
 	await _check_lucky(main, player, events)
 	await _check_clock(main, player, events)
+	await _check_life(main, player)
 
 
 func _check_treasure(main, player, events) -> void:
@@ -151,6 +152,50 @@ func _check_clock(main, player, events) -> void:
 		"and the next one waits minutes (%d s)" % events.wait
 	)
 	await t._frames(2)
+
+
+## Life in the maps (ambient_life.gd): birds that fly off, butterflies, flocks,
+## cloud shadows, and trees that sway.
+func _check_life(main, player) -> void:
+	main.change_map("forest", "west")
+	await t._frames(40)
+	var life = main.map.get_node_or_null("AmbientLife")
+	t._check(
+		(
+			life != null
+			and life.birds.size() == 5
+			and life.butterflies.size() == 4
+			and life.clouds.size() == 2
+		),
+		"Mossy Woods has birds, butterflies and cloud shadows"
+	)
+	var trees: Array = t.get_nodes_in_group("trees").filter(
+		func(node): return main.map.is_ancestor_of(node)
+	)
+	var tree = trees[0]
+	var material = tree.get_node("Sprite").material
+	t._check(
+		material is ShaderMaterial and material.shader.resource_path.ends_with("sway.gdshader"),
+		"its trees sway in the wind"
+	)
+	var bird: Dictionary = life.birds[0]
+	_heal(player)
+	player.global_position = bird["sprite"].global_position + Vector2(60, 10)
+	await t._frames(3)
+	t._check(bird["state"] == "fly", "a bird on the ground flies off when the hero comes near")
+	life.start_flock()
+	t._check(life.flock.size() >= 3, "now and then a flock flies over (%d birds)" % life.flock.size())
+	main.change_map("lantern_arena", "default")
+	await t._frames(10)
+	t._check(
+		main.map.map_id == "lantern_arena" and main.map.get_node_or_null("AmbientLife") == null,
+		"but none in an arena"
+	)
+	var wave_left: Array = t.get_nodes_in_group("enemies")
+	for enemy in wave_left:
+		enemy.queue_free()
+	main.change_map("forest", "west")
+	await t._frames(10)
 
 
 func _heal(player) -> void:

@@ -4122,6 +4122,81 @@ def draw_market_gate(theme: str) -> Image.Image:
     return c.finish(256)
 
 
+# ---------------------------------------------------------------- critters
+# Little life in the maps (ambient_life.gd): birds that hop, peck and fly
+# off, and butterflies. Side view facing right; the game flips them.
+# A sheet of 4 frames: stand, peck, wings up, wings down. Drawn on a 32 grid,
+# saved at 64 px; the game shows them at half size.
+CRITTER_GRID = 32
+BIRD_KINDS = {  # body, belly, wing, beak
+    "song": ((92, 152, 232, 255), (252, 232, 200, 255), (58, 108, 190, 255), (250, 160, 60, 255)),
+    "sparrow": ((166, 122, 86, 255), (238, 222, 198, 255), (118, 84, 60, 255), (240, 176, 90, 255)),
+    "snow": ((244, 246, 252, 255), (255, 255, 255, 255), (190, 204, 224, 255), (70, 70, 84, 255)),
+    "crow": ((64, 62, 80, 255), (96, 94, 114, 255), (44, 42, 58, 255), (70, 70, 80, 255)),
+}
+
+
+def draw_bird(kind: str, frame: int) -> Image.Image:
+    body, belly, wing, beak = BIRD_KINDS[kind]
+    c = Canvas(CRITTER_GRID)
+    flying = frame >= 2
+    peck = frame == 1
+    if not flying:
+        c.ellipse(16, 27, 7, 1.6, SHADOW, outline=False)
+        for x in (14.5, 17.5):
+            c.line([(x, 22), (x, 26)], fill=(220, 140, 60, 255), width=1)
+    c.polygon([(10, 19), (3.5, 15.5 if not flying else 18), (4.5, 21)], wing)  # tail
+    c.ellipse(16, 19, 7.5, 5.6, body)
+    c.ellipse(17.5, 21, 4.6, 3, belly, outline=False)
+    hx, hy = (23, 22) if peck else (22.5, 14.5)
+    c.ellipse(hx, hy, 4.6, 4.4, body)
+    c.polygon([(hx + 3.8, hy - 1 + (2 if peck else 0)), (hx + 8, hy + (4 if peck else 0.5)),
+               (hx + 3.8, hy + 1.5 + (2 if peck else 0))], beak)
+    c.ellipse(hx + 1.6, hy - 0.8, 1.1, 1.3, EYE, outline=False)
+    c.ellipse(hx + 1.3, hy - 1.3, 0.45, 0.45, WHITE, outline=False)
+    if frame == 2:  # wings up: a rounded wing with feather tips
+        c.polygon([(11.5, 18), (9, 11), (8.5, 5), (11, 6.5), (12.5, 2.5), (15, 5), (17, 2), (18.5, 6),
+                   (21, 5), (20.5, 11), (19, 17)], wing)
+        c.line([(13, 15), (12.5, 8)], fill=_tone(wing, light=0.3), width=0.8)
+    elif frame == 3:  # wings down
+        c.polygon([(11.5, 19), (10, 25), (11, 30), (13.5, 28), (15.5, 31), (17.5, 28), (20, 29.5),
+                   (20.5, 24), (19, 19)], wing)
+    else:
+        c.ellipse(14.5, 18.5, 5, 3.4, wing)
+    return c.finish(CRITTER_GRID * 2)
+
+
+def build_bird_sheet(kind: str) -> Image.Image:
+    size = CRITTER_GRID * 2
+    sheet = Image.new("RGBA", (size * 4, size), (0, 0, 0, 0))
+    for frame in range(4):
+        sheet.paste(draw_bird(kind, frame), (frame * size, 0))
+    return sheet
+
+
+def draw_butterfly(open_wings: bool) -> Image.Image:
+    """White wings with soft spots: the game tints each butterfly its own colour."""
+    c = Canvas(CRITTER_GRID)
+    spread = 1.0 if open_wings else 0.35
+    for side in (-1, 1):
+        c.ellipse(16 + side * 6.5 * spread, 13, 6.2 * spread + 0.8, 6.5, (255, 255, 255, 255))
+        c.ellipse(16 + side * 5 * spread, 21, 4.4 * spread + 0.8, 4.4, (240, 240, 240, 255))
+        if open_wings:
+            c.ellipse(16 + side * 7, 12, 2, 2, (200, 200, 200, 255), outline=False)
+    c.rect(15, 10, 17, 24, (60, 46, 60, 255), radius=1, outline=False)
+    for side in (-1, 1):
+        c.line([(16, 10), (16 + side * 3, 5)], width=0.8)
+    return c.finish(CRITTER_GRID * 2)
+
+
+def build_butterfly_sheet() -> Image.Image:
+    size = CRITTER_GRID * 2
+    sheet = Image.new("RGBA", (size * 2, size), (0, 0, 0, 0))
+    sheet.paste(draw_butterfly(True), (0, 0))
+    sheet.paste(draw_butterfly(False), (size, 0))
+    return sheet
+
+
 def build_monster_sheet(draw, poses) -> Image.Image:
     sheet = Image.new("RGBA", (MONSTER_PX * len(poses), MONSTER_PX), (0, 0, 0, 0))
     for col, pose in enumerate(poses):
@@ -4208,6 +4283,11 @@ def main() -> None:
         for role in roles:
             draw_house(theme, role).save(houses_dir / f"{theme}_{role}.png")
         draw_market_gate(theme).save(houses_dir / f"{theme}_gate.png")
+    critters_dir = environment_dir / "critters"
+    critters_dir.mkdir(parents=True, exist_ok=True)
+    for kind in BIRD_KINDS:
+        build_bird_sheet(kind).save(critters_dir / f"bird_{kind}.png")
+    build_butterfly_sheet().save(critters_dir / "butterfly.png")
     props_dir = environment_dir / "props"
     props_dir.mkdir(parents=True, exist_ok=True)
     for color in STALL_COLORS:

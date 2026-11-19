@@ -384,7 +384,14 @@
       "rock_style": [
         "stone"
       ],
-      "ambience": "amb_birds"
+      "ambience": "amb_birds",
+      "life": {
+        "birds": 5,
+        "bird": "song",
+        "butterflies": 6,
+        "flocks": true,
+        "clouds": 3
+      }
     },
     "field": {
       "name": "Green Meadow",
@@ -595,7 +602,14 @@
       "rock_style": [
         "stone"
       ],
-      "ambience": "amb_birds"
+      "ambience": "amb_birds",
+      "life": {
+        "birds": 6,
+        "bird": "song",
+        "butterflies": 8,
+        "flocks": true,
+        "clouds": 4
+      }
     },
     "forest": {
       "name": "Mossy Woods",
@@ -1385,7 +1399,14 @@
         "mossy",
         "stone"
       ],
-      "ambience": "amb_birds"
+      "ambience": "amb_birds",
+      "life": {
+        "birds": 5,
+        "bird": "sparrow",
+        "butterflies": 4,
+        "flocks": true,
+        "clouds": 2
+      }
     },
     "lanternhold": {
       "name": "Lanternhold",
@@ -1727,7 +1748,12 @@
       "rock_style": [
         "mossy"
       ],
-      "ambience": "amb_night"
+      "ambience": "amb_night",
+      "life": {
+        "birds": 2,
+        "bird": "crow",
+        "flocks": false
+      }
     },
     "lantern_arena": {
       "name": "Lantern Arena",
@@ -3021,7 +3047,14 @@
       "rock_style": [
         "stone"
       ],
-      "ambience": "amb_lake"
+      "ambience": "amb_lake",
+      "life": {
+        "birds": 4,
+        "bird": "song",
+        "butterflies": 6,
+        "flocks": true,
+        "clouds": 3
+      }
     },
     "twilight": {
       "name": "Twilight Woods",
@@ -4056,7 +4089,11 @@
       "rock_style": [
         "mossy"
       ],
-      "ambience": "amb_night"
+      "ambience": "amb_night",
+      "life": {
+        "birds": 2,
+        "bird": "crow"
+      }
     },
     "ridge": {
       "name": "Galeclaw Ridge",
@@ -5071,7 +5108,13 @@
       "rock_style": [
         "crag"
       ],
-      "ambience": "amb_wind"
+      "ambience": "amb_wind",
+      "life": {
+        "birds": 3,
+        "bird": "crow",
+        "flocks": true,
+        "clouds": 4
+      }
     },
     "grove": {
       "name": "Elder Grove",
@@ -6007,7 +6050,11 @@
       "rock_style": [
         "mossy"
       ],
-      "ambience": "amb_night"
+      "ambience": "amb_night",
+      "life": {
+        "birds": 2,
+        "bird": "crow"
+      }
     },
     "ruins": {
       "name": "Moonfall Ruins",
@@ -6919,7 +6966,14 @@
         "crag",
         "mossy"
       ],
-      "ambience": "amb_wind"
+      "ambience": "amb_wind",
+      "life": {
+        "birds": 4,
+        "bird": "crow",
+        "butterflies": 3,
+        "flocks": true,
+        "clouds": 3
+      }
     },
     "frostgate": {
       "name": "Frostgate",
@@ -7229,7 +7283,13 @@
       "rock_style": [
         "snowy"
       ],
-      "ambience": "amb_snow"
+      "ambience": "amb_snow",
+      "life": {
+        "birds": 3,
+        "bird": "snow",
+        "flocks": true,
+        "clouds": 2
+      }
     },
     "frost_arena": {
       "name": "Frost Arena",
@@ -8266,7 +8326,13 @@
       "rock_style": [
         "snowy"
       ],
-      "ambience": "amb_snow"
+      "ambience": "amb_snow",
+      "life": {
+        "birds": 3,
+        "bird": "snow",
+        "flocks": true,
+        "clouds": 3
+      }
     },
     "willow_market": {
       "name": "Willow Market",
@@ -8598,7 +8664,14 @@
           "spawn": "market"
         }
       ],
-      "pollen": 12
+      "pollen": 12,
+      "life": {
+        "birds": 4,
+        "bird": "sparrow",
+        "butterflies": 3,
+        "flocks": true,
+        "clouds": 2
+      }
     },
     "lantern_market": {
       "name": "Lantern Bazaar",
@@ -8911,7 +8984,12 @@
         0.9,
         0.98
       ],
-      "fireflies": 16
+      "fireflies": 16,
+      "life": {
+        "birds": 2,
+        "bird": "crow",
+        "flocks": false
+      }
     },
     "frost_market": {
       "name": "Frostgate Market",
@@ -9224,7 +9302,13 @@
         0.97,
         1.0
       ],
-      "snowfall": 28
+      "snowfall": 28,
+      "life": {
+        "birds": 3,
+        "bird": "snow",
+        "flocks": true,
+        "clouds": 2
+      }
     }
   }
 }

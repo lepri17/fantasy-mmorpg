@@ -705,6 +705,18 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
         if not isinstance(data.get("name"), str):
             error(f"{where}: needs a 'name'")
         need_number(where, data, "teleport_price", 0)
+        life = data.get("life")
+        if life is not None:  # birds, butterflies, flocks and cloud shadows (ambient_life.gd)
+            if not isinstance(life, dict) or set(life) - {"birds", "bird", "butterflies", "flocks", "clouds"}:
+                error(f"{where}: 'life' takes birds, bird, butterflies, flocks and clouds")
+            else:
+                for key in ("birds", "butterflies", "clouds"):
+                    if not (isinstance(life.get(key, 0), int) and 0 <= life.get(key, 0) <= 20):
+                        error(f"{where}: life '{key}' must be a whole number from 0 to 20")
+                if "bird" in life and not res_exists(f"res://assets/environment/critters/bird_{life['bird']}.png"):
+                    error(f"{where}: life bird '{life['bird']}' has no drawing")
+                if life.get("birds", 0) and "bird" not in life:
+                    error(f"{where}: life with birds needs a 'bird' kind")
         if "ambience" in data and not res_exists(f"res://assets/audio/{data['ambience']}.wav"):
             error(f"{where}: ambience '{data['ambience']}' has no sound file")
         if "music" in data and not res_exists(f"res://assets/audio/{data['music']}.wav"):

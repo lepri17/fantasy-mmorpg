@@ -483,6 +483,13 @@ func _towns(main, player) -> void:
 	await _shot("72_lucky_monster")
 	main.events.left = 0.01
 	await _frames(5)
+	main.change_map("field", "default")  # life in the maps: birds, butterflies, a flock
+	await _frames(40)
+	player.global_position = main.map.spawn_point("default") + Vector2(200, 0)
+	await _frames(10)
+	main.map.get_node("AmbientLife").start_flock()
+	await _frames(150)
+	await _shot("73_life_meadow")
 
 
 func _nearest_enemy(monster_id: String, point: Vector2):
