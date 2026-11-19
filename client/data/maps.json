@@ -3719,18 +3719,66 @@
         {
           "type": "monster",
           "pos": [
-            2000,
-            1250
+            1650,
+            720
           ],
           "id": "rock_beetle"
         },
         {
           "type": "monster",
           "pos": [
-            2420,
-            1360
+            2470,
+            1000
           ],
           "id": "rock_beetle"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1600,
+            1220
+          ],
+          "id": "gale_harpy"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2150,
+            640
+          ],
+          "id": "gale_harpy"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2470,
+            780
+          ],
+          "id": "gale_harpy"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            700,
+            1010
+          ],
+          "id": "gale_harpy"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2250,
+            1330
+          ],
+          "id": "stormcrest_roc"
+        },
+        {
+          "type": "shrine",
+          "pos": [
+            1950,
+            1180
+          ],
+          "gift": "power"
         },
         {
           "type": "monster",

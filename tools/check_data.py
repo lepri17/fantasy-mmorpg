@@ -552,6 +552,8 @@ MONSTER_MOVES = {
              "damage_multiplier", "cooldown"),
     "roll": ("range", "seconds", "speed", "damage_multiplier", "damage_taken", "cooldown"),
     "lob": ("range", "min_range", "flight_seconds", "radius", "damage_multiplier", "cooldown"),
+    "swoop": ("range", "height", "rise_seconds", "glide_speed", "glide_seconds", "warning_seconds",
+              "radius", "damage_multiplier", "cooldown"),
 }
 SERVICES = {"shop", "heal", "storage", "teleport", "quests"}
 

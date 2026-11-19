@@ -12,6 +12,9 @@ extends Node
 ##   off rocks and cliffs, hitting him whenever it hits him, harder to hurt.
 ## - "lob" (Crag Imp): it heaves a rock high over the ground at the hero; it
 ##   lands on the spot under a warning circle (lobbed_rock.gd).
+## - "swoop" (Gale Harpy, Stormcrest Roc): it flies up out of reach, glides
+##   over to the hero (over cliffs and rifts too), marks a circle under itself
+##   and dives onto it.
 ## slime.gd owns it (a child named "Moves") and asks it each frame: busy(),
 ## step() while busy, try_start() when a move could begin; damage_taken() when
 ## hit; on_death() when it dies; reset() when it comes back.
@@ -19,7 +22,9 @@ extends Node
 const Telegraph := preload("res://scripts/combat/telegraph.gd")
 const Burst := preload("res://scripts/combat/burst.gd")
 const LobbedRock := preload("res://scripts/combat/lobbed_rock.gd")
-const MOVES := ["shell", "leap", "split", "roll", "lob"]
+const MOVES := ["shell", "leap", "split", "roll", "lob", "swoop"]
+const DIVE_SECONDS := 0.18
+const FEATHERS := Color(0.84, 0.8, 0.96)
 const THROW_SECONDS := 0.4  # it stands still while it throws
 const SLIME_SCENE_PATH := "res://scenes/enemies/slime.tscn"
 const DUST := Color(0.7, 0.62, 0.45)
@@ -30,6 +35,7 @@ var leap: Dictionary = {}
 var split: Dictionary = {}
 var roll: Dictionary = {}
 var lob: Dictionary = {}
+var swoop: Dictionary = {}
 var _ready_in: float = 0.0
 var _shell_left: float = 0.0
 var _crouch_left: float = 0.0
@@ -40,6 +46,11 @@ var _roll_left: float = 0.0
 var _roll_dir := Vector2.RIGHT
 var _roll_hit_in: float = 0.0
 var _throw_left: float = 0.0
+var _rise_left: float = 0.0
+var _glide_left: float = 0.0
+var _mark_left: float = 0.0
+var _dive_left: float = 0.0
+var _swoop_to := Vector2.ZERO
 
 
 ## True if a monster's data asks for any of these moves.
@@ -54,6 +65,7 @@ func setup(owner_monster, data: Dictionary) -> void:
 	split = data.get("split", {})
 	roll = data.get("roll", {})
 	lob = data.get("lob", {})
+	swoop = data.get("swoop", {})
 	reset()
 
 
@@ -64,6 +76,7 @@ func reset() -> void:
 	_air_left = 0.0
 	_roll_left = 0.0
 	_throw_left = 0.0
+	_land_from_sky()
 
 
 ## In the middle of a move: the monster neither walks nor attacks by itself.
@@ -74,7 +87,13 @@ func busy() -> bool:
 		or _air_left > 0.0
 		or _roll_left > 0.0
 		or _throw_left > 0.0
+		or in_sky()
 	)
+
+
+## Up in the air in a swoop: out of reach.
+func in_sky() -> bool:
+	return _rise_left > 0.0 or _glide_left > 0.0 or _mark_left > 0.0 or _dive_left > 0.0
 
 
 func rolling() -> bool:
@@ -93,21 +112,39 @@ func tick(delta: float) -> void:
 func try_start(target: Node2D, distance: float) -> bool:
 	if _ready_in > 0.0 or busy():
 		return false
-	if not shell.is_empty() and distance <= float(shell["range"]):
-		_go_in()
-		return true
-	if not leap.is_empty() and distance >= float(leap["min_range"]):
-		if distance <= float(leap["range"]):
+	match _move_for(distance):
+		"shell":
+			_go_in()
+		"leap":
 			_crouch(target)
-			return true
-	if not roll.is_empty() and distance <= float(roll["range"]):
-		_start_roll(target)
-		return true
-	if not lob.is_empty() and distance >= float(lob["min_range"]):
-		if distance <= float(lob["range"]):
+		"roll":
+			_start_roll(target)
+		"swoop":
+			_take_wing()
+		"lob":
 			_throw(target)
-			return true
-	return false
+		_:
+			return false
+	return true
+
+
+## Which of its moves suits the hero's distance now ("" for none).
+func _move_for(distance: float) -> String:
+	if not shell.is_empty() and distance <= float(shell["range"]):
+		return "shell"
+	if not leap.is_empty() and _within(distance, leap):
+		return "leap"
+	if not roll.is_empty() and distance <= float(roll["range"]):
+		return "roll"
+	if not swoop.is_empty() and distance <= float(swoop["range"]):
+		return "swoop"
+	if not lob.is_empty() and _within(distance, lob):
+		return "lob"
+	return ""
+
+
+static func _within(distance: float, move: Dictionary) -> bool:
+	return float(move["min_range"]) <= distance and distance <= float(move["range"])
 
 
 ## The movement while busy (none: it hides, crouches, or flies on its own).
@@ -131,6 +168,8 @@ func step(delta: float) -> Vector2:
 		return _roll_step(delta)
 	elif _throw_left > 0.0:
 		_throw_left -= delta
+	elif in_sky():
+		return _swoop_step(delta)
 	return Vector2.ZERO
 
 
@@ -147,6 +186,7 @@ func on_death() -> void:
 	monster.lift(0.0)
 	_air_left = 0.0
 	_roll_left = 0.0
+	_land_from_sky()
 	if split.is_empty():
 		return
 	for i in int(split["count"]):
@@ -249,3 +289,76 @@ func _throw(target: Node2D) -> void:
 	rock.radius = float(lob["radius"])
 	rock.damage = roundi(monster.attack_damage * float(lob["damage_multiplier"]))
 	parent.add_child(rock)
+
+
+func _take_wing() -> void:
+	_ready_in = float(swoop["cooldown"])
+	_rise_left = float(swoop["rise_seconds"])
+	monster.set_solid(false)
+	monster.remove_from_group("enemies")  # nothing can aim at it up there
+	monster.z_index = 3
+	monster.play_move("soar")
+
+
+## Up, over to the hero, a circle under it, and down onto it.
+func _swoop_step(delta: float) -> Vector2:
+	var height: float = float(swoop["height"])
+	var target: Node2D = monster.chase_target()
+	if _rise_left > 0.0:
+		_rise_left = maxf(0.0, _rise_left - delta)
+		monster.lift(height * (1.0 - _rise_left / float(swoop["rise_seconds"])))
+		if _rise_left == 0.0:
+			_glide_left = float(swoop["glide_seconds"])
+		return Vector2.ZERO
+	if _glide_left > 0.0:
+		_glide_left = maxf(0.0, _glide_left - delta)
+		var aim: Vector2 = target.global_position if target != null else monster.global_position
+		if _glide_left == 0.0 or monster.global_position.distance_to(aim) < 24.0:
+			_glide_left = 0.0
+			_mark(aim)
+			return Vector2.ZERO
+		return monster.global_position.direction_to(aim) * float(swoop["glide_speed"])
+	if _mark_left > 0.0:
+		_mark_left = maxf(0.0, _mark_left - delta)
+		if _mark_left == 0.0:
+			_dive_left = DIVE_SECONDS
+			monster.play_move("dive")
+		return (_swoop_to - monster.global_position) * 8.0
+	_dive_left = maxf(0.0, _dive_left - delta)
+	monster.lift(height * _dive_left / DIVE_SECONDS)
+	if _dive_left == 0.0:
+		_back_down()
+		Burst.spawn(monster.get_parent(), monster.position, FEATHERS, 16, 140.0)
+		if target != null and target.global_position.distance_to(_swoop_to) <= float(swoop["radius"]):
+			monster.hit_hard(target, float(swoop["damage_multiplier"]))
+	return Vector2.ZERO
+
+
+func _mark(spot: Vector2) -> void:
+	_swoop_to = spot
+	_mark_left = float(swoop["warning_seconds"])
+	var circle: Node2D = Telegraph.new()
+	circle.radius = float(swoop["radius"])
+	circle.seconds = float(swoop["warning_seconds"]) + DIVE_SECONDS
+	circle.z_index = -1
+	circle.position = monster.get_parent().to_local(spot)
+	monster.get_parent().add_child(circle)
+
+
+## Cut short (it died, or came back): down on the ground again.
+func _land_from_sky() -> void:
+	if in_sky():
+		_back_down()
+	_rise_left = 0.0
+	_glide_left = 0.0
+	_mark_left = 0.0
+	_dive_left = 0.0
+
+
+func _back_down() -> void:
+	monster.lift(0.0)
+	monster.set_solid(true)
+	monster.z_index = 0
+	if not monster.is_in_group("enemies"):
+		monster.add_to_group("enemies")
+	monster.play_move("idle")

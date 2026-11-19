@@ -286,6 +286,21 @@ func _ridge(main, player) -> void:
 	player.global_position = imp.global_position + Vector2(-60, 260)
 	await _frames(20)  # its rock is up in the air
 	await _shot("47_imp_lob")
+	imp.set_physics_process(false)
+	var harpy = _nearest_enemy("gale_harpy", Vector2(700, 1010))
+	harpy.set_physics_process(true)
+	harpy.moves.set("_ready_in", 0.0)
+	player.global_position = harpy.global_position + Vector2(200, -40)
+	for _i in 300:
+		await process_frame
+		if float(harpy.moves.get("_mark_left")) > 0.0:
+			break
+	await _shot("48_harpy_swoop")
+	harpy.set_physics_process(false)
+	var roc = _nearest_enemy("stormcrest_roc", Vector2(2250, 1330))
+	player.global_position = roc.global_position + Vector2(-250, -60)
+	await _frames(20)
+	await _shot("49_stormcrest_roc")
 
 
 func _nearest_enemy(monster_id: String, point: Vector2):

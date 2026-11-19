@@ -1,7 +1,8 @@
 extends "res://tests/smoke_lake.gd"
 ## The Galeclaw Ridge part of the smoke test: the road east from Twilight
 ## Woods, the rift (it stops the hero, its rope bridges cross it) and the
-## cliffs, the Rock Beetle's bouncing roll and the Crag Imp's thrown rock.
+## cliffs, the Rock Beetle's bouncing roll, the Crag Imp's thrown rock, the
+## Gale Harpy's swoop and the Stormcrest Roc.
 ## smoke_test.gd runs it; the helpers come from smoke_lake.gd.
 
 
@@ -14,6 +15,7 @@ func run(test, main, player, _hud) -> void:
 	await _check_roll(main, player)
 	await _check_bounce(main, player)
 	await _check_lob(main, player)
+	await _check_swoop(main, player)
 	main.change_map("town")
 	await t._frames(3)
 
@@ -42,7 +44,7 @@ func _check_ridge(main) -> void:
 	for enemy in t.get_nodes_in_group("enemies"):
 		monsters[enemy.monster_id] = int(monsters.get(enemy.monster_id, 0)) + 1
 	t._check(
-		monsters == {"rock_beetle": 6, "crag_imp": 5},
+		monsters == {"rock_beetle": 6, "crag_imp": 5, "gale_harpy": 4, "stormcrest_roc": 1},
 		"the ridge has its own monsters (%s)" % str(monsters)
 	)
 	var rift = _water()
@@ -53,6 +55,11 @@ func _check_ridge(main) -> void:
 	t._check(
 		t.get_nodes_in_group("cliffs").size() == 5 and t.get_nodes_in_group("chests").size() == 2,
 		"five cliffs, and two treasure chests to find"
+	)
+	var roc = _monster_near("stormcrest_roc", Vector2.ZERO)
+	t._check(
+		roc != null and roc.is_in_group("bosses") and roc.level == 17,
+		"the Stormcrest Roc is the ridge's boss"
 	)
 
 
@@ -155,3 +162,37 @@ func _check_lob(main, player) -> void:
 	)
 	await t._frames(80)
 	t._check(player.hp < player.max_hp, "the rock comes down on him (%d HP)" % player.hp)
+
+
+func _check_swoop(main, player) -> void:
+	main.change_map("ridge", "west")
+	await t._frames(3)
+	t._freeze(t.get_nodes_in_group("enemies"), true)
+	var harpy = _monster_near("gale_harpy", Vector2(700, 1010))
+	t._freeze([harpy], false)
+	harpy.moves.set("_ready_in", 0.0)
+	_heal(player)
+	player.global_position = harpy.global_position + Vector2(250, 0)
+	var spot: Vector2 = player.global_position
+	await t._frames(3)
+	t._check(
+		harpy.moves.in_sky() and not harpy.is_in_group("enemies"),
+		"the Gale Harpy flies up out of reach"
+	)
+	var mark = null
+	for i in 150:
+		await t._frames(1)
+		for circle in t.get_nodes_in_group("telegraphs"):
+			if is_equal_approx(float(circle.get("radius")), 80.0):
+				mark = circle
+		if mark != null:
+			break
+	t._check(
+		mark != null and mark.global_position.distance_to(spot) < 40.0,
+		"it glides over the hero and marks a circle under itself"
+	)
+	await t._frames(70)
+	t._check(
+		not harpy.moves.in_sky() and harpy.is_in_group("enemies") and player.hp < player.max_hp,
+		"then it dives onto him and is back in reach (%d HP)" % player.hp
+	)
