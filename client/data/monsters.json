@@ -1323,7 +1323,21 @@
       "min_rarity": "rare"
     },
     "gear_drops": {
-      "chance": 1.0
+      "chance": 1.0,
+      "items": [
+        "moonfall_blade",
+        "moonfall_bow",
+        "moonfall_staff",
+        "moonfall_plate",
+        "moonfall_vest",
+        "moonfall_robe",
+        "moonfall_band",
+        "moonfall_hood",
+        "moonfall_hat",
+        "moonfall_gloves",
+        "moonfall_boots",
+        "moonfall_cape"
+      ]
     },
     "crown": false
   },
@@ -1567,7 +1581,21 @@
       "min_rarity": "rare"
     },
     "gear_drops": {
-      "chance": 1.0
+      "chance": 1.0,
+      "items": [
+        "frostfang_blade",
+        "frostfang_bow",
+        "frostfang_staff",
+        "frostfang_plate",
+        "frostfang_vest",
+        "frostfang_robe",
+        "frostfang_band",
+        "frostfang_hood",
+        "frostfang_hat",
+        "frostfang_gloves",
+        "frostfang_boots",
+        "frostfang_cape"
+      ]
     },
     "crown": false
   }

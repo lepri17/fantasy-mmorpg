@@ -642,6 +642,37 @@ LOOK_VARIANTS = {
         "leather_boots", "boots", ["boots", "boots_far", "boots_near"], [("hue", 20, 250)]
     ),
     "moonfall_cape": ("red_cape", "cape", ["cape", "scarf"], [("hue", 355, 250)]),
+    # The Frostfang tier (level 22, Frostfang Hollow): ice blue and frost white.
+    "frostfang_blade": (
+        "training_sword", "sword", ["sword_back", "sword_body", "sword_front"],
+        [("steel", (215, 240, 255), 0.5), ("hue", 30, 195)],
+    ),
+    "frostfang_bow": (
+        "short_bow", "bow", ["sword_back", "sword_body", "sword_front", "quiver"], [("hue", 26, 195)]
+    ),
+    "frostfang_staff": (
+        "oak_staff", "staff", ["sword_back", "sword_body", "sword_front"],
+        [("hue", 30, 200), ("hue", 197, 178)],
+    ),
+    "frostfang_plate": (
+        "blue_plate", "armor", ["armor", "armor_arms", "armor_arm_far", "pauldrons"], [("hue", 220, 190)],
+    ),
+    "frostfang_vest": ("ranger_vest", "vest", ["vest"], [("hue", 26, 195)]),
+    "frostfang_robe": (
+        "violet_robe", "robe", ["robe", "robe_arms", "robe_arm_far"], [("hue", 261, 192)]
+    ),
+    "frostfang_band": ("red_headband", "headband", ["headband", "tails"], [("hue", 355, 195)]),
+    "frostfang_hood": ("green_hood", "hood", ["hood"], [("hue", 131, 195)]),
+    "frostfang_hat": ("sage_hat", "hat", ["hat"], [("hue", 261, 192)]),
+    "frostfang_gloves": (
+        "leather_gloves", "gloves",
+        ["gloves", "bracers", "glove_far", "bracer_far", "grip_glove_body", "grip_glove_front"],
+        [("hue", 20, 195)],
+    ),
+    "frostfang_boots": (
+        "leather_boots", "boots", ["boots", "boots_far", "boots_near"], [("hue", 20, 195)]
+    ),
+    "frostfang_cape": ("red_cape", "cape", ["cape", "scarf"], [("hue", 355, 195)]),
     "crimson_plate": (
         "blue_plate", "armor", ["armor", "armor_arms", "armor_arm_far", "pauldrons"],
         [("hue", 220, 355)],

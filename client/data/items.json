@@ -935,6 +935,184 @@
       "icon": "res://assets/items/icons/moonfall_cape.png",
       "text": "It ripples like a sky full of stars.",
       "price": 3000
+    },
+    "frostfang_blade": {
+      "name": "Frostfang Blade",
+      "slot": "weapon",
+      "level": 22,
+      "look": "training_sword",
+      "set": "frostfang",
+      "classes": [
+        "warrior"
+      ],
+      "attack": 25,
+      "crit_damage": 0.12,
+      "icon": "res://assets/items/icons/frostfang_blade.png",
+      "text": "Its edge never thaws.",
+      "price": 5250
+    },
+    "frostfang_bow": {
+      "name": "Frostfang Bow",
+      "slot": "weapon",
+      "level": 22,
+      "look": "short_bow",
+      "set": "frostfang",
+      "classes": [
+        "archer"
+      ],
+      "attack": 21,
+      "crit_chance": 0.09,
+      "icon": "res://assets/items/icons/frostfang_bow.png",
+      "text": "Strung with frozen wyrm sinew.",
+      "price": 5050
+    },
+    "frostfang_staff": {
+      "name": "Frostfang Staff",
+      "slot": "weapon",
+      "level": 22,
+      "look": "oak_staff",
+      "set": "frostfang",
+      "classes": [
+        "mage"
+      ],
+      "attack": 21,
+      "skill_damage": 0.28,
+      "icon": "res://assets/items/icons/frostfang_staff.png",
+      "text": "A shard of the hollow's oldest ice.",
+      "price": 5050
+    },
+    "frostfang_plate": {
+      "name": "Frostfang Plate",
+      "slot": "armor",
+      "level": 22,
+      "look": "blue_plate",
+      "set": "frostfang",
+      "classes": [
+        "warrior"
+      ],
+      "max_hp": 91,
+      "defense": 16,
+      "icon": "res://assets/items/icons/frostfang_plate.png",
+      "text": "Rimed steel, cold to the touch.",
+      "price": 4850
+    },
+    "frostfang_vest": {
+      "name": "Frostfang Vest",
+      "slot": "armor",
+      "level": 22,
+      "look": "ranger_vest",
+      "set": "frostfang",
+      "classes": [
+        "archer"
+      ],
+      "max_hp": 78,
+      "defense": 10,
+      "evasion": 0.07,
+      "icon": "res://assets/items/icons/frostfang_vest.png",
+      "text": "Snow-wolf fur under frosted leather.",
+      "price": 4650
+    },
+    "frostfang_robe": {
+      "name": "Frostfang Robe",
+      "slot": "armor",
+      "level": 22,
+      "look": "violet_robe",
+      "set": "frostfang",
+      "classes": [
+        "mage"
+      ],
+      "max_hp": 70,
+      "defense": 10,
+      "max_stamina": 58,
+      "icon": "res://assets/items/icons/frostfang_robe.png",
+      "text": "Woven from falling snow.",
+      "price": 4650
+    },
+    "frostfang_band": {
+      "name": "Frostfang Band",
+      "slot": "head",
+      "level": 22,
+      "look": "red_headband",
+      "set": "frostfang",
+      "classes": [
+        "warrior"
+      ],
+      "max_hp": 36,
+      "defense": 6,
+      "icon": "res://assets/items/icons/frostfang_band.png",
+      "text": "A circlet of clear blue ice.",
+      "price": 3650
+    },
+    "frostfang_hood": {
+      "name": "Frostfang Hood",
+      "slot": "head",
+      "level": 22,
+      "look": "green_hood",
+      "set": "frostfang",
+      "classes": [
+        "archer"
+      ],
+      "max_hp": 31,
+      "evasion": 0.05,
+      "crit_chance": 0.04,
+      "icon": "res://assets/items/icons/frostfang_hood.png",
+      "text": "Lined with snow-wolf fur.",
+      "price": 3650
+    },
+    "frostfang_hat": {
+      "name": "Frostfang Hat",
+      "slot": "head",
+      "level": 22,
+      "look": "sage_hat",
+      "set": "frostfang",
+      "classes": [
+        "mage"
+      ],
+      "max_hp": 27,
+      "max_stamina": 49,
+      "skill_damage": 0.1,
+      "icon": "res://assets/items/icons/frostfang_hat.png",
+      "text": "Frost gathers on its brim.",
+      "price": 3650
+    },
+    "frostfang_gloves": {
+      "name": "Frostfang Gloves",
+      "slot": "gloves",
+      "level": 22,
+      "look": "leather_gloves",
+      "set": "frostfang",
+      "attack": 6,
+      "crit_chance": 0.05,
+      "accuracy": 0.06,
+      "icon": "res://assets/items/icons/frostfang_gloves.png",
+      "text": "Never numb, never slow.",
+      "price": 3850
+    },
+    "frostfang_boots": {
+      "name": "Frostfang Boots",
+      "slot": "boots",
+      "level": 22,
+      "look": "leather_boots",
+      "set": "frostfang",
+      "max_hp": 31,
+      "evasion": 0.05,
+      "attack_speed": 0.06,
+      "icon": "res://assets/items/icons/frostfang_boots.png",
+      "text": "Sure-footed on the frozen pond.",
+      "price": 3850
+    },
+    "frostfang_cape": {
+      "name": "Frostfang Cape",
+      "slot": "cape",
+      "level": 22,
+      "look": "red_cape",
+      "set": "frostfang",
+      "max_hp": 39,
+      "defense": 4,
+      "crit_damage": 0.19,
+      "icon": "res://assets/items/icons/frostfang_cape.png",
+      "text": "It catches the snow and keeps it.",
+      "price": 4050
     }
   },
   "upgrades": {
@@ -1048,6 +1226,22 @@
         "6": {
           "attack_speed": 0.1,
           "crit_damage": 0.15
+        }
+      }
+    },
+    "frostfang": {
+      "name": "Frostfang Set",
+      "bonuses": {
+        "2": {
+          "max_hp": 50
+        },
+        "4": {
+          "attack": 8,
+          "crit_chance": 0.05
+        },
+        "6": {
+          "attack_speed": 0.12,
+          "crit_damage": 0.2
         }
       }
     }

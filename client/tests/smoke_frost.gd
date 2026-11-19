@@ -1,7 +1,7 @@
 extends "res://tests/smoke_ruins.gd"
 ## The Frostfang Hollow part of the smoke test: the road north from Moonfall
 ## Ruins, the frozen pond (ice to walk on), ice cliffs and falling snow, the
-## icicle gorge, a Snow Wolf's pounce and the Frost Wyrm. smoke_test.gd runs
+## icicle gorge, a Snow Wolf's pounce, the Frost Wyrm and the Frostfang set. smoke_test.gd runs
 ## it; the helpers come from smoke_ruins.gd and smoke_lake.gd.
 
 
@@ -12,6 +12,7 @@ func run(test, main, player, _hud) -> void:
 	await _check_pond(main, player)
 	await _check_icefall(main, player)
 	await _check_pounce(main, player)
+	await _check_frost_set(main, player)
 	main.change_map("town")
 	await t._frames(3)
 
@@ -112,3 +113,34 @@ func _check_pounce(main, player) -> void:
 	t._check(lanes.size() == 1, "a Snow Wolf crouches and marks its pounce")
 	await t._frames(60)
 	t._check(player.hp < player.max_hp, "then it leaps on the hero (%d HP)" % player.hp)
+
+
+func _check_frost_set(main, player) -> void:
+	t._check(
+		ItemDb.set_size("frostfang") == 12 and ItemDb.set_size("frostfang", "warrior") == 6,
+		"the Frostfang set has 12 pieces, 6 that each class can wear"
+	)
+	t._check(
+		"frostfang_blade" in ItemDb.drop_pool(23) and not "frostfang_blade" in ItemDb.drop_pool(19),
+		"Frostfang gear drops from the hollow's strongest monsters, not yet from the wolves"
+	)
+	main.change_map("frostfang", "south")
+	await t._frames(3)
+	var wyrm = _one(main, "frost_wyrm", Vector2(1920, 170))
+	wyrm.set_physics_process(false)
+	_heal(player)
+	player.global_position = wyrm.global_position + Vector2(-700, 700)  # out of the loot's reach
+	wyrm.set("_player", player)
+	var before: Array = t.get_nodes_in_group("pickups")
+	wyrm.call("_maybe_drop_gear")
+	await t._frames(2)
+	var dropped: Array = t.get_nodes_in_group("pickups").filter(
+		func(p): return not p in before and not p.get("stack").is_empty()
+	)
+	t._check(
+		(
+			dropped.size() == 3
+			and dropped.all(func(p): return str(p.get("stack")["id"]).begins_with("frostfang_"))
+		),
+		"the Frost Wyrm drops three Frostfang pieces (%d)" % dropped.size()
+	)

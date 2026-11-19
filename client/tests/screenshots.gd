@@ -383,6 +383,19 @@ func _frost(main, player) -> void:
 	player.global_position = Vector2(1700, 230)
 	await _frames(20)
 	await _shot("58_frost_wyrm")
+	var saved_gear: Dictionary = player.stats.equipment.duplicate(true)
+	for item_id in [
+		"frostfang_blade", "frostfang_plate", "frostfang_band",
+		"frostfang_gloves", "frostfang_boots", "frostfang_cape"
+	]:
+		player.stats.equipment[ItemDb.items[item_id]["slot"]] = ItemDb.gear(item_id)
+	player.call("_gear_changed")  # the hero in the icy Frostfang set
+	player.hp = player.max_hp
+	player.global_position = Vector2(700, 1000)
+	await _frames(20)
+	await _shot("59_frostfang_set")
+	player.stats.equipment = saved_gear
+	player.call("_gear_changed")
 
 
 func _nearest_enemy(monster_id: String, point: Vector2):
