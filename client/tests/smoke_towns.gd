@@ -44,6 +44,10 @@ func _check_street(main, player) -> void:
 		),
 		"each of them stands at the door of their own house"
 	)
+	t._check(
+		main.map.find_children("*", "PointLight2D", true, false).is_empty(),
+		"the street lamps paint their glow, with no real lights to slow a phone"
+	)
 	_heal(player)
 	player.global_position = Vector2(1700, 560)
 	await t._frames(2)

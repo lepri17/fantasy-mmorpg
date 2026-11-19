@@ -1670,36 +1670,36 @@
           ]
         },
         {
-          "type": "glowcap",
+          "type": "decor",
+          "kind": "mushrooms",
           "pos": [
             460,
             704
-          ],
-          "color": "cyan"
+          ]
         },
         {
-          "type": "glowcap",
+          "type": "decor",
+          "kind": "mushrooms",
           "pos": [
             1180,
             704
-          ],
-          "color": "violet"
+          ]
         },
         {
-          "type": "glowcap",
+          "type": "decor",
+          "kind": "mushrooms",
           "pos": [
             1720,
             704
-          ],
-          "color": "teal"
+          ]
         },
         {
-          "type": "glowcap",
+          "type": "decor",
+          "kind": "mushrooms",
           "pos": [
             2420,
             704
-          ],
-          "color": "cyan"
+          ]
         },
         {
           "type": "portal",

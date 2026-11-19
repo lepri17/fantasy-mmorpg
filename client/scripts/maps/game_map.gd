@@ -73,7 +73,10 @@ func _ready() -> void:
 		var blend: Node2D = GroundBlend.new()
 		blend.name = "GroundBlend"
 		blend.setup(data["ground"])
-		add_child(blend)
+		if DisplayServer.get_name() == "headless":
+			add_child(blend)  # no screen to draw on (the smoke test reads it as it is)
+		else:
+			_bake(blend)
 		_add_edges()
 	for thing in data.get("objects", []):
 		_add_object(thing)
@@ -152,6 +155,7 @@ func _add_object(thing: Dictionary) -> void:
 	match thing["type"]:
 		"torch":
 			node = Torch.new()
+			node.set("lamp", not data.get("indoor", false))  # real light only in the dark cellar
 		"glowcap":
 			node = Glowcap.new()
 			node.set("color_name", thing.get("color", "cyan"))
@@ -237,6 +241,26 @@ func _add_snowfall(count: int) -> void:
 	flakes.color = Color(1, 1, 1, 0.85)
 	flakes.z_index = 5
 	add_child(flakes)
+
+
+## The ground's soft borders and details (ground_blend.gd) are thousands of
+## little shapes: drawn every frame they cost hundreds of draw calls, and the
+## frame rate dropped, most of all in the long towns. They are drawn once into
+## a picture instead (a SubViewport that renders one time), shown by a sprite.
+func _bake(blend: Node2D) -> void:
+	var viewport := SubViewport.new()
+	viewport.name = "GroundBake"
+	viewport.size = Vector2i(map_size())
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	viewport.add_child(blend)
+	add_child(viewport)
+	var picture := Sprite2D.new()
+	picture.name = "GroundPicture"
+	picture.texture = viewport.get_texture()
+	picture.centered = false
+	picture.z_index = -9  # just over the ground, as the shapes were
+	add_child(picture)
 
 
 ## Leaves, pollen or dust drifting over the whole map (DRIFTS), each bit
