@@ -175,8 +175,8 @@ func _check_swoop(main, player) -> void:
 	harpy.moves.set("_ready_in", 0.0)
 	_heal(player)
 	player.global_position = harpy.global_position + Vector2(250, 0)
-	var spot: Vector2 = player.global_position
 	await t._frames(3)
+	var spot: Vector2 = player.global_position  # where he stands once a cliff has pushed him clear
 	t._check(
 		harpy.moves.in_sky() and not harpy.is_in_group("enemies"),
 		"the Gale Harpy flies up out of reach"

@@ -949,40 +949,40 @@
         {
           "type": "monster",
           "pos": [
-            1400,
-            500
+            1760,
+            810
           ],
           "id": "blue_slime"
         },
         {
           "type": "monster",
           "pos": [
-            1700,
-            800
+            1654,
+            907
           ],
           "id": "blue_slime"
         },
         {
           "type": "monster",
           "pos": [
-            2000,
-            450
+            1778,
+            607
           ],
           "id": "blue_slime"
         },
         {
           "type": "monster",
           "pos": [
-            2200,
-            1100
+            1911,
+            1008
           ],
           "id": "blue_slime"
         },
         {
           "type": "monster",
           "pos": [
-            1500,
-            1200
+            1557,
+            760
           ],
           "id": "blue_slime"
         },
@@ -990,24 +990,24 @@
           "type": "monster",
           "id": "spore_shroom",
           "pos": [
-            1900,
-            700
+            1663,
+            750
           ]
         },
         {
           "type": "monster",
           "id": "spore_shroom",
           "pos": [
-            960,
-            1300
+            1481,
+            940
           ]
         },
         {
           "type": "monster",
           "id": "spore_shroom",
           "pos": [
-            2300,
-            420
+            1600,
+            489
           ]
         },
         {
@@ -1283,40 +1283,40 @@
           "type": "monster",
           "id": "twin_slime",
           "pos": [
-            1854,
-            363
+            1669,
+            396
           ]
         },
         {
           "type": "monster",
           "id": "twin_slime",
           "pos": [
-            1227,
-            834
+            1783,
+            493
           ]
         },
         {
           "type": "monster",
           "id": "mossback_beetle",
           "pos": [
-            634,
-            568
+            961,
+            566
           ]
         },
         {
           "type": "monster",
           "id": "mossback_beetle",
           "pos": [
-            2057,
-            299
+            798,
+            607
           ]
         },
         {
           "type": "monster",
           "id": "mossback_beetle",
           "pos": [
-            714,
-            967
+            920,
+            444
           ]
         },
         {
@@ -1331,15 +1331,15 @@
           "type": "monster",
           "id": "puffcap",
           "pos": [
-            611,
-            721
+            668,
+            664
           ]
         },
         {
           "type": "monster",
           "id": "puffcap",
           "pos": [
-            1183,
+            1443,
             692
           ]
         }
@@ -2790,128 +2790,128 @@
         {
           "type": "monster",
           "pos": [
-            420,
-            270
+            1727,
+            363
           ],
           "id": "bubble_slime"
         },
         {
           "type": "monster",
           "pos": [
-            860,
-            230
+            1695,
+            491
           ],
           "id": "bubble_slime"
         },
         {
           "type": "monster",
           "pos": [
-            1700,
-            360
+            1775,
+            234
           ],
           "id": "bubble_slime"
         },
         {
           "type": "monster",
           "pos": [
-            2050,
-            270
+            1878,
+            561
           ],
           "id": "bubble_slime"
         },
         {
           "type": "monster",
           "pos": [
-            2350,
-            480
+            1662,
+            600
           ],
           "id": "bubble_slime"
         },
         {
           "type": "monster",
           "pos": [
-            1900,
-            570
+            1998,
+            190
           ],
           "id": "bubble_slime"
         },
         {
           "type": "monster",
           "pos": [
-            1500,
-            560
+            1434,
+            892
           ],
           "id": "snapjaw_turtle"
         },
         {
           "type": "monster",
           "pos": [
-            1640,
-            940
+            1444,
+            1019
           ],
           "id": "snapjaw_turtle"
         },
         {
           "type": "monster",
           "pos": [
-            2420,
-            690
+            1553,
+            885
           ],
           "id": "snapjaw_turtle"
         },
         {
           "type": "monster",
           "pos": [
-            1050,
-            1060
+            1585,
+            1090
           ],
           "id": "snapjaw_turtle"
         },
         {
           "type": "monster",
           "pos": [
-            300,
-            1060
+            1120,
+            916
           ],
           "id": "snapjaw_turtle"
         },
         {
           "type": "monster",
           "pos": [
-            480,
-            1300
+            1007,
+            1312
           ],
           "id": "marsh_frog"
         },
         {
           "type": "monster",
           "pos": [
-            820,
-            1380
+            871,
+            1357
           ],
           "id": "marsh_frog"
         },
         {
           "type": "monster",
           "pos": [
-            1250,
-            1320
+            1025,
+            1109
           ],
           "id": "marsh_frog"
         },
         {
           "type": "monster",
           "pos": [
-            1560,
-            1420
+            1106,
+            1358
           ],
           "id": "marsh_frog"
         },
         {
           "type": "monster",
           "pos": [
-            770,
-            770
+            724,
+            1302
           ],
           "id": "marsh_frog"
         },
@@ -3182,80 +3182,80 @@
           "type": "monster",
           "id": "bramble_boar",
           "pos": [
-            560,
-            1180
+            1378,
+            812
           ]
         },
         {
           "type": "monster",
           "id": "bramble_boar",
           "pos": [
-            1900,
-            1250
+            1272,
+            869
           ]
         },
         {
           "type": "monster",
           "id": "bramble_boar",
           "pos": [
-            2050,
-            760
+            1136,
+            609
           ]
         },
         {
           "type": "monster",
           "id": "bramble_boar",
           "pos": [
-            700,
-            420
-          ]
-        },
-        {
-          "type": "monster",
-          "id": "bramble_boar",
-          "pos": [
-            1750,
-            380
-          ]
-        },
-        {
-          "type": "monster",
-          "id": "lantern_wisp",
-          "pos": [
-            500,
-            800
-          ]
-        },
-        {
-          "type": "monster",
-          "id": "lantern_wisp",
-          "pos": [
-            1500,
-            1000
-          ]
-        },
-        {
-          "type": "monster",
-          "id": "lantern_wisp",
-          "pos": [
-            2150,
-            450
-          ]
-        },
-        {
-          "type": "monster",
-          "id": "lantern_wisp",
-          "pos": [
-            1000,
-            300
-          ]
-        },
-        {
-          "type": "monster",
-          "id": "lantern_wisp",
-          "pos": [
-            2200,
+            1529,
             1050
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "bramble_boar",
+          "pos": [
+            1123,
+            790
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "lantern_wisp",
+          "pos": [
+            1690,
+            720
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "lantern_wisp",
+          "pos": [
+            1700,
+            847
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "lantern_wisp",
+          "pos": [
+            1688,
+            517
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "lantern_wisp",
+          "pos": [
+            1898,
+            861
+          ]
+        },
+        {
+          "type": "monster",
+          "id": "lantern_wisp",
+          "pos": [
+            1787,
+            670
           ]
         },
         {
@@ -4340,24 +4340,24 @@
           "type": "monster",
           "id": "dusk_imp",
           "pos": [
-            2288,
-            532
+            1960,
+            635
           ]
         },
         {
           "type": "monster",
           "id": "dusk_imp",
           "pos": [
-            2229,
-            349
+            1874,
+            732
           ]
         },
         {
           "type": "monster",
           "id": "dusk_imp",
           "pos": [
-            1363,
-            1023
+            1964,
+            447
           ]
         },
         {
@@ -5257,80 +5257,80 @@
         {
           "type": "monster",
           "pos": [
-            600,
-            790
+            1647,
+            818
           ],
           "id": "rock_beetle"
         },
         {
           "type": "monster",
           "pos": [
-            820,
-            1060
+            1541,
+            915
           ],
           "id": "rock_beetle"
         },
         {
           "type": "monster",
           "pos": [
-            1960,
-            640
+            1665,
+            615
           ],
           "id": "rock_beetle"
         },
         {
           "type": "monster",
           "pos": [
-            2380,
-            700
+            1798,
+            1076
           ],
           "id": "rock_beetle"
         },
         {
           "type": "monster",
           "pos": [
-            1650,
-            720
+            1484,
+            768
           ],
           "id": "rock_beetle"
         },
         {
           "type": "monster",
           "pos": [
-            2470,
-            1000
+            1918,
+            645
           ],
           "id": "rock_beetle"
         },
         {
           "type": "monster",
           "pos": [
-            1600,
-            1220
+            1730,
+            912
           ],
           "id": "gale_harpy"
         },
         {
           "type": "monster",
           "pos": [
-            2150,
-            640
+            1624,
+            1009
           ],
           "id": "gale_harpy"
         },
         {
           "type": "monster",
           "pos": [
-            2470,
-            780
+            1748,
+            709
           ],
           "id": "gale_harpy"
         },
         {
           "type": "monster",
           "pos": [
-            700,
-            1010
+            1702,
+            1125
           ],
           "id": "gale_harpy"
         },
@@ -5345,40 +5345,40 @@
         {
           "type": "monster",
           "pos": [
-            1590,
-            380
+            1866,
+            742
           ],
           "id": "crag_imp"
         },
         {
           "type": "monster",
           "pos": [
-            1560,
-            1110
+            1606,
+            712
           ],
           "id": "crag_imp"
         },
         {
           "type": "monster",
           "pos": [
-            2470,
-            560
+            1832,
+            569
           ],
           "id": "crag_imp"
         },
         {
           "type": "monster",
           "pos": [
-            2330,
-            1020
+            2085,
+            1107
           ],
           "id": "crag_imp"
         },
         {
           "type": "monster",
           "pos": [
-            980,
-            640
+            1509,
+            661
           ],
           "id": "crag_imp"
         }
@@ -5550,40 +5550,40 @@
           "type": "monster",
           "id": "rootling",
           "pos": [
-            600,
-            1150
+            1435,
+            862
           ]
         },
         {
           "type": "monster",
           "id": "rootling",
           "pos": [
-            1900,
-            1200
+            1130,
+            974
           ]
         },
         {
           "type": "monster",
           "id": "rootling",
           "pos": [
-            450,
-            650
+            1423,
+            608
           ]
         },
         {
           "type": "monster",
           "id": "rootling",
           "pos": [
-            2150,
-            700
+            1586,
+            1060
           ]
         },
         {
           "type": "monster",
           "id": "rootling",
           "pos": [
-            1550,
-            900
+            1132,
+            812
           ]
         },
         {
@@ -5614,8 +5614,8 @@
           "type": "monster",
           "id": "moss_golem",
           "pos": [
-            2000,
-            1000
+            1903,
+            1071
           ]
         },
         {
@@ -7442,8 +7442,8 @@
         {
           "type": "monster",
           "pos": [
-            1180,
-            460
+            1101,
+            576
           ],
           "id": "stone_gargoyle"
         },
@@ -7458,8 +7458,8 @@
         {
           "type": "monster",
           "pos": [
-            420,
-            840
+            547,
+            660
           ],
           "id": "stone_gargoyle"
         },
@@ -7490,48 +7490,48 @@
         {
           "type": "monster",
           "pos": [
-            2300,
-            1400
+            2285,
+            1181
           ],
           "id": "mimic"
         },
         {
           "type": "monster",
           "pos": [
-            2440,
-            840
+            2388,
+            870
           ],
           "id": "mimic"
         },
         {
           "type": "monster",
           "pos": [
-            600,
-            640
+            1332,
+            845
           ],
           "id": "ruin_sentinel"
         },
         {
           "type": "monster",
           "pos": [
-            2100,
-            440
+            1226,
+            902
           ],
           "id": "ruin_sentinel"
         },
         {
           "type": "monster",
           "pos": [
-            2150,
-            1100
+            1350,
+            662
           ],
           "id": "ruin_sentinel"
         },
         {
           "type": "monster",
           "pos": [
-            480,
-            1200
+            1403,
+            1043
           ],
           "id": "ruin_sentinel"
         }
@@ -8857,128 +8857,128 @@
         {
           "type": "monster",
           "pos": [
-            380,
-            860
+            946,
+            1167
           ],
           "id": "snow_wolf"
         },
         {
           "type": "monster",
           "pos": [
-            440,
-            950
+            840,
+            1264
           ],
           "id": "snow_wolf"
         },
         {
           "type": "monster",
           "pos": [
-            330,
-            980
+            964,
+            964
           ],
           "id": "snow_wolf"
         },
         {
           "type": "monster",
           "pos": [
-            700,
-            1250
+            918,
+            1349
           ],
           "id": "snow_wolf"
         },
         {
           "type": "monster",
           "pos": [
-            780,
-            1320
+            663,
+            1117
           ],
           "id": "snow_wolf"
         },
         {
           "type": "monster",
           "pos": [
-            640,
-            1350
+            1158,
+            914
           ],
           "id": "snow_wolf"
         },
         {
           "type": "monster",
           "pos": [
-            2400,
-            1300
+            748,
+            1362
           ],
           "id": "snow_wolf"
         },
         {
           "type": "monster",
           "pos": [
-            2470,
-            1370
+            771,
+            829
           ],
           "id": "snow_wolf"
         },
         {
           "type": "monster",
           "pos": [
-            2340,
-            1390
+            1583,
+            924
           ],
           "id": "snow_wolf"
         },
         {
           "type": "monster",
           "pos": [
-            900,
-            720
+            1587,
+            525
           ],
           "id": "frost_wraith"
         },
         {
           "type": "monster",
           "pos": [
-            1200,
-            460
+            1458,
+            464
           ],
           "id": "frost_wraith"
         },
         {
           "type": "monster",
           "pos": [
-            2420,
-            600
+            1585,
+            322
           ],
           "id": "frost_wraith"
         },
         {
           "type": "monster",
           "pos": [
-            2440,
-            1060
+            1678,
+            267
           ],
           "id": "frost_wraith"
         },
         {
           "type": "monster",
           "pos": [
-            520,
-            260
+            1337,
+            467
           ],
           "id": "ice_golem"
         },
         {
           "type": "monster",
           "pos": [
-            1250,
-            280
+            1203,
+            536
           ],
           "id": "ice_golem"
         },
         {
           "type": "monster",
           "pos": [
-            2420,
-            860
+            1355,
+            264
           ],
           "id": "ice_golem"
         }
