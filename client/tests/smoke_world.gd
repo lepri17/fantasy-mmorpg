@@ -12,6 +12,7 @@ const PICKUP_SCENE = preload("res://scenes/items/pickup.tscn")
 const PlayerStats = preload("res://scripts/player/player_stats.gd")
 const SaveFile = preload("res://scripts/player/save_file.gd")
 
+const CombatRules = preload("res://scripts/combat/combat_rules.gd")
 var t = null
 
 
@@ -224,11 +225,14 @@ func run(test, main, player, hud) -> void:
 		player.global_position = shrooms[0].global_position + Vector2(-210, 0)
 		var hp_before_spores: int = player.hp
 		var saw_spore := false
-		for _i in 240:
+		var evasion_cap: float = CombatRules.max_evasion
+		CombatRules.max_evasion = 0.0  # no lucky dodges: the check is that spores fly and hit
+		for _i in 360:
 			await t._frames(1)
 			saw_spore = saw_spore or not t.get_nodes_in_group("projectiles").is_empty()
 			if player.hp < hp_before_spores:
 				break
+		CombatRules.max_evasion = evasion_cap
 		t._check(saw_spore, "a Spore Shroom shoots spores")
 		t._check(player.hp < hp_before_spores, "a spore hits the warrior (hp %d)" % player.hp)
 
