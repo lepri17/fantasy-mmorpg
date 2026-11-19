@@ -319,6 +319,9 @@ func _shoot(target: Node2D) -> void:
 	shot.speed = float(ranged.get("projectile_speed", 260.0))
 	shot.damage = attack_damage
 	shot.on_hit = ranged.get("on_hit", {})
+	if ranged.has("color"):  # e.g. the Crag Imp's pebbles
+		var rgb: Array = ranged["color"]
+		shot.color = Color(rgb[0], rgb[1], rgb[2])
 	get_parent().add_child(shot)
 
 

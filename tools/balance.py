@@ -29,11 +29,12 @@ LEVELS = (1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 18)
 # Where a hero of each level hunts (the monster used for "time to kill").
 HUNT = [(1, "green_slime"), (3, "blue_slime"), (4, "spore_shroom"), (6, "bubble_slime"), (8, "slime_king"),
         (8, "snapjaw_turtle"), (9, "bramble_boar"), (9, "marsh_frog"), (10, "lantern_wisp"),
-        (11, "elder_snapjaw"), (13, "rootling"), (15, "moss_golem"), (18, "elder_treant")]
+        (11, "elder_snapjaw"), (13, "rootling"), (14, "rock_beetle"), (15, "moss_golem"),
+        (15, "crag_imp"), (18, "elder_treant")]
 MAIN_STAT = {"warrior": "strength", "archer": "dexterity", "mage": "energy"}
 # Monsters a hero hunts for XP (not the boss nor the event's golden slimes).
 REGULAR = ("green_slime", "blue_slime", "spore_shroom", "bubble_slime", "snapjaw_turtle", "bramble_boar",
-           "marsh_frog", "lantern_wisp", "rootling", "moss_golem")
+           "marsh_frog", "lantern_wisp", "rootling", "rock_beetle", "moss_golem", "crag_imp")
 BUILD_LEVEL = 10
 GEAR_TARGET = "blue_slime"  # the monster the gear table measures DPS and survival against
 BETWEEN_FIGHTS = 5.0  # seconds of walking, looting and waiting for respawns per kill (pace table)

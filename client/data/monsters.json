@@ -832,5 +832,115 @@
       "chance": 1.0
     },
     "crown": false
+  },
+  "rock_beetle": {
+    "name": "Rock Beetle",
+    "level": 14,
+    "max_hp": 820,
+    "move_speed": 70,
+    "detect_radius": 320,
+    "attack_range": 54,
+    "attack_damage": 46,
+    "attack_cooldown": 1.4,
+    "respawn_seconds": 8,
+    "xp": 260,
+    "gold": [
+      18,
+      34
+    ],
+    "drops": [
+      {
+        "item": "red_potion",
+        "chance": 0.4
+      },
+      {
+        "item": "ember_stone",
+        "chance": 0.12
+      },
+      {
+        "item": "moon_stone",
+        "chance": 0.04
+      }
+    ],
+    "defense": 16,
+    "evasion": 0.02,
+    "tint": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "frames": "res://assets/monsters/beetle/beetle_frames.tres",
+    "knockback_resist": 0.5,
+    "roll": {
+      "range": 300,
+      "seconds": 2.4,
+      "speed": 360,
+      "damage_multiplier": 1.4,
+      "damage_taken": 0.4,
+      "cooldown": 6.0
+    },
+    "gear_drops": {
+      "chance": 0.05
+    }
+  },
+  "crag_imp": {
+    "name": "Crag Imp",
+    "level": 15,
+    "max_hp": 520,
+    "move_speed": 90,
+    "detect_radius": 420,
+    "attack_range": 260,
+    "attack_damage": 40,
+    "attack_cooldown": 1.8,
+    "respawn_seconds": 8,
+    "xp": 270,
+    "gold": [
+      18,
+      36
+    ],
+    "drops": [
+      {
+        "item": "red_potion",
+        "chance": 0.35
+      },
+      {
+        "item": "blue_potion",
+        "chance": 0.15
+      },
+      {
+        "item": "moon_stone",
+        "chance": 0.05
+      }
+    ],
+    "defense": 6,
+    "evasion": 0.12,
+    "tint": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "frames": "res://assets/monsters/imp/imp_frames.tres",
+    "ranged": {
+      "keep_distance": 180,
+      "projectile_speed": 320,
+      "color": [
+        0.62,
+        0.56,
+        0.5
+      ]
+    },
+    "lob": {
+      "range": 420,
+      "min_range": 150,
+      "flight_seconds": 1.1,
+      "radius": 85,
+      "damage_multiplier": 1.8,
+      "cooldown": 5.0
+    },
+    "gear_drops": {
+      "chance": 0.05
+    }
   }
 }

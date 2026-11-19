@@ -534,7 +534,10 @@ def check_upgrades(items_data: dict) -> None:
 OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc", "torch", "glowcap", "decor", "chest",
                 "shrine"}
 GLOW_COLORS = {"cyan", "teal", "violet"}
-DECOR_KINDS = {"reeds", "cattails", "lily", "flowers", "pebbles", "log", "mushrooms", "bones"}  # decor.gd
+DECOR_KINDS = {"reeds", "cattails", "lily", "flowers", "pebbles", "log", "mushrooms", "bones",
+               "crystals"}  # decor.gd
+WATER_STYLES = {"water", "chasm"}  # water.gd
+CLIFF_HEIGHT = 56  # cliff.gd HEIGHT: the rock face below a cliff's top
 SHRINE_GIFTS = {"heal", "power"}  # shrine.gd
 # A monster's extra moves (slime.gd) and the numbers each needs.
 MONSTER_MOVES = {
@@ -547,6 +550,8 @@ MONSTER_MOVES = {
               "damage_multiplier"),
     "leap": ("range", "min_range", "warning_seconds", "air_seconds", "height", "radius",
              "damage_multiplier", "cooldown"),
+    "roll": ("range", "seconds", "speed", "damage_multiplier", "damage_taken", "cooldown"),
+    "lob": ("range", "min_range", "flight_seconds", "radius", "damage_multiplier", "cooldown"),
 }
 SERVICES = {"shop", "heal", "storage", "teleport", "quests"}
 
@@ -703,6 +708,11 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
         for spawn_name, point in spawns.items():
             inside(point, f"spawn '{spawn_name}'")
         waters = [w for w in data.get("objects", []) if w.get("type") == "water"]
+        cliffs = [cliff_block(c["points"]) for c in data.get("objects", [])
+                  if c.get("type") == "cliff" and len(c.get("points", [])) >= 3]
+        for spawn_name, point in spawns.items():
+            if isinstance(point, list) and len(point) == 2 and any(in_polygon(point, c) for c in cliffs):
+                error(f"{where}: spawn '{spawn_name}' is in a cliff")
         for thing in data.get("objects", []):
             kind = thing.get("type")
             if kind == "exit":
@@ -710,6 +720,12 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                 continue
             if kind == "water":
                 check_water(where, thing, inside, spawns)
+                continue
+            if kind == "cliff":
+                top = thing.get("points", [])
+                if not (isinstance(top, list) and len(top) >= 3
+                        and all(inside(point, "cliff point") for point in top)):
+                    error(f"{where}: a cliff needs at least three 'points' on the map")
                 continue
             if kind not in OBJECT_TYPES:
                 error(f"{where}: object type '{kind}' is not one of {sorted(OBJECT_TYPES)}")
@@ -723,6 +739,8 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                 need_number(f"{where} {kind}", thing, "scale", 0.5, 2.5)
             if kind != "decor" and any(is_wet(thing["pos"], w) for w in waters):
                 error(f"{where}: {kind} at {thing['pos']} is in the water")
+            if any(in_polygon(thing["pos"], c) for c in cliffs):
+                error(f"{where}: {kind} at {thing['pos']} is in a cliff")
             if kind == "glowcap" and thing.get("color") not in GLOW_COLORS:
                 error(f"{where}: glowcap color must be one of {sorted(GLOW_COLORS)}")
             if kind == "decor" and thing.get("kind") not in DECOR_KINDS:
@@ -752,6 +770,8 @@ def check_water(where: str, water: dict, inside, spawns: dict) -> None:
     bridges as [x, y, width, height] boxes with both ends on dry land (or an
     island), and no spawn in the water."""
     points = water.get("points", [])
+    if water.get("style", "water") not in WATER_STYLES:
+        error(f"{where}: water style must be one of {sorted(WATER_STYLES)}")
     if not (isinstance(points, list) and len(points) >= 3):
         error(f"{where}: water needs at least three shore 'points'")
         return
@@ -794,6 +814,13 @@ def check_water(where: str, water: dict, inside, spawns: dict) -> None:
         if (isinstance(point, list) and len(point) == 2 and all(is_number(v) for v in point)
                 and wet(point, bridges)):
             error(f"{where}: spawn '{spawn_name}' is in the water")
+
+
+def cliff_block(top: list) -> list:
+    """Roughly the ground a cliff stands on (cliff.gd block): its top, stretched
+    down by the rock face (the top's outline, with its lowest points moved down)."""
+    middle = sum(p[1] for p in top) / len(top)
+    return [[x, y + CLIFF_HEIGHT if y >= middle else y] for x, y in top]
 
 
 def is_wet(point, water: dict) -> bool:

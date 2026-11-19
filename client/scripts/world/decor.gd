@@ -1,10 +1,12 @@
 extends Node2D
 ## Small things that make a map look lived in (a maps.json object "decor":
 ## "kind" and "pos"): reeds, cattails, lily pads, flowers, pebbles, a log,
-## mushrooms, bones. Drawn here; nothing to bump into. Each is a little
+## mushrooms, bones, crystals. Drawn here; nothing to bump into. Each is a little
 ## different (seeded by where it stands).
 
-const KINDS := ["reeds", "cattails", "lily", "flowers", "pebbles", "log", "mushrooms", "bones"]
+const KINDS := [
+	"reeds", "cattails", "lily", "flowers", "pebbles", "log", "mushrooms", "bones", "crystals"
+]
 ## These lie flat, under the feet of whoever walks by; the rest stand up.
 const FLAT := ["lily", "flowers", "pebbles", "bones", "mushrooms"]
 const STALK := Color(0.36, 0.6, 0.3)
@@ -15,6 +17,7 @@ const PAD_DARK := Color(0.24, 0.46, 0.25)
 const BARK := Color(0.5, 0.34, 0.21)
 const BARK_DARK := Color(0.35, 0.23, 0.14)
 const BONE := Color(0.94, 0.92, 0.84)
+const CRYSTAL := [Color(0.56, 0.9, 1.0), Color(0.8, 0.66, 1.0)]
 const PETALS := [
 	Color(1.0, 0.72, 0.84), Color(1.0, 0.95, 0.6), Color(0.96, 0.96, 1.0), Color(0.8, 0.7, 1.0)
 ]
@@ -47,6 +50,35 @@ func _draw() -> void:
 			_mushrooms(rng)
 		"bones":
 			_bones(rng)
+		"crystals":
+			_crystals(rng)
+
+
+## A cluster of glowing crystal shards in the rock (Galeclaw Ridge).
+func _crystals(rng: RandomNumberGenerator) -> void:
+	var tint: Color = CRYSTAL[rng.randi() % CRYSTAL.size()]
+	draw_set_transform(Vector2(0, 2), 0.0, Vector2(1.0, 0.4))
+	draw_circle(Vector2.ZERO, 28.0, Color(tint, 0.25))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	for i in rng.randi_range(3, 5):
+		var base := Vector2(rng.randf_range(-14.0, 14.0), rng.randf_range(-3.0, 3.0))
+		var height: float = rng.randf_range(18.0, 40.0)
+		var lean: float = rng.randf_range(-7.0, 7.0)
+		var half: float = rng.randf_range(4.0, 7.0)
+		var shoulder := Vector2(lean * 0.7, -height * 0.75)
+		var tip := base + Vector2(lean, -height)
+		draw_colored_polygon(
+			PackedVector2Array(
+				[base + Vector2(-half, 0), base + shoulder - Vector2(half, 0), tip, base]
+			),
+			tint.darkened(0.2)
+		)
+		draw_colored_polygon(
+			PackedVector2Array(
+				[base, tip, base + shoulder + Vector2(half, 0), base + Vector2(half, 0)]
+			),
+			tint.lightened(0.2)
+		)
 
 
 func _reeds(rng: RandomNumberGenerator, heads: bool) -> void:

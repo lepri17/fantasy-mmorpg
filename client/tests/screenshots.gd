@@ -100,6 +100,7 @@ func _initialize() -> void:
 	await _shot("32_grove")
 	await _boss_loot(player, hud)
 	await _lake(main, player)
+	await _ridge(main, player)
 	GameScript.sky_seconds = -1.0
 	main.change_map("cellar")
 	await _frames(240)
@@ -257,6 +258,45 @@ func _lake(main, player) -> void:
 		if get_nodes_in_group("telegraphs").any(func(mark): return mark.get("radius") == 200.0):
 			break
 	await _shot("43_snapjaw")
+
+
+## Galeclaw Ridge: the canyon between two cliffs, the rift and a rope bridge,
+## a Rock Beetle rolling and a Crag Imp's rock in the air.
+func _ridge(main, player) -> void:
+	main.change_map("ridge", "west")
+	await _frames(20)
+	for enemy in get_nodes_in_group("enemies"):
+		enemy.set_physics_process(false)
+	player.global_position = Vector2(640, 900)
+	await _frames(20)
+	await _shot("44_canyon")
+	player.global_position = Vector2(1350, 480)
+	await _frames(20)
+	await _shot("45_rope_bridge")
+	var beetle = _nearest_enemy("rock_beetle", Vector2(1960, 640))
+	beetle.set_physics_process(true)
+	beetle.moves.set("_ready_in", 0.0)
+	player.global_position = beetle.global_position + Vector2(-230, 10)
+	await _frames(14)
+	await _shot("46_beetle_roll")
+	beetle.set_physics_process(false)
+	var imp = _nearest_enemy("crag_imp", Vector2(2470, 560))
+	imp.set_physics_process(true)
+	imp.moves.set("_ready_in", 0.0)
+	player.global_position = imp.global_position + Vector2(-60, 260)
+	await _frames(20)  # its rock is up in the air
+	await _shot("47_imp_lob")
+
+
+func _nearest_enemy(monster_id: String, point: Vector2):
+	var best = null
+	for enemy in get_nodes_in_group("enemies"):
+		if enemy.monster_id != monster_id:
+			continue
+		var gap: float = enemy.global_position.distance_to(point)
+		if best == null or gap < best.global_position.distance_to(point):
+			best = enemy
+	return best
 
 
 ## The Elder Treant's reward on the ground (rare pieces stand in a beam of

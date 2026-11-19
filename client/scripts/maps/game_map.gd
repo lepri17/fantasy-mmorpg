@@ -13,6 +13,7 @@ const Torch := preload("res://scripts/world/torch.gd")
 const Glowcap := preload("res://scripts/world/glowcap.gd")
 const EdgeExit := preload("res://scripts/maps/edge_exit.gd")
 const Water := preload("res://scripts/world/water.gd")
+const Cliff := preload("res://scripts/world/cliff.gd")
 const Decor := preload("res://scripts/world/decor.gd")
 const Chest := preload("res://scripts/world/chest.gd")
 const Shrine := preload("res://scripts/world/shrine.gd")
@@ -90,6 +91,11 @@ func _add_object(thing: Dictionary) -> void:
 	if thing["type"] == "water":
 		_add_water(thing)
 		return
+	if thing["type"] == "cliff":
+		var cliff = Cliff.new()
+		cliff.points = _shape(thing["points"])
+		add_child(cliff)
+		return
 	var node: Node2D
 	match thing["type"]:
 		"torch":
@@ -139,18 +145,21 @@ func _add_exit(thing: Dictionary) -> void:
 ## A lake or a river, with its bridges (water.gd).
 func _add_water(thing: Dictionary) -> void:
 	var lake = Water.new()
-	var shore := PackedVector2Array()
-	for point in thing["points"]:
-		shore.append(Vector2(point[0], point[1]))
-	lake.points = shore
+	lake.style = thing.get("style", "water")
+	lake.points = _shape(thing["points"])
 	for box in thing.get("bridges", []):
 		lake.bridges.append(Rect2(box[0], box[1], box[2], box[3]))
 	for island in thing.get("islands", []):
-		var sand := PackedVector2Array()
-		for point in island:
-			sand.append(Vector2(point[0], point[1]))
-		lake.islands.append(sand)
+		lake.islands.append(_shape(island))
 	add_child(lake)
+
+
+## maps.json points ([x, y] pairs) as a shape.
+static func _shape(points: Array) -> PackedVector2Array:
+	var shape := PackedVector2Array()
+	for point in points:
+		shape.append(Vector2(point[0], point[1]))
+	return shape
 
 
 ## Fireflies drifting over the whole map (maps.json "fireflies": how many).

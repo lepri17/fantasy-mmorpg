@@ -1705,7 +1705,7 @@ def build_icon(sheet: Image.Image) -> Image.Image:
 TILE = 128
 # Ground kinds in tiles.png, two seamless variants each, in this column order.
 # client/data/maps.json names them in "tile_kinds".
-TILE_KINDS = ["grass", "path", "stone", "forest", "cellar", "twilight", "grove", "sand"]
+TILE_KINDS = ["grass", "path", "stone", "forest", "cellar", "twilight", "grove", "sand", "crag"]
 
 
 def _seamless(size: int, base, paint, seed: int) -> Image.Image:
@@ -1851,6 +1851,24 @@ def _paint_sand(draw, rng, everywhere, size, scale):
            (1.4, 2.4), (1.0, 1.8))
 
 
+def _paint_crag(draw, rng, everywhere, size, scale):
+    """Galeclaw Ridge: hard grey-brown rock with cracks, gravel and dry tufts."""
+    _blobs(draw, rng, everywhere, size, scale, 9,
+           [(150, 138, 124, 255), (132, 122, 110, 255), (162, 152, 138, 255)], (18, 34), (10, 20))
+    for _ in range(4):  # cracks
+        x, y = rng.uniform(0, size), rng.uniform(0, size)
+        points = [(x, y)]
+        for _ in range(3):
+            x, y = x + rng.uniform(-14, 14), y + rng.uniform(4, 12)
+            points.append((x, y))
+        scaled = [(px * scale, py * scale) for px, py in points]
+        everywhere(lambda ox, oy: draw.line([(ox + px, oy + py) for px, py in scaled],
+                                            fill=(96, 86, 78, 255), width=int(1.6 * scale)))
+    _blobs(draw, rng, everywhere, size, scale, 14, [(112, 102, 94, 255), (182, 172, 160, 255)],
+           (1.6, 3.2), (1.2, 2.4))
+    _tufts(draw, rng, everywhere, size, scale, 5, [(150, 150, 96, 255), (124, 128, 82, 255)])
+
+
 def build_tiles() -> Image.Image:
     """tiles.png: a row of 128 px ground tiles, TILE_KINDS order, two variants each."""
     makers = {
@@ -1862,6 +1880,7 @@ def build_tiles() -> Image.Image:
         "twilight": lambda seed: _seamless(TILE, (58, 102, 92, 255), _paint_twilight, seed),
         "grove": lambda seed: _seamless(TILE, (46, 88, 60, 255), _paint_grove, seed),
         "sand": lambda seed: _seamless(TILE, (228, 200, 144, 255), _paint_sand, seed),
+        "crag": lambda seed: _seamless(TILE, (142, 132, 120, 255), _paint_crag, seed),
     }
     sheet = Image.new("RGBA", (TILE * 2 * len(TILE_KINDS), TILE), (0, 0, 0, 0))
     for i, kind in enumerate(TILE_KINDS):
@@ -2464,6 +2483,191 @@ def draw_frog(rx: float, ry: float, face: str, legs: float) -> Image.Image:
     return c.finish()
 
 
+BEETLE_SHELL = (128, 122, 114, 255)
+BEETLE_SHELL_DARK = (98, 92, 86, 255)
+BEETLE_SHELL_LIGHT = (170, 164, 152, 255)
+BEETLE_BODY = (72, 62, 58, 255)
+BEETLE_GEM = (126, 214, 232, 255)
+# (animation, jaws open 0..1, face, rolled up: 0, or roll frame 1 / 2, bits of shell)
+BEETLE_POSES = [
+    ("idle", 0.0, "normal", 0, 0),
+    ("idle", 0.25, "normal", 0, 0),
+    ("attack", 0.8, "angry", 0, 0),
+    ("attack", 1.0, "angry", 0, 0),
+    ("die", 0.0, "dead", 0, 0),
+    ("die", 0.0, "dead", 0, 3),
+    ("die", 0.0, "none", 0, 6),
+    ("roll", 0.0, "none", 1, 0),
+    ("roll", 0.0, "none", 2, 0),
+]
+
+
+def draw_beetle(jaws: float, face: str, rolled: int, bits: int) -> Image.Image:
+    """Rock Beetle: a stony shell split down the back with glinting crystals, six
+    little legs and pincer jaws. It curls into a striped ball to roll."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 19, 4.5, SHADOW, outline=False)
+    if rolled:
+        cy = feet - 15
+        c.ellipse(cx, cy, 16, 15, BEETLE_SHELL)
+        shift = 0 if rolled == 1 else 5  # the bands move between the two frames
+        for k in range(-2, 3):
+            y = cy + k * 6 + shift - 2.5
+            if abs(y - cy) < 13:
+                half = (15 ** 2 - (y - cy) ** 2) ** 0.5
+                c.line([(cx - half + 1.5, y), (cx + half - 1.5, y)], fill=BEETLE_SHELL_DARK, width=1.6)
+        c.ellipse(cx - 5, cy - 8, 4.5, 2.4, BEETLE_SHELL_LIGHT, outline=False)
+        c.ellipse(cx + 6, cy + 4 - shift, 2.2, 2.2, BEETLE_GEM, outline=False)
+        return c.finish()
+    if face == "none":
+        rng = random.Random(bits)
+        for _ in range(bits):
+            c.ellipse(cx + rng.uniform(-18, 18), feet - rng.uniform(1, 8), 3.4, 2.6, BEETLE_SHELL)
+        return c.finish()
+    cy = feet - 14
+    for side in (-1, 1):
+        for k, dy in enumerate((-5, 0, 5)):
+            c.line([(cx + side * 13, cy + dy), (cx + side * (21 + k), cy + dy + 2), (cx + side * (23 + k), cy + dy + 7)],
+                   fill=BEETLE_BODY, width=2.6)
+    c.ellipse(cx, cy + 2, 18, 13, BEETLE_BODY)
+    c.ellipse(cx, cy - 1, 19, 14, BEETLE_SHELL)
+    c.line([(cx, cy - 14), (cx, cy + 12)], width=1.4)
+    for dx, dy, r in ((-9, -5, 3.0), (8, -2, 2.4), (-5, 6, 2.0), (10, 7, 2.2)):
+        c.ellipse(cx + dx, cy + dy, r, r * 0.8, BEETLE_SHELL_DARK, outline=False)
+    for dx, dy in ((-11, 1), (6, -8)):
+        c.polygon([(cx + dx, cy + dy - 4), (cx + dx + 3, cy + dy), (cx + dx, cy + dy + 3.5),
+                   (cx + dx - 3, cy + dy)], BEETLE_GEM)
+    c.ellipse(cx - 7, cy - 9, 5, 2.4, BEETLE_SHELL_LIGHT, outline=False)
+    hx, hy = cx, feet - 5
+    c.ellipse(hx, hy, 9, 6.5, BEETLE_BODY)
+    for side in (-1, 1):  # the pincers open before a bite
+        spread = 2 + jaws * 4
+        c.polygon([(hx + side * 3, hy + 3), (hx + side * (3 + spread), hy + 9), (hx + side * 1.2, hy + 6.5)],
+                  BEETLE_SHELL_DARK)
+    _eyes(c, hx, hy - 1.5, 3.4, face, 0.75, color=(240, 232, 150, 255))
+    if bits:
+        rng = random.Random(bits)
+        for _ in range(bits):
+            c.ellipse(cx + rng.uniform(-22, 22), feet - rng.uniform(0, 6), 2.2, 1.6, BEETLE_SHELL)
+    return c.finish()
+
+
+IMP = (198, 94, 72, 255)
+IMP_DARK = (150, 64, 52, 255)
+IMP_BELLY = (238, 172, 132, 255)
+IMP_HORN = (242, 228, 198, 255)
+ROCK = (140, 130, 122, 255)
+# (animation, rock heaved up 0..1, face, bob, bits)
+IMP_POSES = [
+    ("idle", 0.0, "normal", 0.0, 0),
+    ("idle", 0.0, "normal", 1.5, 0),
+    ("attack", 0.7, "angry", 0.0, 0),
+    ("attack", 1.0, "angry", -1.0, 0),
+    ("die", 0.0, "dead", 2.0, 0),
+    ("die", 0.0, "dead", 4.0, 0),
+    ("die", 0.0, "none", 0.0, 0),
+]
+
+
+def draw_imp(arm: float, face: str, bob: float, bits: int) -> Image.Image:
+    """Crag Imp: a little red imp with curled horns, bat ears and a pointed tail,
+    holding a rock that it heaves over its head to throw."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 14, 3.6, SHADOW, outline=False)
+    if face == "none":
+        for k in range(3):
+            c.ellipse(cx - 8 + k * 8, feet - 2 - (k % 2) * 2, 2.6, 1.8, IMP)
+        c.ellipse(cx + 13, feet - 3, 4.5, 3.6, ROCK)
+        return c.finish()
+    by = feet - 13 + bob
+    c.line([(cx + 6, by + 6), (cx + 15, by + 2), (cx + 18, by - 6)], fill=IMP_DARK, width=2.2)
+    c.polygon([(cx + 18, by - 11), (cx + 21.5, by - 5), (cx + 15, by - 5)], IMP_DARK)
+    for side in (-1, 1):
+        c.ellipse(cx + side * 5, feet - 2.5, 4, 2.6, IMP_DARK)
+    c.ellipse(cx, by + 3, 10, 9, IMP)
+    c.ellipse(cx, by + 5, 6, 5, IMP_BELLY, outline=False)
+    hy = by - 11
+    rock = (cx, hy - 13 - arm * 4) if arm > 0.5 else (cx + 10, by + 2)
+    if arm > 0.5:  # heaved over its head: the arms go up behind it
+        for side in (-1, 1):
+            c.line([(cx + side * 8, by - 1), (cx + side * 14, hy - 3), (rock[0] + side * 6, rock[1] + 3)],
+                   fill=IMP_DARK, width=3.2)
+    for side in (-1, 1):  # bat ears and curled horns
+        c.polygon([(cx + side * 7, hy - 2), (cx + side * 17, hy - 8), (cx + side * 9, hy + 3)], IMP_DARK)
+        c.polygon([(cx + side * 4, hy - 6), (cx + side * 6, hy - 15), (cx + side * 9, hy - 14),
+                   (cx + side * 7.5, hy - 5)], IMP_HORN)
+    c.ellipse(cx, hy, 9.5, 8.5, IMP)
+    _eyes(c, cx, hy - 0.5, 3.4, face, 0.8, color=(250, 222, 96, 255))
+    c.line(arc_points(cx, hy + 3, 3.6, 2.2, 20, 160, 8), width=1.2)
+    if arm <= 0.5:
+        c.line([(cx + 7, by - 1), (rock[0] - 3, rock[1])], fill=IMP_DARK, width=3.2)
+        c.line([(cx - 7, by - 1), (cx - 10, by + 5)], fill=IMP_DARK, width=3.2)
+    c.ellipse(rock[0], rock[1], 6.5, 5.5, ROCK)
+    c.ellipse(rock[0] - 2, rock[1] - 2, 2.2, 1.3, (180, 172, 164, 255), outline=False)
+    return c.finish()
+
+
+HARPY = (150, 132, 196, 255)
+HARPY_DARK = (108, 92, 156, 255)
+HARPY_LIGHT = (214, 204, 240, 255)
+HARPY_CREST = (96, 196, 206, 255)
+TALON = (240, 196, 92, 255)
+# (animation, wings: -1 down .. 1 up, 2 spread wide, -2 folded, face, body drop, bits)
+HARPY_POSES = [
+    ("idle", 1.0, "normal", 0.0, 0),
+    ("idle", -1.0, "normal", 2.0, 0),
+    ("attack", 1.0, "angry", -2.0, 0),
+    ("attack", -1.0, "angry", 3.0, 0),
+    ("die", -1.0, "dead", 4.0, 0),
+    ("die", -1.0, "dead", 7.0, 0),
+    ("die", 0.0, "none", 0.0, 0),
+    ("soar", 2.0, "normal", 0.0, 0),
+    ("soar", 1.6, "normal", 1.0, 0),
+    ("dive", -2.0, "angry", 0.0, 0),
+]
+
+
+def draw_harpy(wings: float, face: str, drop: float, bits: int) -> Image.Image:
+    """Gale Harpy: a round, fluffy storm bird with a teal crest, big wings and
+    golden talons. It soars with its wings spread and dives with them folded."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 14, 3.6, SHADOW, outline=False)
+    if face == "none":
+        rng = random.Random(7)
+        for _ in range(6):  # a puff of feathers
+            x, y = cx + rng.uniform(-16, 16), feet - rng.uniform(1, 10)
+            c.ellipse(x, y, 4, 1.8, HARPY_LIGHT if rng.random() < 0.5 else HARPY)
+        return c.finish()
+    cy = feet - 24 + drop
+    for side in (-1, 1):  # wings behind the body
+        if wings >= 2.0:  # spread wide, soaring
+            tip = (cx + side * 31, cy - 10 * (wings - 1.0))
+            c.polygon([(cx + side * 6, cy - 4), tip, (cx + side * 27, cy + 2), (cx + side * 18, cy + 6),
+                       (cx + side * 8, cy + 6)], HARPY_DARK)
+        elif wings <= -2.0:  # folded tight for a dive
+            c.polygon([(cx + side * 8, cy - 6), (cx + side * 13, cy + 8), (cx + side * 6, cy + 12)], HARPY_DARK)
+        else:
+            tip = (cx + side * 26, cy - 12 * wings)
+            c.polygon([(cx + side * 7, cy - 4), tip, (cx + side * 22, cy + 4 - 4 * wings),
+                       (cx + side * 9, cy + 7)], HARPY_DARK)
+    if wings > -2.0:
+        for side in (-1, 1):  # legs with talons
+            c.line([(cx + side * 4, cy + 8), (cx + side * 5, feet - 3 + drop * 0.3)], fill=TALON, width=2.2)
+            c.polygon([(cx + side * 2, feet - 2 + drop * 0.3), (cx + side * 8, feet - 2 + drop * 0.3),
+                       (cx + side * 5, feet + 1 + drop * 0.3)], TALON)
+    c.ellipse(cx, cy, 12, 12, HARPY)
+    c.ellipse(cx, cy + 3, 7, 7, HARPY_LIGHT, outline=False)
+    for k, dx in enumerate((-4, 0, 4)):  # the crest
+        c.polygon([(cx + dx - 2, cy - 10), (cx + dx * 1.6, cy - 19 - (k % 2) * 3), (cx + dx + 2, cy - 10)],
+                  HARPY_CREST)
+    _eyes(c, cx, cy - 3, 4.2, face, 0.85, color=(60, 42, 80, 255))
+    c.polygon([(cx - 2.6, cy + 0.5), (cx + 2.6, cy + 0.5), (cx, cy + 5)], TALON)
+    return c.finish()
+
+
 FOREST_MONSTERS = {
     "boar": (draw_boar, BOAR_POSES),
     "wisp": (draw_wisp, WISP_POSES),
@@ -2472,6 +2676,9 @@ FOREST_MONSTERS = {
     "treant": (draw_treant, TREANT_POSES),
     "turtle": (draw_turtle, TURTLE_POSES),
     "frog": (draw_frog, FROG_POSES),
+    "beetle": (draw_beetle, BEETLE_POSES),
+    "imp": (draw_imp, IMP_POSES),
+    "harpy": (draw_harpy, HARPY_POSES),
 }
 
 
@@ -2480,6 +2687,9 @@ def build_monster_sheet(draw, poses) -> Image.Image:
     for col, pose in enumerate(poses):
         sheet.paste(draw(*pose[1:]), (col * SLIME_FRAME, 0))
     return sheet
+
+
+EXTRA_FPS = {"roll": 12.0}  # the beetle's ball spins fast; other own poses play at 4 fps
 
 
 def build_slime_frames(sheet_res_path: str, poses=SLIME_POSES) -> str:
@@ -2501,7 +2711,7 @@ def build_slime_frames(sheet_res_path: str, poses=SLIME_POSES) -> str:
     extra = []  # a monster's own poses, such as the turtle's shell or the frog's leap
     for pose in poses:
         if pose[0] not in [a[0] for a in SLIME_ANIMATIONS + extra]:
-            extra.append((pose[0], 4.0, True))
+            extra.append((pose[0], EXTRA_FPS.get(pose[0], 4.0), True))
     for name, fps, loop in SLIME_ANIMATIONS + extra:
         columns = [col for col, pose in enumerate(poses) if pose[0] == name]
         frames = ", ".join(

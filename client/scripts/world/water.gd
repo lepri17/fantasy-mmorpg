@@ -7,6 +7,8 @@ extends Node2D
 ## (Geometry2D.clip_polygons), in the "obstacles" group, so monsters path round
 ## it too. All drawn here: a sandy rim, shallow and deep water, the islands,
 ## ripples that come and go, and the bridges.
+## "style": "chasm" makes it a deep rift in the rock instead (Galeclaw Ridge):
+## a dark drop with wisps of mist, crossed by rope bridges.
 
 const RIM := Color(0.86, 0.78, 0.56)
 const SHALLOW := Color(0.38, 0.68, 0.8)
@@ -17,7 +19,17 @@ const PLANK := Color(0.62, 0.44, 0.27)
 const PLANK_DARK := Color(0.43, 0.29, 0.17)
 const PLANK_WIDTH := 16.0
 const REDRAW_SECONDS := 0.1  # the ripples move ten times a second
+const CHASM := {
+	"rim": Color(0.5, 0.45, 0.4),
+	"shallow": Color(0.17, 0.14, 0.16),
+	"deep": Color(0.06, 0.05, 0.08),
+	"edge": Color(0.66, 0.6, 0.54, 0.8),
+	"ripple": Color(0.8, 0.82, 0.95),
+	"rail": Color(0.78, 0.68, 0.46)
+}
 
+## "water", or "chasm" (a rift in the rock).
+var style: String = "water"
 var points := PackedVector2Array()
 ## Rect2 boxes of planks across the water.
 var bridges: Array = []
@@ -29,11 +41,16 @@ var _shoals: Array = []  # the shallow water round each island
 var _ripples: Array = []  # of [position, phase, half length]
 var _time: float = 0.0
 var _redraw_in: float = 0.0
+var _colors: Dictionary = {}
 
 
 func _ready() -> void:
 	add_to_group("water")
 	z_index = -5  # on the ground, under everyone walking by
+	_colors = CHASM if style == "chasm" else {
+		"rim": RIM, "shallow": SHALLOW, "deep": DEEP, "edge": EDGE, "ripple": Color.WHITE,
+		"rail": PLANK_DARK
+	}
 	_rim = Geometry2D.offset_polygon(points, 16.0)
 	_deep = Geometry2D.offset_polygon(points, -40.0)
 	for island in islands:
@@ -128,26 +145,27 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	for rim in _rim:
-		draw_colored_polygon(rim, RIM)
-	draw_colored_polygon(points, SHALLOW)
+		draw_colored_polygon(rim, _colors["rim"])
+	draw_colored_polygon(points, _colors["shallow"])
 	for deep in _deep:
-		draw_colored_polygon(deep, DEEP)
+		draw_colored_polygon(deep, _colors["deep"])
 	var shore := points.duplicate()
 	shore.append(points[0])
-	draw_polyline(shore, EDGE, 3.0, true)
+	draw_polyline(shore, _colors["edge"], 3.0, true)
 	for shoal in _shoals:
-		draw_colored_polygon(shoal, SHALLOW)
+		draw_colored_polygon(shoal, _colors["shallow"])
 	for island in islands:
 		var beach: PackedVector2Array = island.duplicate()
 		beach.append(island[0])
 		draw_colored_polygon(island, RIM)
 		for inner in Geometry2D.offset_polygon(island, -14.0):
 			draw_colored_polygon(inner, SAND)
-		draw_polyline(beach, EDGE, 3.0, true)
+		draw_polyline(beach, _colors["edge"], 3.0, true)
 	for ripple in _ripples:
 		var wave: float = sin(_time * 1.3 + ripple[1])
 		var half: float = ripple[2] * (0.7 + 0.3 * wave)
-		var color := Color(1, 1, 1, 0.1 + 0.14 * (wave + 1.0) * 0.5)
+		var color: Color = _colors["ripple"]
+		color.a = 0.1 + 0.14 * (wave + 1.0) * 0.5
 		draw_line(ripple[0] - Vector2(half, 0), ripple[0] + Vector2(half, 0), color, 2.0)
 	for bridge in bridges:
 		_draw_bridge(bridge)
@@ -189,7 +207,10 @@ func _draw_bridge(box: Rect2) -> void:
 			Rect2(box.end.x - 4, box.position.y, 7, box.size.y)
 		]
 	for rail in rails:
-		draw_rect(rail, PLANK_DARK)
+		if style == "chasm":  # rope, not wood
+			draw_rect(rail.grow(-2.0), _colors["rail"])
+		else:
+			draw_rect(rail, PLANK_DARK)
 	var corners: Array = [
 		box.position, Vector2(box.end.x, box.position.y), box.end, Vector2(box.position.x, box.end.y)
 	]
