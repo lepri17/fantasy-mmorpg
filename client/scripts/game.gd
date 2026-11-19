@@ -15,6 +15,8 @@ const SkyClock := preload("res://scripts/world/sky.gd")
 const FloatingText := preload("res://scripts/ui/floating_text.gd")
 const RoamingBosses := preload("res://scripts/world/roaming_bosses.gd")
 const MUSIC_DB := -14.0
+## The quiet sound of the place under the music (maps.json "ambience").
+const AMBIENCE_DB := -12.0
 ## Rain makes the day a little greyer.
 const RAIN_DIM := Color(0.86, 0.88, 0.94)
 
@@ -35,6 +37,7 @@ var _sky_check: float = 0.0
 var _daylight: CanvasModulate
 var _rain: CPUParticles2D
 var _music: AudioStreamPlayer
+var _ambience: AudioStreamPlayer
 ## The invasion window already used ("YYYY-MM-DD HH:MM"), so it comes once.
 var _invaded_window: String = ""
 var _fade: ColorRect
@@ -183,6 +186,21 @@ func _play_music(track: String) -> void:
 	create_tween().tween_property(_music, "volume_db", MUSIC_DB, 0.8)
 
 
+## G4: the place's own sound (birds, water, crickets, wind, drips), looping
+## on the Sounds bus, so the sounds slider sets it too.
+func _play_ambience(track: String) -> void:
+	if track == "":
+		_ambience.stop()
+		return
+	var path: String = "res://assets/audio/%s.wav" % track
+	if _ambience.playing and _ambience.stream != null and _ambience.stream.resource_path == path:
+		return
+	_ambience.stream = load(path)
+	_ambience.volume_db = -40.0
+	_ambience.play()
+	create_tween().tween_property(_ambience, "volume_db", AMBIENCE_DB, 1.2)
+
+
 func _build_sky() -> void:
 	_daylight = CanvasModulate.new()
 	_daylight.name = "Daylight"
@@ -216,12 +234,18 @@ func _build_sky() -> void:
 	_music.volume_db = MUSIC_DB
 	_music.finished.connect(_music.play)
 	add_child(_music)
+	_ambience = AudioStreamPlayer.new()
+	_ambience.bus = "Sounds"
+	_ambience.name = "Ambience"
+	_ambience.finished.connect(_ambience.play)
+	add_child(_ambience)
 
 
 func _arrive(point: Vector2) -> void:
 	_player.call("enter_map", map.map_id, point, map.spawn_point("default"), map.bounds())
 	_fade_in()
 	_play_music(_maps()[map.map_id].get("music", ""))
+	_play_ambience(_maps()[map.map_id].get("ambience", ""))
 	update_sky()
 	var subtitle: String = _maps()[map.map_id].get("levels", "")
 	var boss_here: String = bosses.map_arrived(map.map_id)

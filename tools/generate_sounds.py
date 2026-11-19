@@ -195,6 +195,63 @@ def build_music(rng: random.Random) -> dict[str, list[float]]:
     return tracks
 
 
+# ---------------------------------------------------------------- ambience
+# G4: a quiet sound of each place under the music (maps.json "ambience"),
+# 12 seconds that loop without a seam.
+AMBIENCE_SECONDS = 12.0
+
+
+def crickets(seconds: float, rng: random.Random, voices: int = 3) -> list[float]:
+    """Crickets at night: each one trills a few quick pulses now and then."""
+    out = [0.0] * int(RATE * seconds)
+    for _ in range(voices):
+        pitch = rng.uniform(4200, 5200)
+        t = rng.uniform(0.0, 0.8)
+        while t < seconds - 0.4:
+            for k in range(rng.randint(3, 5)):
+                pulse = tone(pitch, pitch * 0.98, 0.025)
+                at = int((t + k * 0.05) * RATE)
+                for i, value in enumerate(pulse):
+                    if at + i < len(out):
+                        out[at + i] += value * 0.12
+            t += rng.uniform(0.6, 1.3)
+    return out
+
+
+def water(seconds: float, rng: random.Random) -> list[float]:
+    """Water lapping at a shore: soft low noise that rises and falls."""
+    samples, last = [], 0.0
+    count = int(RATE * seconds)
+    for i in range(count):
+        last += (rng.uniform(-1, 1) - last) * 0.03
+        lap = 0.35 + 0.65 * max(0.0, math.sin(2 * math.pi * i / RATE / 2.4)) ** 2
+        samples.append(last * lap)
+    return samples
+
+
+def seamless(samples: list[float], fade_seconds: float = 1.0) -> list[float]:
+    """Folds the extra second at the end into the start, so the loop has no seam."""
+    fade = int(RATE * fade_seconds)
+    body = samples[:-fade]
+    for i in range(fade):
+        k = i / fade
+        body[i] = body[i] * k + samples[len(samples) - fade + i] * (1.0 - k)
+    return body
+
+
+def build_ambience(rng: random.Random) -> dict[str, list[float]]:
+    seconds = AMBIENCE_SECONDS + 1.0
+    scale = lambda layer, gain: [v * gain for v in layer]  # noqa: E731
+    return {name: seamless(samples) for name, samples in {
+        "amb_birds": mix(chirps(seconds, rng, 1.6), chirps(seconds, rng, 2.4), scale(wind(seconds, rng), 0.5)),
+        "amb_lake": mix(water(seconds, rng), chirps(seconds, rng, 2.8)),
+        "amb_night": mix(crickets(seconds, rng), scale(wind(seconds, rng), 0.4)),
+        "amb_wind": mix(wind(seconds, rng), scale(wind(seconds, rng), 0.7)),
+        "amb_snow": mix(wind(seconds, rng), scale(noise(seconds, 0.05, rng), 0.3)),
+        "amb_cave": mix(drips(seconds, rng, 1.2), scale(wind(seconds, rng), 0.3)),
+    }.items()}
+
+
 def main() -> None:
     AUDIO.mkdir(parents=True, exist_ok=True)
     rng = random.Random(3)
@@ -207,6 +264,8 @@ def main() -> None:
     save("levelup", sequence(*(tone(hz, hz, 0.11) for hz in (523, 659, 784)), tone(1047, 1047, 0.3)))
     save("defeat", sequence(tone(392, 370, 0.18), tone(311, 294, 0.18), tone(233, 196, 0.4)))
     for name, samples in build_music(random.Random(11)).items():
+        save(name, samples)
+    for name, samples in build_ambience(random.Random(23)).items():
         save(name, samples)
     print("Sounds written to", AUDIO)
 

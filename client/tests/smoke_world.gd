@@ -304,6 +304,11 @@ func run(test, main, player, hud) -> void:
 	main.change_map("cellar")
 	await t._frames(3)
 	var run = main.map.get_node_or_null("DungeonRun")
+	var cave_sound = main.get_node("Ambience")
+	t._check(
+		cave_sound.playing and cave_sound.stream.resource_path.ends_with("amb_cave.wav"),
+		"the cellar drips: each place has its own background sound"
+	)
 	t._check(
 		(
 			main.map.map_id == "cellar"
@@ -376,6 +381,15 @@ func run(test, main, player, hud) -> void:
 	t._check(
 		music.stream != null and music.stream.resource_path.ends_with("music_town.wav"),
 		"the town plays its own music"
+	)
+	var ambience = main.get_node("Ambience")
+	t._check(
+		(
+			ambience.playing
+			and ambience.bus == "Sounds"
+			and ambience.stream.resource_path.ends_with("amb_birds.wav")
+		),
+		"birds sing in town, under the music, at the sounds volume"
 	)
 	var dots: Array = hud.get_node("Minimap").markers()
 	t._check(

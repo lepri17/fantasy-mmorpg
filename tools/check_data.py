@@ -650,6 +650,8 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
         if not isinstance(data.get("name"), str):
             error(f"{where}: needs a 'name'")
         need_number(where, data, "teleport_price", 0)
+        if "ambience" in data and not res_exists(f"res://assets/audio/{data['ambience']}.wav"):
+            error(f"{where}: ambience '{data['ambience']}' has no sound file")
         if "music" in data and not res_exists(f"res://assets/audio/{data['music']}.wav"):
             error(f"{where}: music '{data['music']}' has no file in assets/audio")
         if not isinstance(data.get("indoor", False), bool):

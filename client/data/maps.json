@@ -387,7 +387,8 @@
       ],
       "rock_style": [
         "stone"
-      ]
+      ],
+      "ambience": "amb_birds"
     },
     "field": {
       "name": "Green Meadow",
@@ -597,7 +598,8 @@
       ],
       "rock_style": [
         "stone"
-      ]
+      ],
+      "ambience": "amb_birds"
     },
     "forest": {
       "name": "Mossy Woods",
@@ -1386,7 +1388,8 @@
       "rock_style": [
         "mossy",
         "stone"
-      ]
+      ],
+      "ambience": "amb_birds"
     },
     "lanternhold": {
       "name": "Lanternhold",
@@ -1731,7 +1734,8 @@
       ],
       "rock_style": [
         "mossy"
-      ]
+      ],
+      "ambience": "amb_night"
     },
     "lantern_arena": {
       "name": "Lantern Arena",
@@ -1862,7 +1866,8 @@
         0.9,
         0.98
       ],
-      "fireflies": 12
+      "fireflies": 12,
+      "ambience": "amb_night"
     },
     "cellar": {
       "name": "Old Cellar",
@@ -2018,7 +2023,8 @@
       },
       "music": "music_cellar",
       "indoor": true,
-      "dust": 12
+      "dust": 12,
+      "ambience": "amb_cave"
     },
     "lake": {
       "name": "Sunpetal Lake",
@@ -3022,7 +3028,8 @@
       ],
       "rock_style": [
         "stone"
-      ]
+      ],
+      "ambience": "amb_lake"
     },
     "twilight": {
       "name": "Twilight Woods",
@@ -4056,7 +4063,8 @@
       ],
       "rock_style": [
         "mossy"
-      ]
+      ],
+      "ambience": "amb_night"
     },
     "ridge": {
       "name": "Galeclaw Ridge",
@@ -5070,7 +5078,8 @@
       ],
       "rock_style": [
         "crag"
-      ]
+      ],
+      "ambience": "amb_wind"
     },
     "grove": {
       "name": "Elder Grove",
@@ -6005,7 +6014,8 @@
       ],
       "rock_style": [
         "mossy"
-      ]
+      ],
+      "ambience": "amb_night"
     },
     "ruins": {
       "name": "Moonfall Ruins",
@@ -6916,7 +6926,8 @@
       "rock_style": [
         "crag",
         "mossy"
-      ]
+      ],
+      "ambience": "amb_wind"
     },
     "frostgate": {
       "name": "Frostgate",
@@ -7229,7 +7240,8 @@
       ],
       "rock_style": [
         "snowy"
-      ]
+      ],
+      "ambience": "amb_snow"
     },
     "frost_arena": {
       "name": "Frost Arena",
@@ -7355,7 +7367,8 @@
         }
       },
       "music": "music_grove",
-      "snowfall": 25
+      "snowfall": 25,
+      "ambience": "amb_snow"
     },
     "frostfang": {
       "name": "Frostfang Hollow",
@@ -8264,7 +8277,8 @@
       ],
       "rock_style": [
         "snowy"
-      ]
+      ],
+      "ambience": "amb_snow"
     }
   }
 }
