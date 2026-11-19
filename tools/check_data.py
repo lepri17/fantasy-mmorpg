@@ -568,7 +568,8 @@ MONSTER_MOVES = {
     "ambush": ("wake_range", "radius", "warning_seconds", "damage_multiplier"),
     "beam": ("range", "length", "width", "warning_seconds", "damage_multiplier", "cooldown"),
 }
-SERVICES = {"shop", "heal", "storage", "teleport", "quests"}
+SERVICES = {"shop", "heal", "storage", "teleport", "quests", "wish"}
+RARITIES = {"common", "uncommon", "rare", "epic"}
 
 
 def check_quests(quests: dict, npcs: dict, items: dict, monsters: dict) -> None:
@@ -617,7 +618,9 @@ def check_npcs(npcs: dict, items: dict) -> None:
         for key in ("name", "title", "greeting"):
             if not isinstance(npc.get(key), str) or not npc[key]:
                 error(f"{where}: needs a '{key}'")
-        if not res_exists(f"res://assets/characters/npcs/{npc.get('look')}.png"):
+        if "wish" in npc.get("services", []):  # a wishing fountain: the prop is its picture
+            check_wish(where, npc.get("wish"), items)
+        elif not res_exists(f"res://assets/characters/npcs/{npc.get('look')}.png"):
             error(f"{where}: look '{npc.get('look')}' has no picture")
         for service in npc.get("services", []):
             if service not in SERVICES:
@@ -627,6 +630,35 @@ def check_npcs(npcs: dict, items: dict) -> None:
         for item_id in npc.get("shop", []):
             if item_id not in items or items[item_id].get("price", 0) <= 0:
                 error(f"{where}: sells '{item_id}', which is not an item with a price")
+
+
+def check_wish(where: str, wish, items: dict) -> None:
+    """A wishing fountain (O18): what a wish costs and the prizes, by weight."""
+    if not isinstance(wish, dict):
+        error(f"{where}: a wishing fountain needs a 'wish'")
+        return
+    for key in ("cost", "level"):
+        if not (isinstance(wish.get(key), int) and wish[key] > 0):
+            error(f"{where}: wish '{key}' must be a whole number above 0")
+    prizes = wish.get("prizes")
+    if not (isinstance(prizes, list) and prizes):
+        error(f"{where}: wish needs 'prizes'")
+        return
+    for i, prize in enumerate(prizes):
+        at = f"{where} prize {i + 1}"
+        if not (is_number(prize.get("weight")) and prize["weight"] > 0):
+            error(f"{at}: needs a 'weight' above 0")
+        kinds = [k for k in ("item", "gear", "gold") if k in prize]
+        if len(kinds) != 1:
+            error(f"{at}: needs exactly one of 'item', 'gear' or 'gold'")
+        elif kinds[0] == "item" and (prize["item"] not in items or items[prize["item"]].get("slot", "")):
+            error(f"{at}: '{prize['item']}' is not an item that stacks")
+        elif kinds[0] == "gear" and prize["gear"] not in RARITIES:
+            error(f"{at}: gear rarity '{prize['gear']}' is not one of {sorted(RARITIES)}")
+        elif kinds[0] == "gold" and not (isinstance(prize["gold"], int) and prize["gold"] > 0):
+            error(f"{at}: 'gold' must be how many times the cost")
+    if not isinstance(prizes[0].get("item"), str):
+        error(f"{where}: the first prize must be an item (given when no gear fits)")
 
 
 def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
@@ -743,6 +775,8 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                 look = thing.get("look")
                 if not (isinstance(look, str) and res_exists(f"res://assets/environment/props/{look}.png")):
                     error(f"{where}: prop look '{look}' has no drawing")
+                if "npc" in thing and "wish" not in npcs.get(thing["npc"], {}).get("services", []):
+                    error(f"{where}: prop npc '{thing['npc']}' is not a wishing fountain in npcs.json")
                 block = thing.get("block", [0, 0])
                 if not (isinstance(block, list) and len(block) == 2 and all(is_number(v) and v >= 0 for v in block)):
                     error(f"{where}: prop 'block' must be [width, height]")

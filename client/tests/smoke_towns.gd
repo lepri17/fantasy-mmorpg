@@ -8,6 +8,7 @@ extends RefCounted
 ## and stalls. smoke_test.gd runs it; t is the test (a SceneTree).
 
 const GameData = preload("res://scripts/data/game_data.gd")
+const ItemDb = preload("res://scripts/items/item_db.gd")
 
 var t = null
 
@@ -17,6 +18,7 @@ func run(test, main, player, hud) -> void:
 	await _check_street(main, player)
 	await _check_new_towns(main, player)
 	await _check_markets(main, player)
+	await _check_wish(main, player, hud)
 	await _check_teleports(main, player, hud)
 	await _check_arena(main, player)
 	main.change_map("town")
@@ -157,6 +159,73 @@ func _check_markets(main, player) -> void:
 			),
 			"the road out of %s comes back at the gate" % name
 		)
+
+
+## O18: the wishing fountain in a market. TALK at it, toss in gold, get a prize.
+func _check_wish(main, player, hud) -> void:
+	main.change_map("willow_market", "default")
+	await t._frames(20)
+	var fountain = t.get_nodes_in_group("talkers")[0]
+	_heal(player)
+	player.global_position = fountain.global_position + Vector2(0, 90)
+	await t._frames(6)
+	hud.talk()
+	await t._frames(2)
+	var dialog = hud.get_node("NpcDialog")
+	var toss = dialog.option("Toss in 100 gold")
+	t._check(
+		dialog.visible and toss != null and "Wishing Fountain" in dialog.get("_name_label").text,
+		"walking up to the fountain shows TALK, and it offers a wish"
+	)
+	while player.stats.bag.size() >= 12:
+		player.stats.bag.pop_back()
+	player.stats.gold = 1000
+	toss.pressed.emit()
+	await t._frames(2)
+	t._check(
+		player.stats.gold in [900, 1300] and dialog.visible,  # 1300: the gold shower came
+		"a wish takes 100 gold, and the fountain stays open for another"
+	)
+	hud.call("_close_windows")
+	while player.stats.bag.size() >= 12:
+		player.stats.bag.pop_back()
+	var reds: int = player.stats.count_of("red_potion")
+	var kind: String = player.make_wish("willow_fountain", 0.0)
+	t._check(
+		kind == "item" and player.stats.count_of("red_potion") == reds + 3,
+		"the most common wish: three red potions"
+	)
+	var bag_before: int = player.stats.bag.size()
+	kind = player.make_wish("willow_fountain", 0.7)
+	var piece: Dictionary = player.stats.bag[-1]
+	t._check(
+		(
+			kind == "gear"
+			and player.stats.bag.size() == bag_before + 1
+			and ItemDb.rarity_rank(piece["rarity"]) >= ItemDb.rarity_rank("uncommon")
+			and ItemDb.usable_by(piece["id"], player.stats.class_id)
+		),
+		"or gear for the hero's class, Uncommon or better (%s)" % ItemDb.display_name(piece)
+	)
+	var gold_before: int = player.stats.gold
+	t._check(
+		player.make_wish("willow_fountain", 0.999) == "gold" and player.stats.gold == gold_before + 300,
+		"and now and then a shower of gold: four times the coin"
+	)
+	player.stats.gold = 50
+	t._check(
+		player.make_wish("willow_fountain", 0.0) == "" and player.stats.gold == 50,
+		"no wish without the gold for it"
+	)
+	player.stats.gold = 1000
+	while player.stats.bag.size() < player.stats.bag_size:
+		player.stats.bag.append(ItemDb.gear("training_sword"))
+	t._check(
+		player.make_wish("willow_fountain", 0.0) == "" and player.stats.gold == 1000,
+		"and none with a full bag"
+	)
+	while player.stats.bag.size() >= 12:
+		player.stats.bag.pop_back()
 
 
 func _check_teleports(main, player, hud) -> void:

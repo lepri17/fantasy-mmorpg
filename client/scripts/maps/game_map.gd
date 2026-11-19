@@ -146,6 +146,7 @@ func _add_object(thing: Dictionary) -> void:
 		prop.look = thing["look"]
 		var block: Array = thing.get("block", [0, 0])
 		prop.block = Vector2(block[0], block[1])
+		prop.npc_id = thing.get("npc", "")
 		prop.position = Vector2(thing["pos"][0], thing["pos"][1])
 		add_child(prop)
 		return

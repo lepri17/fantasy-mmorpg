@@ -450,6 +450,16 @@ func _towns(main, player) -> void:
 		player.global_position = step[1]
 		await _frames(40)
 		await _shot(step[2])
+	main.change_map("willow_market", "default")  # the wishing fountain (O18)
+	await _frames(20)
+	var fountain = get_nodes_in_group("talkers")[0]
+	player.global_position = fountain.global_position + Vector2(-60, 90)
+	await _frames(10)
+	var hud = get_first_node_in_group("hud")
+	hud.talk()
+	await _frames(4)
+	await _shot("70_wishing_fountain")
+	hud.call("_close_windows")
 
 
 func _nearest_enemy(monster_id: String, point: Vector2):

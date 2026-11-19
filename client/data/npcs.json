@@ -221,5 +221,142 @@
       "ember_stone",
       "moon_stone"
     ]
+  },
+  "willow_fountain": {
+    "name": "Wishing Fountain",
+    "title": "A wish: 100 gold",
+    "greeting": "Coins glint at the bottom of the clear water. Toss one in and make a wish!",
+    "services": [
+      "wish"
+    ],
+    "wish": {
+      "cost": 100,
+      "level": 6,
+      "prizes": [
+        {
+          "weight": 35,
+          "item": "red_potion",
+          "count": 3
+        },
+        {
+          "weight": 20,
+          "item": "blue_potion",
+          "count": 2
+        },
+        {
+          "weight": 8,
+          "item": "ember_stone",
+          "count": 1
+        },
+        {
+          "weight": 25,
+          "gear": "uncommon"
+        },
+        {
+          "weight": 7,
+          "gear": "rare"
+        },
+        {
+          "weight": 5,
+          "gold": 4
+        }
+      ]
+    }
+  },
+  "lantern_fountain": {
+    "name": "Wishing Fountain",
+    "title": "A wish: 250 gold",
+    "greeting": "Coins glint at the bottom of the clear water. Toss one in and make a wish!",
+    "services": [
+      "wish"
+    ],
+    "wish": {
+      "cost": 250,
+      "level": 13,
+      "prizes": [
+        {
+          "weight": 30,
+          "item": "red_potion",
+          "count": 4
+        },
+        {
+          "weight": 18,
+          "item": "blue_potion",
+          "count": 3
+        },
+        {
+          "weight": 10,
+          "item": "ember_stone",
+          "count": 1
+        },
+        {
+          "weight": 4,
+          "item": "moon_stone",
+          "count": 1
+        },
+        {
+          "weight": 25,
+          "gear": "uncommon"
+        },
+        {
+          "weight": 8,
+          "gear": "rare"
+        },
+        {
+          "weight": 5,
+          "gold": 4
+        }
+      ]
+    }
+  },
+  "frost_fountain": {
+    "name": "Wishing Fountain",
+    "title": "A wish: 450 gold",
+    "greeting": "Coins glint at the bottom of the clear water. Toss one in and make a wish!",
+    "services": [
+      "wish"
+    ],
+    "wish": {
+      "cost": 450,
+      "level": 22,
+      "prizes": [
+        {
+          "weight": 28,
+          "item": "red_potion",
+          "count": 5
+        },
+        {
+          "weight": 16,
+          "item": "blue_potion",
+          "count": 4
+        },
+        {
+          "weight": 10,
+          "item": "moon_stone",
+          "count": 1
+        },
+        {
+          "weight": 3,
+          "item": "rebirth_scroll",
+          "count": 1
+        },
+        {
+          "weight": 25,
+          "gear": "uncommon"
+        },
+        {
+          "weight": 12,
+          "gear": "rare"
+        },
+        {
+          "weight": 2,
+          "gear": "epic"
+        },
+        {
+          "weight": 4,
+          "gold": 4
+        }
+      ]
+    }
   }
 }

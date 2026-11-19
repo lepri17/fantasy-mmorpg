@@ -8440,7 +8440,8 @@
           "block": [
             172,
             44
-          ]
+          ],
+          "npc": "willow_fountain"
         },
         {
           "type": "prop",
@@ -8747,7 +8748,8 @@
           "block": [
             172,
             44
-          ]
+          ],
+          "npc": "lantern_fountain"
         },
         {
           "type": "prop",
@@ -9059,7 +9061,8 @@
           "block": [
             172,
             44
-          ]
+          ],
+          "npc": "frost_fountain"
         },
         {
           "type": "prop",

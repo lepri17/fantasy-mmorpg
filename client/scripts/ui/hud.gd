@@ -16,6 +16,7 @@ const GameData := preload("res://scripts/data/game_data.gd")
 ## Player methods the town windows (dialog, shop, storage) may ask for.
 const TOWN_ACTIONS := [
 	"buy_item",
+	"make_wish",
 	"sell_from_bag",
 	"store_item",
 	"take_stored",

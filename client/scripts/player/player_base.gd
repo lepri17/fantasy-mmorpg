@@ -178,6 +178,52 @@ func add_item(item_id: String, count: int = 1) -> bool:
 	return true
 
 
+## O18: a coin in a market's fountain (npcs.json "wish": "cost", "level" of
+## the gear it gives, and "prizes" by weight: an "item" and "count", "gear" of
+## at least a rarity, or "gold" times the cost). roll (0 to 1) picks the prize;
+## tests pass their own. Returns what came: "item", "gear", "gold", or "".
+func make_wish(fountain_id: String, roll: float = -1.0) -> String:
+	var wish: Dictionary = GameData.table("npcs").get(fountain_id, {}).get("wish", {})
+	if wish.is_empty():
+		return ""
+	var cost: int = int(wish["cost"])
+	if stats.gold < cost:
+		_say("A wish costs %d gold." % cost, WARNING_COLOR)
+		return ""
+	if stats.bag.size() >= stats.bag_size:
+		_say("Your bag is full. Make room for what the fountain gives.", WARNING_COLOR)
+		return ""
+	stats.gold -= cost
+	var prizes: Array = wish["prizes"]
+	var total: float = 0.0
+	for prize in prizes:
+		total += float(prize["weight"])
+	var pick: float = (roll if roll >= 0.0 else randf()) * total
+	var chosen: Dictionary = prizes[-1]
+	for prize in prizes:
+		pick -= float(prize["weight"])
+		if pick < 0.0:
+			chosen = prize
+			break
+	FloatingText.spawn(self, "A wish!", Color(0.6, 0.9, 1.0), 130.0, 24)
+	Burst.spawn(self, Vector2(0, -30), Color(0.7, 0.95, 1.0), 16, 120.0)
+	if chosen.has("gold"):
+		_sfx("levelup")
+		_say("The fountain sparkles: a shower of gold!", GOLD_COLOR)
+		add_gold(cost * int(chosen["gold"]))
+		return "gold"
+	if chosen.has("gear"):
+		var pool: Array = ItemDb.drop_pool(int(wish["level"])).filter(
+			func(item_id: String) -> bool: return ItemDb.usable_by(item_id, stats.class_id)
+		)
+		if not pool.is_empty():
+			add_stack(ItemDb.roll_gear(pool.pick_random(), 2, String(chosen["gear"])))
+			return "gear"
+		chosen = prizes[0]  # nothing to wear at this level: something useful instead
+	add_item(String(chosen["item"]), int(chosen.get("count", 1)))
+	return "item"
+
+
 ## Buys one item from a shop. Only items the shop sells are offered (hud.gd).
 func buy_item(item_id: String) -> void:
 	var cost: int = ItemDb.price(item_id)

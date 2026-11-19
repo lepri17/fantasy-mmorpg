@@ -53,6 +53,9 @@ func open(id: String, extra: Array = [], text: String = "", with_services: bool 
 				_add_option("Open my storage", "open_storage", null)
 			"teleport":
 				_add_travel_options()
+			"wish":
+				var cost: int = int(data["wish"]["cost"])
+				_add_option("Toss in %d gold and make a wish" % cost, "make_wish", id)
 	for row in extra:
 		_add_option(row[0], row[1], row[2])
 	_add_option("Goodbye", "close", null)
