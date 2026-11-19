@@ -2,7 +2,10 @@ extends "res://tests/smoke_lake.gd"
 ## The Moonfall Ruins part of the smoke test: the roads from Galeclaw Ridge and
 ## Elder Grove, the ruined walls, statues that wake (Stone Gargoyle), the
 ## Mimic that sits like a chest, the Ruin Sentinel's beam and the sleeping
-## Ruin Colossus. smoke_test.gd runs it; the helpers come from smoke_lake.gd.
+## Ruin Colossus, and the Moonfall set it drops. smoke_test.gd runs it; the
+## helpers come from smoke_lake.gd.
+
+const ItemDb = preload("res://scripts/items/item_db.gd")
 
 
 func run(test, main, player, _hud) -> void:
@@ -13,6 +16,7 @@ func run(test, main, player, _hud) -> void:
 	await _check_mimic(main, player)
 	await _check_beam(main, player)
 	await _check_wall(main, player)
+	await _check_moonfall(main, player)
 	main.change_map("town")
 	await t._frames(3)
 
@@ -153,4 +157,36 @@ func _check_wall(main, player) -> void:
 	t._check(
 		player.global_position.y > 1200.0 and player.global_position.y < 1290.0,
 		"the old temple wall stops him (y %d)" % player.global_position.y
+	)
+
+
+func _check_moonfall(main, player) -> void:
+	t._check(
+		ItemDb.set_size("moonfall") == 12 and ItemDb.set_size("moonfall", "warrior") == 6,
+		"the Moonfall set has 12 pieces, 6 that each class can wear"
+	)
+	var pool: Array = ItemDb.drop_pool(20)
+	t._check(
+		"moonfall_blade" in pool and not "elderwood_blade" in pool,
+		"the ruins' strongest monsters drop Moonfall gear, not the older Elderwood"
+	)
+	main.change_map("ruins", "south")
+	await t._frames(3)
+	var colossus = _one(main, "ruin_colossus", Vector2(1350, 680))
+	colossus.set_physics_process(false)
+	_heal(player)
+	player.global_position = colossus.global_position + Vector2(0, 700)  # out of the loot's reach
+	colossus.set("_player", player)
+	var before: Array = t.get_nodes_in_group("pickups")
+	colossus.call("_maybe_drop_gear")
+	await t._frames(2)
+	var dropped: Array = t.get_nodes_in_group("pickups").filter(
+		func(p): return not p in before and not p.get("stack").is_empty()
+	)
+	t._check(
+		(
+			dropped.size() == 3
+			and dropped.all(func(p): return str(p.get("stack")["id"]).begins_with("moonfall_"))
+		),
+		"the Ruin Colossus drops three Moonfall pieces (%d)" % dropped.size()
 	)

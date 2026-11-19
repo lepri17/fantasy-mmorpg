@@ -757,6 +757,184 @@
       "icon": "res://assets/items/icons/elderwood_cape.png",
       "text": "A cloak of a thousand leaves.",
       "price": 2000
+    },
+    "moonfall_blade": {
+      "name": "Moonfall Blade",
+      "slot": "weapon",
+      "level": 18,
+      "look": "training_sword",
+      "set": "moonfall",
+      "classes": [
+        "warrior"
+      ],
+      "attack": 19,
+      "crit_damage": 0.1,
+      "icon": "res://assets/items/icons/moonfall_blade.png",
+      "text": "Forged by moonlight in the old temple.",
+      "price": 3900
+    },
+    "moonfall_bow": {
+      "name": "Moonfall Bow",
+      "slot": "weapon",
+      "level": 18,
+      "look": "short_bow",
+      "set": "moonfall",
+      "classes": [
+        "archer"
+      ],
+      "attack": 16,
+      "crit_chance": 0.07,
+      "icon": "res://assets/items/icons/moonfall_bow.png",
+      "text": "Its string hums like the night wind.",
+      "price": 3750
+    },
+    "moonfall_staff": {
+      "name": "Moonfall Staff",
+      "slot": "weapon",
+      "level": 18,
+      "look": "oak_staff",
+      "set": "moonfall",
+      "classes": [
+        "mage"
+      ],
+      "attack": 16,
+      "skill_damage": 0.22,
+      "icon": "res://assets/items/icons/moonfall_staff.png",
+      "text": "A shard of the fallen moon at its tip.",
+      "price": 3750
+    },
+    "moonfall_plate": {
+      "name": "Moonfall Plate",
+      "slot": "armor",
+      "level": 18,
+      "look": "blue_plate",
+      "set": "moonfall",
+      "classes": [
+        "warrior"
+      ],
+      "max_hp": 70,
+      "defense": 12,
+      "icon": "res://assets/items/icons/moonfall_plate.png",
+      "text": "Silver steel that drinks the moonlight.",
+      "price": 3600
+    },
+    "moonfall_vest": {
+      "name": "Moonfall Vest",
+      "slot": "armor",
+      "level": 18,
+      "look": "ranger_vest",
+      "set": "moonfall",
+      "classes": [
+        "archer"
+      ],
+      "max_hp": 60,
+      "defense": 8,
+      "evasion": 0.06,
+      "icon": "res://assets/items/icons/moonfall_vest.png",
+      "text": "Dark as the night between the pillars.",
+      "price": 3450
+    },
+    "moonfall_robe": {
+      "name": "Moonfall Robe",
+      "slot": "armor",
+      "level": 18,
+      "look": "violet_robe",
+      "set": "moonfall",
+      "classes": [
+        "mage"
+      ],
+      "max_hp": 54,
+      "defense": 8,
+      "max_stamina": 45,
+      "icon": "res://assets/items/icons/moonfall_robe.png",
+      "text": "Stitched with threads of starlight.",
+      "price": 3450
+    },
+    "moonfall_band": {
+      "name": "Moonfall Band",
+      "slot": "head",
+      "level": 18,
+      "look": "red_headband",
+      "set": "moonfall",
+      "classes": [
+        "warrior"
+      ],
+      "max_hp": 28,
+      "defense": 5,
+      "icon": "res://assets/items/icons/moonfall_band.png",
+      "text": "A circlet of pale temple silver.",
+      "price": 2700
+    },
+    "moonfall_hood": {
+      "name": "Moonfall Hood",
+      "slot": "head",
+      "level": 18,
+      "look": "green_hood",
+      "set": "moonfall",
+      "classes": [
+        "archer"
+      ],
+      "max_hp": 24,
+      "evasion": 0.04,
+      "crit_chance": 0.03,
+      "icon": "res://assets/items/icons/moonfall_hood.png",
+      "text": "Shadows gather in its folds.",
+      "price": 2700
+    },
+    "moonfall_hat": {
+      "name": "Moonfall Hat",
+      "slot": "head",
+      "level": 18,
+      "look": "sage_hat",
+      "set": "moonfall",
+      "classes": [
+        "mage"
+      ],
+      "max_hp": 21,
+      "max_stamina": 38,
+      "skill_damage": 0.08,
+      "icon": "res://assets/items/icons/moonfall_hat.png",
+      "text": "The stars seem closer under it.",
+      "price": 2700
+    },
+    "moonfall_gloves": {
+      "name": "Moonfall Gloves",
+      "slot": "gloves",
+      "level": 18,
+      "look": "leather_gloves",
+      "set": "moonfall",
+      "attack": 5,
+      "crit_chance": 0.04,
+      "accuracy": 0.05,
+      "icon": "res://assets/items/icons/moonfall_gloves.png",
+      "text": "Cool to the touch, always.",
+      "price": 2850
+    },
+    "moonfall_boots": {
+      "name": "Moonfall Boots",
+      "slot": "boots",
+      "level": 18,
+      "look": "leather_boots",
+      "set": "moonfall",
+      "max_hp": 24,
+      "evasion": 0.04,
+      "attack_speed": 0.05,
+      "icon": "res://assets/items/icons/moonfall_boots.png",
+      "text": "Silent on old stone.",
+      "price": 2850
+    },
+    "moonfall_cape": {
+      "name": "Moonfall Cape",
+      "slot": "cape",
+      "level": 18,
+      "look": "red_cape",
+      "set": "moonfall",
+      "max_hp": 30,
+      "defense": 3,
+      "crit_damage": 0.15,
+      "icon": "res://assets/items/icons/moonfall_cape.png",
+      "text": "It ripples like a sky full of stars.",
+      "price": 3000
     }
   },
   "upgrades": {
@@ -854,6 +1032,22 @@
         "6": {
           "attack_speed": 0.08,
           "crit_damage": 0.1
+        }
+      }
+    },
+    "moonfall": {
+      "name": "Moonfall Set",
+      "bonuses": {
+        "2": {
+          "max_hp": 35
+        },
+        "4": {
+          "attack": 6,
+          "crit_chance": 0.04
+        },
+        "6": {
+          "attack_speed": 0.1,
+          "crit_damage": 0.15
         }
       }
     }

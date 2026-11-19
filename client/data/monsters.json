@@ -1323,21 +1323,7 @@
       "min_rarity": "rare"
     },
     "gear_drops": {
-      "chance": 1.0,
-      "items": [
-        "elderwood_band",
-        "elderwood_blade",
-        "elderwood_boots",
-        "elderwood_bow",
-        "elderwood_cape",
-        "elderwood_gloves",
-        "elderwood_hat",
-        "elderwood_hood",
-        "elderwood_plate",
-        "elderwood_robe",
-        "elderwood_staff",
-        "elderwood_vest"
-      ]
+      "chance": 1.0
     },
     "crown": false
   }

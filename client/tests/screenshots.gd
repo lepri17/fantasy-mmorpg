@@ -332,6 +332,19 @@ func _ruins(main, player) -> void:
 		await _frames(16)
 		await _shot(step[3])
 		picked.set_physics_process(false)
+	var saved_gear: Dictionary = player.stats.equipment.duplicate(true)
+	for item_id in [
+		"moonfall_blade", "moonfall_plate", "moonfall_band", "moonfall_gloves", "moonfall_boots",
+		"moonfall_cape"
+	]:
+		player.stats.equipment[ItemDb.items[item_id]["slot"]] = ItemDb.gear(item_id)
+	player.call("_gear_changed")  # the hero in the moonlit Moonfall set
+	player.hp = player.max_hp
+	player.global_position = Vector2(1350, 1000)
+	await _frames(20)
+	await _shot("54_moonfall_set")
+	player.stats.equipment = saved_gear
+	player.call("_gear_changed")
 
 
 func _nearest_enemy(monster_id: String, point: Vector2):
