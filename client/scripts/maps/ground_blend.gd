@@ -5,8 +5,10 @@ extends Node2D
 ## own texture from tiles.png; where it touches a cell only at a corner, the
 ## corner is rounded. On top, a few small things lie about on each kind of
 ## ground: tufts and flowers on grass, leaves in the woods, pebbles and cracks
-## on paths and stone, shells on sand, sparkles on snow and ice. The shapes
-## are worked out once, in setup(); _draw() only paints them.
+## on paths and stone, shells on sand, sparkles on snow and ice. Along the
+## map's edges, except where a road leads out, a frame of bushes (or rocks, or
+## snow banks) closes the picture, as MapleStory's maps never just stop. The
+## shapes are worked out once, in setup(); _draw() only paints them.
 
 const GameData := preload("res://scripts/data/game_data.gd")
 const TEXTURE := preload("res://assets/environment/tiles.png")
@@ -39,9 +41,13 @@ var _size: float = 128.0
 var _cols: int = 0
 var _rows: int = 0
 var _shapes: Array = []  # [points, uvs, rim] for each band and corner
+var _gaps: Array = []  # [side, from, to]: where roads lead out, no frame
 
 
-func setup(rows: Array) -> void:
+## rows: maps.json "ground"; roads: its "exit" objects (left open in the frame).
+func setup(rows: Array, roads: Array = []) -> void:
+	for road in roads:
+		_gaps.append([road["side"], float(road["span"][0]) - 50.0, float(road["span"][1]) + 50.0])
 	var maps: Dictionary = GameData.table("maps")
 	_names = maps["tile_kinds"]
 	_size = float(maps["tile_size"])
@@ -178,6 +184,58 @@ func _draw() -> void:
 	for y in _rows:
 		for x in _cols:
 			_draw_details(Vector2i(x, y))
+	_draw_frame()
+
+
+## Clumps of bush, rock or snow along each edge, half over it.
+func _draw_frame() -> void:
+	var size := Vector2(_cols, _rows) * _size
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _cols * 1000 + _rows
+	for side in ["north", "south", "west", "east"]:
+		var length: float = size.x if side in ["north", "south"] else size.y
+		var along: float = rng.randf_range(0.0, 30.0)
+		while along < length:
+			var open: bool = _gaps.any(
+				func(gap): return gap[0] == side and along > gap[1] and along < gap[2]
+			)
+			if not open:
+				var at: Vector2 = {
+					"north": Vector2(along, 6), "south": Vector2(along, size.y - 6),
+					"west": Vector2(6, along), "east": Vector2(size.x - 6, along)
+				}[side]
+				_clump(at, _kind(Vector2i((at / _size).floor()).clamp(
+					Vector2i.ZERO, Vector2i(_cols - 1, _rows - 1)
+				)), rng)
+			along += rng.randf_range(38.0, 56.0)
+
+
+func _clump(at: Vector2, kind_index: int, rng: RandomNumberGenerator) -> void:
+	var kind: String = _names[kind_index]
+	var radius: float = rng.randf_range(22.0, 32.0)
+	var dark: Color
+	var mid: Color
+	var light: Color
+	if kind in ["grass", "forest", "twilight", "grove"]:
+		dark = Color(0.16, 0.36, 0.2)
+		mid = Color(0.26, 0.52, 0.27)
+		light = Color(0.45, 0.7, 0.36)
+		if kind in ["twilight", "grove"]:
+			dark = Color(0.1, 0.24, 0.22)
+			mid = Color(0.16, 0.36, 0.3)
+			light = Color(0.28, 0.5, 0.4)
+	elif kind in ["snow", "ice"]:
+		dark = Color(0.68, 0.76, 0.9)
+		mid = Color(0.88, 0.92, 0.98)
+		light = Color(1, 1, 1)
+	else:
+		dark = Color(0.36, 0.34, 0.36)
+		mid = Color(0.54, 0.52, 0.52)
+		light = Color(0.7, 0.68, 0.66)
+	draw_circle(at + Vector2(3, 5), radius, Color(0, 0, 0, 0.18))
+	draw_circle(at, radius, dark)
+	draw_circle(at + Vector2(-radius * 0.15, -radius * 0.18), radius * 0.78, mid)
+	draw_circle(at + Vector2(-radius * 0.35, -radius * 0.4), radius * 0.32, light)
 
 
 ## A few small things lying on a cell, by its kind of ground (always the same

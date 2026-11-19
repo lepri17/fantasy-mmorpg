@@ -1733,9 +1733,9 @@
       "teleport_price": 60,
       "music": "music_town",
       "shade": [
-        0.82,
-        0.84,
-        0.95
+        0.9,
+        0.9,
+        0.98
       ],
       "fireflies": 24
     },
@@ -1864,9 +1864,9 @@
       },
       "music": "music_twilight",
       "shade": [
-        0.82,
-        0.84,
-        0.95
+        0.9,
+        0.9,
+        0.98
       ],
       "fireflies": 12
     },
@@ -4380,9 +4380,9 @@
       "teleport_price": 80,
       "music": "music_twilight",
       "shade": [
-        0.8,
-        0.85,
-        0.95
+        0.9,
+        0.93,
+        0.98
       ],
       "fireflies": 36,
       "leaves": 16
@@ -6592,9 +6592,9 @@
       "teleport_price": 120,
       "music": "music_grove",
       "shade": [
-        0.6,
-        0.72,
-        0.64
+        0.8,
+        0.88,
+        0.82
       ],
       "fireflies": 56,
       "leaves": 22
@@ -6605,9 +6605,9 @@
       "teleport_price": 140,
       "music": "music_twilight",
       "shade": [
-        0.82,
-        0.84,
-        0.96
+        0.92,
+        0.93,
+        0.98
       ],
       "fireflies": 30,
       "ground": [

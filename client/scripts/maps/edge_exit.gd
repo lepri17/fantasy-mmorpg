@@ -11,6 +11,10 @@ const DEPTH := 64.0
 ## The edge walls of a map, as in game_map.gd EDGE_MARGINS: left, top, right, bottom.
 const WALLS := [24.0, 80.0, 24.0, 20.0]
 const CHEVRON := Color(1.0, 0.92, 0.6)
+## The wooden signpost the next place's name hangs on, as in MapleStory.
+const BOARD := Color(0.62, 0.42, 0.26)
+const BOARD_LIGHT := Color(0.74, 0.54, 0.34)
+const SIGN_EDGE := Color(0.2, 0.14, 0.18)
 
 var side: String = "east"
 var span := Vector2.ZERO
@@ -47,6 +51,13 @@ func _ready() -> void:
 
 
 func _draw() -> void:
+	var board := Rect2(_label.position - Vector2(10, 5), _label.size + Vector2(20, 10))
+	var post := Rect2(board.get_center().x - 4.0, board.end.y - 2.0, 8.0, 30.0)
+	draw_rect(post, BOARD)
+	draw_rect(post, SIGN_EDGE, false, 2.0)
+	draw_rect(board, BOARD)
+	draw_rect(Rect2(board.position + Vector2(3, 3), Vector2(board.size.x - 6, 4)), BOARD_LIGHT)
+	draw_rect(board, SIGN_EDGE, false, 2.5)
 	var across := Vector2(-_outward.y, _outward.x)
 	for i in 3:
 		var shift: float = fmod(_spin * 14.0 + i * 22.0, 66.0) - 44.0

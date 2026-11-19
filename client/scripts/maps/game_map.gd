@@ -72,7 +72,9 @@ func _ready() -> void:
 		add_child(ground)
 		var blend: Node2D = GroundBlend.new()
 		blend.name = "GroundBlend"
-		blend.setup(data["ground"])
+		blend.setup(
+			data["ground"], data.get("objects", []).filter(func(o): return o["type"] == "exit")
+		)
 		if DisplayServer.get_name() == "headless":
 			add_child(blend)  # no screen to draw on (the smoke test reads it as it is)
 		else:

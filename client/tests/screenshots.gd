@@ -98,6 +98,11 @@ func _initialize() -> void:
 	await _shot("31_twilight")
 	main.change_map("grove", "south")
 	await _frames(30)
+	for monster in main.map.get_children().filter(func(n): return n.get("monster_id") != null):
+		monster.set_physics_process(false)  # the Rootlings hunt in a pack here now
+	if player.is_dead:
+		player.revive()
+	player.hp = player.max_hp
 	player.global_position = Vector2(1280, 640)
 	await _frames(30)
 	await _shot("32_grove")
