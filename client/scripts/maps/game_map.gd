@@ -12,6 +12,10 @@ const DungeonRun := preload("res://scripts/maps/dungeon_run.gd")
 const Torch := preload("res://scripts/world/torch.gd")
 const Glowcap := preload("res://scripts/world/glowcap.gd")
 const EdgeExit := preload("res://scripts/maps/edge_exit.gd")
+const Water := preload("res://scripts/world/water.gd")
+const Decor := preload("res://scripts/world/decor.gd")
+const Chest := preload("res://scripts/world/chest.gd")
+const Shrine := preload("res://scripts/world/shrine.gd")
 const SCENES := {
 	"tree": preload("res://scenes/maps/tree.tscn"),
 	"rock": preload("res://scenes/maps/rock.tscn"),
@@ -83,6 +87,9 @@ func _add_object(thing: Dictionary) -> void:
 	if thing["type"] == "exit":
 		_add_exit(thing)
 		return
+	if thing["type"] == "water":
+		_add_water(thing)
+		return
 	var node: Node2D
 	match thing["type"]:
 		"torch":
@@ -90,6 +97,15 @@ func _add_object(thing: Dictionary) -> void:
 		"glowcap":
 			node = Glowcap.new()
 			node.set("color_name", thing.get("color", "cyan"))
+		"decor":
+			node = Decor.new()
+			node.set("kind", thing["kind"])
+		"chest":
+			node = Chest.new()
+			node.set("level", int(thing["level"]))
+		"shrine":
+			node = Shrine.new()
+			node.set("gift", thing.get("gift", "heal"))
 		_:
 			node = SCENES[thing["type"]].instantiate()
 	node.position = Vector2(thing["pos"][0], thing["pos"][1])
@@ -118,6 +134,23 @@ func _add_exit(thing: Dictionary) -> void:
 	road.to_map = thing["to"]
 	road.to_spawn = thing.get("spawn", "default")
 	add_child(road)
+
+
+## A lake or a river, with its bridges (water.gd).
+func _add_water(thing: Dictionary) -> void:
+	var lake = Water.new()
+	var shore := PackedVector2Array()
+	for point in thing["points"]:
+		shore.append(Vector2(point[0], point[1]))
+	lake.points = shore
+	for box in thing.get("bridges", []):
+		lake.bridges.append(Rect2(box[0], box[1], box[2], box[3]))
+	for island in thing.get("islands", []):
+		var sand := PackedVector2Array()
+		for point in island:
+			sand.append(Vector2(point[0], point[1]))
+		lake.islands.append(sand)
+	add_child(lake)
 
 
 ## Fireflies drifting over the whole map (maps.json "fireflies": how many).

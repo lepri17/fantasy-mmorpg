@@ -99,6 +99,7 @@ func _initialize() -> void:
 	await _frames(30)
 	await _shot("32_grove")
 	await _boss_loot(player, hud)
+	await _lake(main, player)
 	GameScript.sky_seconds = -1.0
 	main.change_map("cellar")
 	await _frames(240)
@@ -222,6 +223,40 @@ func _shot(file_name: String) -> void:
 func _frames(count: int) -> void:
 	for i in count:
 		await process_frame
+
+
+## Sunpetal Lake: the island and its chest, the river's bridges, a Marsh Frog
+## in the air, and the Elder Snapjaw coming out of its shell.
+func _lake(main, player) -> void:
+	main.change_map("lake", "north")
+	await _frames(20)
+	for enemy in get_nodes_in_group("enemies"):
+		enemy.set_physics_process(false)
+	player.global_position = Vector2(690, 520)
+	await _frames(20)
+	await _shot("40_lake")
+	player.global_position = Vector2(1280, 700)
+	await _frames(20)
+	await _shot("41_river")
+	var frog = get_nodes_in_group("enemies").filter(
+		func(enemy): return enemy.monster_id == "marsh_frog" and enemy.global_position.y > 1200
+	)[0]
+	frog.set_physics_process(true)
+	player.global_position = frog.global_position + Vector2(250, -20)
+	for _i in 200:
+		await process_frame
+		if float(frog.moves.get("_air_left")) > 0.25:
+			break
+	await _shot("42_frog_leap")
+	var snapjaw = get_first_node_in_group("bosses")
+	snapjaw.set_physics_process(true)
+	player.global_position = snapjaw.global_position + Vector2(-170, 30)
+	for _i in 400:
+		player.hp = player.max_hp
+		await process_frame
+		if get_nodes_in_group("telegraphs").any(func(mark): return mark.get("radius") == 200.0):
+			break
+	await _shot("43_snapjaw")
 
 
 ## The Elder Treant's reward on the ground (rare pieces stand in a beam of

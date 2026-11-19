@@ -405,6 +405,18 @@ func _skill_buff(skill: Dictionary) -> void:
 	_sfx("levelup")
 
 
+## A shrine's blessing: more damage for a while (the same boost as War Cry).
+func bless(damage_bonus: float, seconds: float) -> void:
+	_damage_bonus = maxf(_damage_bonus, damage_bonus)
+	_damage_bonus_left = maxf(_damage_bonus_left, seconds)
+	FloatingText.spawn(self, "BLESSED!", Color(1.0, 0.8, 0.35), 130.0, 30)
+	_sfx("levelup")
+	_say(
+		"The shrine's power fills you: +%d%% damage for %d seconds." % [damage_bonus * 100, seconds],
+		Color(1.0, 0.8, 0.35)
+	)
+
+
 ## Ground Slam: hits everything around and stuns it for a moment.
 func _skill_slam(skill: Dictionary) -> void:
 	_slash.play_spin()

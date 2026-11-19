@@ -265,6 +265,14 @@ def check_monsters(monsters: dict, items: dict) -> None:
             if move in monster:
                 for key in keys:
                     need_number(f"{where} {move}", monster[move], key, 0.01)
+        if "shell" in monster:
+            need_number(f"{where} shell", monster["shell"], "damage_taken", 0.01, 1.0)
+        split = monster.get("split")
+        if split is not None:
+            into = split.get("into")
+            if into not in monsters or into == monster_id or "split" in monsters.get(into, {}):
+                error(f"{where}: split 'into' must be another monster that does not split")
+            need_number(where + " split", split, "count", 1, 6)
         if "hover" in monster:
             need_number(where, monster, "hover", 0, 30)
         if "knockback_resist" in monster:
@@ -523,14 +531,22 @@ def check_upgrades(items_data: dict) -> None:
         check_bonus(f"{where} per_plus '{slot}'", bonus)
 
 
-OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc", "torch", "glowcap"}
+OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc", "torch", "glowcap", "decor", "chest",
+                "shrine"}
 GLOW_COLORS = {"cyan", "teal", "violet"}
+DECOR_KINDS = {"reeds", "cattails", "lily", "flowers", "pebbles", "log", "mushrooms", "bones"}  # decor.gd
+SHRINE_GIFTS = {"heal", "power"}  # shrine.gd
 # A monster's extra moves (slime.gd) and the numbers each needs.
 MONSTER_MOVES = {
     "charge": ("range", "min_range", "warning_seconds", "speed", "distance", "damage_multiplier", "cooldown"),
     "blink": ("when_closer", "distance", "cooldown"),
     "burrow": ("cooldown", "seconds", "speed", "radius", "warning_seconds", "damage_multiplier"),
     "special": ("every", "radius", "warning_seconds", "damage_multiplier"),
+    # monster_moves.gd: the open world's moves.
+    "shell": ("range", "seconds", "damage_taken", "cooldown", "radius", "warning_seconds",
+              "damage_multiplier"),
+    "leap": ("range", "min_range", "warning_seconds", "air_seconds", "height", "radius",
+             "damage_multiplier", "cooldown"),
 }
 SERVICES = {"shop", "heal", "storage", "teleport", "quests"}
 
@@ -686,10 +702,14 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
             error(f"{where}: needs a 'default' spawn")
         for spawn_name, point in spawns.items():
             inside(point, f"spawn '{spawn_name}'")
+        waters = [w for w in data.get("objects", []) if w.get("type") == "water"]
         for thing in data.get("objects", []):
             kind = thing.get("type")
             if kind == "exit":
                 check_exit(where, map_id, thing, size, maps, spawns)
+                continue
+            if kind == "water":
+                check_water(where, thing, inside, spawns)
                 continue
             if kind not in OBJECT_TYPES:
                 error(f"{where}: object type '{kind}' is not one of {sorted(OBJECT_TYPES)}")
@@ -701,8 +721,16 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                 error(f"{where}: {kind} 'tint' must be four numbers")
             if "scale" in thing:
                 need_number(f"{where} {kind}", thing, "scale", 0.5, 2.5)
+            if kind != "decor" and any(is_wet(thing["pos"], w) for w in waters):
+                error(f"{where}: {kind} at {thing['pos']} is in the water")
             if kind == "glowcap" and thing.get("color") not in GLOW_COLORS:
                 error(f"{where}: glowcap color must be one of {sorted(GLOW_COLORS)}")
+            if kind == "decor" and thing.get("kind") not in DECOR_KINDS:
+                error(f"{where}: decor kind must be one of {sorted(DECOR_KINDS)}")
+            if kind == "chest":
+                need_number(f"{where} chest", thing, "level", 1, 999)
+            if kind == "shrine" and thing.get("gift", "heal") not in SHRINE_GIFTS:
+                error(f"{where}: shrine gift must be one of {sorted(SHRINE_GIFTS)}")
             if kind == "npc" and thing.get("id") not in npcs:
                 error(f"{where}: npc '{thing.get('id')}' is not in npcs.json")
             if kind == "monster" and thing.get("id") not in monsters:
@@ -717,6 +745,75 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                     if isinstance(point, list) and len(point) == 2 and all(
                             is_number(v) for v in point) and math.dist(point, thing["pos"]) < 80:
                         error(f"{where}: spawn '{spawn_name}' is too close to a portal")
+
+
+def check_water(where: str, water: dict, inside, spawns: dict) -> None:
+    """A lake or river (water.gd): a shore of points on the map, islands in it,
+    bridges as [x, y, width, height] boxes with both ends on dry land (or an
+    island), and no spawn in the water."""
+    points = water.get("points", [])
+    if not (isinstance(points, list) and len(points) >= 3):
+        error(f"{where}: water needs at least three shore 'points'")
+        return
+    if not all(inside(point, "water point") for point in points):
+        return
+    islands = []
+    for island in water.get("islands", []):
+        if not (isinstance(island, list) and len(island) >= 3
+                and all(inside(point, "island point") for point in island)):
+            error(f"{where}: an island needs at least three points on the map")
+            continue
+        if not all(in_polygon(point, points) for point in island):
+            error(f"{where}: an island must be in its water")
+        islands.append(island)
+
+    def wet(point, bridges=()):
+        if any(b[0] <= point[0] <= b[0] + b[2] and b[1] <= point[1] <= b[1] + b[3] for b in bridges):
+            return False
+        return in_polygon(point, points) and not any(in_polygon(point, i) for i in islands)
+
+    bridges, reached = [], []
+    for box in water.get("bridges", []):
+        if not (isinstance(box, list) and len(box) == 4 and all(is_number(v) for v in box)
+                and box[2] >= 64 and box[3] >= 64 and inside(box[:2], "bridge corner")
+                and inside([box[0] + box[2], box[1] + box[3]], "bridge corner")):
+            error(f"{where}: a bridge must be [x, y, width, height] on the map, 64 or more wide")
+            continue
+        x, y, w, h = box
+        ends = ([(x + 4, y + h / 2), (x + w - 4, y + h / 2)] if w >= h
+                else [(x + w / 2, y + 4), (x + w / 2, y + h - 4)])
+        if any(wet(end) for end in ends):
+            error(f"{where}: bridge {box} must reach dry land at both ends")
+        bridges.append(box)
+        for island in islands:
+            if any(in_polygon(end, island) for end in ends):
+                reached.append(island)
+    if any(island not in reached for island in islands):
+        error(f"{where}: each island needs a bridge to it (else it is a hole in the water)")
+    for spawn_name, point in spawns.items():
+        if (isinstance(point, list) and len(point) == 2 and all(is_number(v) for v in point)
+                and wet(point, bridges)):
+            error(f"{where}: spawn '{spawn_name}' is in the water")
+
+
+def is_wet(point, water: dict) -> bool:
+    """Is a point in this water: not on one of its bridges or islands?"""
+    for box in water.get("bridges", []):
+        if box[0] <= point[0] <= box[0] + box[2] and box[1] <= point[1] <= box[1] + box[3]:
+            return False
+    if any(in_polygon(point, island) for island in water.get("islands", [])):
+        return False
+    return in_polygon(point, water.get("points", []))
+
+
+def in_polygon(point, polygon) -> bool:
+    """Is a point inside a shape (even-odd rule)?"""
+    x, y = point
+    inside_ = False
+    for (x1, y1), (x2, y2) in zip(polygon, polygon[1:] + polygon[:1]):
+        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+            inside_ = not inside_
+    return inside_
 
 
 EXIT_SIDES = {"north", "south", "east", "west"}

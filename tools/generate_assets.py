@@ -1705,7 +1705,7 @@ def build_icon(sheet: Image.Image) -> Image.Image:
 TILE = 128
 # Ground kinds in tiles.png, two seamless variants each, in this column order.
 # client/data/maps.json names them in "tile_kinds".
-TILE_KINDS = ["grass", "path", "stone", "forest", "cellar", "twilight", "grove"]
+TILE_KINDS = ["grass", "path", "stone", "forest", "cellar", "twilight", "grove", "sand"]
 
 
 def _seamless(size: int, base, paint, seed: int) -> Image.Image:
@@ -1837,6 +1837,20 @@ def _paint_cellar(draw, rng, everywhere, size, scale):
                 outline=(58, 52, 70, 255), width=scale))
 
 
+def _paint_sand(draw, rng, everywhere, size, scale):
+    """Sunpetal Lake's beaches: warm sand with ripple marks, shells and pebbles."""
+    _blobs(draw, rng, everywhere, size, scale, 10,
+           [(232, 206, 150, 255), (220, 192, 136, 255), (240, 218, 166, 255)], (16, 32), (8, 16))
+    for _ in range(5):  # ripple marks left by the wind
+        x, y = rng.uniform(0, size) * scale, rng.uniform(0, size) * scale
+        width = rng.uniform(14, 26) * scale
+        everywhere(lambda ox, oy: draw.arc(
+            [ox + x - width, oy + y - 4 * scale, ox + x + width, oy + y + 4 * scale], 200, 340,
+            fill=(204, 174, 120, 255), width=int(1.5 * scale)))
+    _blobs(draw, rng, everywhere, size, scale, 8, [(250, 236, 214, 255), (196, 170, 130, 255)],
+           (1.4, 2.4), (1.0, 1.8))
+
+
 def build_tiles() -> Image.Image:
     """tiles.png: a row of 128 px ground tiles, TILE_KINDS order, two variants each."""
     makers = {
@@ -1847,6 +1861,7 @@ def build_tiles() -> Image.Image:
         "cellar": lambda seed: _seamless(TILE, (60, 54, 72, 255), _paint_cellar, seed),
         "twilight": lambda seed: _seamless(TILE, (58, 102, 92, 255), _paint_twilight, seed),
         "grove": lambda seed: _seamless(TILE, (46, 88, 60, 255), _paint_grove, seed),
+        "sand": lambda seed: _seamless(TILE, (228, 200, 144, 255), _paint_sand, seed),
     }
     sheet = Image.new("RGBA", (TILE * 2 * len(TILE_KINDS), TILE), (0, 0, 0, 0))
     for i, kind in enumerate(TILE_KINDS):
@@ -2328,12 +2343,135 @@ def draw_treant(sway: float, branches: int, face: str, leaves: int) -> Image.Ima
 
 
 # Monster folder -> (drawing, poses). Each gets <name>.png and <name>_frames.tres.
+SHELL = (104, 132, 74, 255)
+SHELL_DARK = (74, 98, 56, 255)
+SHELL_RIM = (196, 176, 112, 255)
+TURTLE_SKIN = (126, 186, 150, 255)
+TURTLE_SKIN_DARK = (92, 146, 116, 255)
+BEAK = (244, 204, 96, 255)
+# (animation, how far the head is out 0..1, lunge 0..1, face, shell bits when broken)
+TURTLE_POSES = [
+    ("idle", 1.0, 0.0, "normal", 0),
+    ("idle", 0.92, 0.0, "normal", 0),
+    ("attack", 1.0, 0.6, "angry", 0),
+    ("attack", 1.0, 1.0, "angry", 0),
+    ("die", 0.7, 0.0, "dead", 0),
+    ("die", 0.4, 0.0, "dead", 3),
+    ("die", 0.0, 0.0, "none", 6),
+    ("shell", 0.0, 0.0, "hidden", 0),
+    ("shell", 0.0, 0.0, "peek", 0),
+]
+
+
+def draw_turtle(head: float, lunge: float, face: str, bits: int) -> Image.Image:
+    """Snapjaw Turtle: a domed, plated shell, stubby legs and a beaked head that
+    snaps forward. Hidden, only the shell shows (with eyes peeking out)."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 22, 4.5, SHADOW, outline=False)
+    if face == "none":  # only bits of shell are left
+        rng = random.Random(bits)
+        for _ in range(bits):
+            c.ellipse(cx + rng.uniform(-18, 18), feet - rng.uniform(2, 9), 3.4, 2.4, SHELL)
+        return c.finish()
+    hidden = face in ("hidden", "peek")
+    shell_y = feet - (10 if hidden else 12)
+    if not hidden:
+        for side in (-1, 1):  # legs
+            c.ellipse(cx + side * 17, feet - 4, 6, 4.5, TURTLE_SKIN_DARK)
+    c.ellipse(cx, shell_y + 6, 24, 7, SHELL_RIM)  # the rim under the dome
+    c.ellipse(cx, shell_y, 22, 17, SHELL)
+    plates = [(0, -8, 6.5, 5), (-11, -2, 5.5, 4.5), (11, -2, 5.5, 4.5), (-6, 6, 5, 3.5), (6, 6, 5, 3.5)]
+    for dx, dy, rx, ry in plates:
+        c.ellipse(cx + dx, shell_y + dy, rx, ry, SHELL_DARK, outline=False)
+    c.ellipse(cx - 7, shell_y - 11, 5, 2.4, (150, 178, 112, 255), outline=False)  # shine
+    if hidden:
+        c.ellipse(cx, shell_y + 6, 7, 3.6, (40, 34, 30, 255), outline=False)  # the dark opening
+        if face == "peek":
+            for side in (-1, 1):
+                c.ellipse(cx + side * 2.6, shell_y + 6, 1.2, 1.2, (255, 236, 150, 255), outline=False)
+        return c.finish()
+    hx, hy = cx, feet - 8 + lunge * 3
+    radius = 7 + head * 2 + lunge * 1.5
+    c.ellipse(hx, hy - head * 2, radius, radius * 0.85, TURTLE_SKIN)
+    if bits:
+        rng = random.Random(bits)
+        for _ in range(bits):
+            c.ellipse(cx + rng.uniform(-24, 24), feet - rng.uniform(0, 6), 2.2, 1.6, SHELL)
+    _eyes(c, hx, hy - head * 2 - 2.5, 4.2, face, 0.9)
+    open_mouth = lunge * 3.0
+    c.polygon([(hx - 4, hy + 1), (hx + 4, hy + 1), (hx, hy + 5 - open_mouth * 0.3)], BEAK)
+    if open_mouth > 0.5:
+        c.polygon([(hx - 3.4, hy + 2 + open_mouth), (hx + 3.4, hy + 2 + open_mouth),
+                   (hx, hy + 6 + open_mouth)], BEAK)
+    return c.finish()
+
+
+FROG = (108, 182, 96, 255)
+FROG_DARK = (78, 140, 72, 255)
+FROG_BELLY = (230, 238, 176, 255)
+FROG_SPOT = (70, 128, 66, 255)
+FROG_EYE = (250, 214, 92, 255)
+# (animation, body squash: half-width, half-height, face, legs out 0..1)
+FROG_POSES = [
+    ("idle", 18, 13, "normal", 0.0),
+    ("idle", 19, 12, "puff", 0.0),
+    ("attack", 21, 10, "angry", 0.0),
+    ("attack", 22, 9, "angry", 0.0),
+    ("die", 19, 9, "dead", 0.0),
+    ("die", 20, 6, "dead", 0.3),
+    ("die", 0, 0, "none", 0.0),
+    ("leap", 14, 17, "angry", 1.0),
+]
+
+
+def draw_frog(rx: float, ry: float, face: str, legs: float) -> Image.Image:
+    """Marsh Frog: a squat green frog with a pale belly, spots and big golden
+    eyes on top. It crouches flat before a leap and stretches out in the air."""
+    c = Canvas(SLIME_FRAME)
+    cx, feet = 32, SLIME_FEET_Y
+    c.ellipse(cx, feet + 1, 18, 4, SHADOW, outline=False)
+    if face == "none":
+        for k in range(4):
+            c.ellipse(cx - 12 + k * 8, feet - 3 - (k % 2) * 3, 2.6, 2.0, FROG)
+        return c.finish()
+    cy = feet - ry - 2
+    for side in (-1, 1):  # back legs: folded, or stretched in a leap
+        if legs > 0.5:
+            c.polygon([(cx + side * 8, cy + 4), (cx + side * 20, feet + 2), (cx + side * 14, feet + 4)], FROG_DARK)
+        else:
+            c.ellipse(cx + side * (rx - 3), feet - 5, 7, 5, FROG_DARK)
+        c.ellipse(cx + side * 8, feet - 2, 4, 2.4, FROG_DARK)  # front feet
+    c.ellipse(cx, cy, rx, ry, FROG)
+    c.ellipse(cx, cy + ry * 0.35, rx * 0.62, ry * 0.5, FROG_BELLY, outline=False)
+    for dx, dy in ((-9, -4), (8, -6), (11, 2)):
+        c.ellipse(cx + dx * rx / 18, cy + dy * ry / 13, 2.6, 2.0, FROG_SPOT, outline=False)
+    if face == "puff":  # the throat swells
+        c.ellipse(cx, cy + ry * 0.55, 7, 5, (246, 246, 206, 255))
+    for side in (-1, 1):  # eyes up on top
+        ex, ey = cx + side * rx * 0.48, cy - ry * 0.75
+        c.ellipse(ex, ey, 6, 5.5, FROG)
+        if face == "dead":
+            c.line([(ex - 2.4, ey - 2.4), (ex + 2.4, ey + 2.4)], width=1.3)
+            c.line([(ex - 2.4, ey + 2.4), (ex + 2.4, ey - 2.4)], width=1.3)
+            continue
+        c.ellipse(ex, ey, 4, 3.8, FROG_EYE, outline=False)
+        c.ellipse(ex, ey + 0.4, 1.4, 2.8, EYE, outline=False)
+        if face == "angry":
+            c.line([(ex - side * 4.5, ey - 5.5), (ex + side * 2.5, ey - 3.5)], width=1.3)
+    mouth = cy + ry * 0.1
+    c.line(arc_points(cx, mouth - 2, rx * 0.55, 3, 20, 160, 10), width=1.3)
+    return c.finish()
+
+
 FOREST_MONSTERS = {
     "boar": (draw_boar, BOAR_POSES),
     "wisp": (draw_wisp, WISP_POSES),
     "rootling": (draw_rootling, ROOTLING_POSES),
     "golem": (draw_golem, GOLEM_POSES),
     "treant": (draw_treant, TREANT_POSES),
+    "turtle": (draw_turtle, TURTLE_POSES),
+    "frog": (draw_frog, FROG_POSES),
 }
 
 
@@ -2360,7 +2498,11 @@ def build_slime_frames(sheet_res_path: str, poses=SLIME_POSES) -> str:
             "",
         ]
     blocks = []
-    for name, fps, loop in SLIME_ANIMATIONS:
+    extra = []  # a monster's own poses, such as the turtle's shell or the frog's leap
+    for pose in poses:
+        if pose[0] not in [a[0] for a in SLIME_ANIMATIONS + extra]:
+            extra.append((pose[0], 4.0, True))
+    for name, fps, loop in SLIME_ANIMATIONS + extra:
         columns = [col for col, pose in enumerate(poses) if pose[0] == name]
         frames = ", ".join(
             '{\n"duration": 1.0,\n"texture": SubResource("frame_%d")\n}' % col for col in columns

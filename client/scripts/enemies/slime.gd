@@ -17,6 +17,7 @@ const PICKUP_SCENE := preload("res://scenes/items/pickup.tscn")
 const ItemDb := preload("res://scripts/items/item_db.gd")
 const Projectile := preload("res://scripts/combat/projectile.gd")
 const Burst := preload("res://scripts/combat/burst.gd")
+const MonsterMoves := preload("res://scripts/enemies/monster_moves.gd")
 const CROWN := preload("res://assets/monsters/slime/crown.png")
 const SLIME_SCENE_PATH := "res://scenes/enemies/slime.tscn"
 const BAR_HEIGHT := 56.0
@@ -89,6 +90,8 @@ var hover: float = 0.0
 var burrowed: bool = false
 ## Elites have more HP, damage, XP and loot, glow, and are a bit bigger.
 var is_elite: bool = false
+## The open world's moves (monster_moves.gd: shell, leap, split), if it has any.
+var moves = null
 
 var hp: int = 0
 var is_dead: bool = false
@@ -135,6 +138,12 @@ func _ready() -> void:
 	_load_monster_data()
 	_apply_size()
 	_roll_elite()
+	var data: Dictionary = GameData.table("monsters").get(monster_id, {})
+	if MonsterMoves.wanted(data):
+		moves = MonsterMoves.new()
+		moves.name = "Moves"
+		add_child(moves)
+		moves.setup(self, data)
 	hp = max_hp
 	_spawn_position = global_position
 	_wander_target = global_position
@@ -159,11 +168,15 @@ func _physics_process(delta: float) -> void:
 	var stunned: bool = statuses.is_active("stun")
 	_sprite.speed_scale = 0.0 if stunned else 1.0
 	_float(delta)
+	if moves != null:
+		moves.tick(delta)
 
 	var movement := Vector2.ZERO
 	var target: Node2D = _chase_target()
 	if _rush_left > 0.0:
 		movement = _rush_step(delta, target)
+	elif moves != null and moves.busy():
+		movement = moves.step(delta)
 	elif burrowed:
 		movement = _dig_toward(target, delta)
 	elif stunned or _casting_left > 0.0:
@@ -197,6 +210,8 @@ func take_damage(
 ) -> void:
 	if is_dead:
 		return
+	if moves != null:
+		amount = moves.damage_taken(amount)  # less while it hides in its shell
 	hp = maxi(hp - amount, 0)
 	_hp_bar.set_values(hp, max_hp)
 	if crit:
@@ -395,6 +410,8 @@ func _hit_hard(target: Node2D, multiplier: float) -> void:
 ## Starts its special move when it is ready and the hero is where it works:
 ## a charge from mid range, a blink when he comes too close, a dig from afar.
 func _try_move(target: Node2D, distance: float) -> bool:
+	if moves != null and moves.try_start(target, distance):
+		return true
 	if _move_ready_in > 0.0:
 		return false
 	if not charge.is_empty() and distance <= float(charge["range"]):
@@ -514,6 +531,35 @@ func _draw() -> void:
 	draw_circle(Vector2(6.0, -4.0), 4.0, Color(0.4, 0.29, 0.2))
 
 
+## For monster_moves.gd: plays one of its own animations ("shell", "leap"), if
+## its sheet has it.
+func play_move(animation: String) -> void:
+	if _sprite.sprite_frames.has_animation(animation):
+		_sprite.play(animation)
+
+
+## For monster_moves.gd: raises the picture off the ground (a leap).
+func lift(height: float) -> void:
+	_sprite.position.y = _sprite_y - height
+
+
+## For monster_moves.gd: off while it flies over things in a leap.
+func set_solid(solid: bool) -> void:
+	_collision.set_deferred("disabled", not solid)
+
+
+func area_attack(radius: float, warning: float, multiplier: float) -> void:
+	_area_attack(radius, warning, multiplier)
+
+
+func hit_hard(target: Node2D, multiplier: float) -> void:
+	_hit_hard(target, multiplier)
+
+
+func chase_target() -> Node2D:
+	return _chase_target()
+
+
 ## Lantern Wisp: bobs gently in the air.
 func _float(delta: float) -> void:
 	if hover <= 0.0:
@@ -536,6 +582,8 @@ func _die() -> void:
 	statuses.clear()
 	_sprite.speed_scale = 1.0
 	_sprite.play("die")
+	if moves != null:
+		moves.on_death()  # lands from a leap; a Bubble Slime bursts into small ones
 	var fade: Tween = create_tween()
 	fade.tween_interval(0.4)
 	fade.tween_property(_sprite, "modulate:a", 0.0, 0.35)
@@ -752,6 +800,9 @@ func _drop(kind: String, amount: int, item_id: String = "") -> void:
 
 func _respawn() -> void:
 	global_position = _spawn_position
+	if moves != null:
+		moves.reset()
+		lift(0.0)
 	_threat.clear()
 	_attack_count = 0
 	_casting_left = 0.0
