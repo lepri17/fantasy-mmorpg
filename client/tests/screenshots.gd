@@ -234,6 +234,7 @@ func _frames(count: int) -> void:
 ## Sunpetal Lake: the island and its chest, the river's bridges, a Marsh Frog
 ## in the air, and the Elder Snapjaw coming out of its shell.
 func _lake(main, player) -> void:
+	get_first_node_in_group("hud").call("_close_windows")  # a fresh view
 	main.change_map("lake", "north")
 	await _frames(20)
 	for enemy in get_nodes_in_group("enemies"):
@@ -269,6 +270,7 @@ func _lake(main, player) -> void:
 ## Galeclaw Ridge: the canyon between two cliffs, the rift and a rope bridge,
 ## a Rock Beetle rolling and a Crag Imp's rock in the air.
 func _ridge(main, player) -> void:
+	get_first_node_in_group("hud").call("_close_windows")  # a fresh view
 	main.change_map("ridge", "west")
 	await _frames(20)
 	for enemy in get_nodes_in_group("enemies"):
@@ -314,6 +316,7 @@ func _ridge(main, player) -> void:
 ## Moonfall Ruins: the temple with the sleeping Colossus, a gargoyle waking,
 ## a Mimic biting and a Sentinel's beam.
 func _ruins(main, player) -> void:
+	get_first_node_in_group("hud").call("_close_windows")  # a fresh view
 	main.change_map("ruins", "south")
 	await _frames(20)
 	var all: Array = main.map.get_children().filter(func(n): return n.get("monster_id") != null)
@@ -357,6 +360,7 @@ func _ruins(main, player) -> void:
 ## Frostfang Hollow: the frozen pond in falling snow, an icicle dropping in the
 ## gorge, a pack of Snow Wolves and the Frost Wyrm.
 func _frost(main, player) -> void:
+	get_first_node_in_group("hud").call("_close_windows")  # a fresh view
 	main.change_map("frostfang", "south")
 	await _frames(20)
 	var all: Array = main.map.get_children().filter(func(n): return n.get("monster_id") != null)

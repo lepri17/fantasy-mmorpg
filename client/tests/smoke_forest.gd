@@ -83,6 +83,12 @@ func _check_maps(main) -> void:
 		"the Stormcrest Roc can come down in the grove, without the Slime King's crown"
 	)
 	main.bosses.leave("stormcrest_roc")
+	var blend = main.map.get_node_or_null("GroundBlend")
+	var bands: int = blend.bands if blend != null else 0
+	t._check(
+		bands > 10 and main.map.get_node_or_null("Leaves") is CPUParticles2D,
+		"the grove's ground has soft, wavy borders (%d), and leaves drift down" % bands
+	)
 
 
 func _check_charge(main, player) -> void:

@@ -8,6 +8,32 @@ extends Node2D
 
 const GameData := preload("res://scripts/data/game_data.gd")
 const MapTiles := preload("res://scripts/maps/map_tiles.gd")
+const GroundBlend := preload("res://scripts/maps/ground_blend.gd")
+## Things drifting over a whole map (maps.json "leaves", "pollen", "dust": how
+## many): colours to pick from, heading, speed, size and spin.
+const DRIFTS := {
+	"leaves": {
+		"colors": [Color(0.55, 0.72, 0.28), Color(0.88, 0.6, 0.22), Color(0.72, 0.42, 0.18)],
+		"heading": Vector2(0.45, 1.0),
+		"speed": [28.0, 55.0],
+		"size": [2.5, 4.5],
+		"spin": 180.0
+	},
+	"pollen": {
+		"colors": [Color(1.0, 0.96, 0.66), Color(1.0, 1.0, 1.0)],
+		"heading": Vector2(1.0, -0.35),
+		"speed": [8.0, 22.0],
+		"size": [1.5, 2.6],
+		"spin": 0.0
+	},
+	"dust": {
+		"colors": [Color(0.88, 0.82, 0.7, 0.6), Color(0.74, 0.7, 0.62, 0.5)],
+		"heading": Vector2(1.0, 0.12),
+		"speed": [55.0, 100.0],
+		"size": [1.5, 3.0],
+		"spin": 0.0
+	}
+}
 const DungeonRun := preload("res://scripts/maps/dungeon_run.gd")
 const Torch := preload("res://scripts/world/torch.gd")
 const Glowcap := preload("res://scripts/world/glowcap.gd")
@@ -43,6 +69,10 @@ func _ready() -> void:
 		var ground: TileMapLayer = MapTiles.build(data["ground"])
 		ground.z_index = -10
 		add_child(ground)
+		var blend: Node2D = GroundBlend.new()
+		blend.name = "GroundBlend"
+		blend.setup(data["ground"])
+		add_child(blend)
 		_add_edges()
 	for thing in data.get("objects", []):
 		_add_object(thing)
@@ -50,6 +80,9 @@ func _ready() -> void:
 		_add_fireflies(int(data["fireflies"]))
 	if int(data.get("snowfall", 0)) > 0:
 		_add_snowfall(int(data["snowfall"]))
+	for drift in DRIFTS:
+		if int(data.get(drift, 0)) > 0:
+			_add_drift(drift, int(data[drift]))
 	call_deferred("_bake_navigation")
 	if data.has("dungeon"):
 		var run: Node = DungeonRun.new()
@@ -131,7 +164,9 @@ func _add_object(thing: Dictionary) -> void:
 		# The deep forest: bigger, darker trees (maps.json "scale" and "tint").
 		node.scale = Vector2.ONE * float(thing.get("scale", 1.0))
 		var rgba: Array = thing.get("tint", [1, 1, 1, 1])
-		node.modulate = Color(rgba[0], rgba[1], rgba[2], rgba[3])
+		# Each a little lighter or darker than the next, so no two look cloned.
+		var shade: float = 0.92 + 0.12 * float(posmod(hash(node.position), 100)) / 100.0
+		node.modulate = Color(rgba[0] * shade, rgba[1] * shade, rgba[2] * shade, rgba[3])
 	match thing["type"]:
 		"monster":
 			node.set("monster_id", thing["id"])
@@ -195,6 +230,43 @@ func _add_snowfall(count: int) -> void:
 	flakes.color = Color(1, 1, 1, 0.85)
 	flakes.z_index = 5
 	add_child(flakes)
+
+
+## Leaves, pollen or dust drifting over the whole map (DRIFTS), each bit
+## fading in and out where it is, so the map looks alive everywhere.
+func _add_drift(kind: String, count: int) -> void:
+	var look: Dictionary = DRIFTS[kind]
+	var bits := CPUParticles2D.new()
+	bits.name = kind.capitalize()
+	bits.amount = count
+	bits.lifetime = 7.0
+	bits.preprocess = 7.0
+	bits.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	var size: Vector2 = map_size()
+	bits.position = size * 0.5
+	bits.emission_rect_extents = size * 0.5
+	bits.direction = look["heading"]
+	bits.spread = 25.0
+	bits.gravity = Vector2.ZERO
+	bits.initial_velocity_min = look["speed"][0]
+	bits.initial_velocity_max = look["speed"][1]
+	bits.scale_amount_min = look["size"][0]
+	bits.scale_amount_max = look["size"][1]
+	bits.angular_velocity_min = -float(look["spin"])
+	bits.angular_velocity_max = float(look["spin"])
+	var colors: Array = look["colors"]
+	var pick := Gradient.new()
+	pick.offsets = PackedFloat32Array([0.0, 1.0] if colors.size() == 2 else [0.0, 0.5, 1.0])
+	pick.colors = PackedColorArray(colors)
+	bits.color_initial_ramp = pick
+	var fade := Gradient.new()
+	fade.offsets = PackedFloat32Array([0.0, 0.2, 0.8, 1.0])
+	fade.colors = PackedColorArray(
+		[Color(1, 1, 1, 0), Color(1, 1, 1, 0.9), Color(1, 1, 1, 0.9), Color(1, 1, 1, 0)]
+	)
+	bits.color_ramp = fade
+	bits.z_index = 5
+	add_child(bits)
 
 
 ## Fireflies drifting over the whole map (maps.json "fireflies": how many).

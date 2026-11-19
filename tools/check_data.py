@@ -658,8 +658,9 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
         if not (isinstance(shade, list) and len(shade) == 3 and all(is_number(v) and 0.2 <= v <= 1.0
                                                                      for v in shade)):
             error(f"{where}: 'shade' must be three numbers from 0.2 to 1")
-        if "fireflies" in data:
-            need_number(where, data, "fireflies", 0, 200)
+        for drift in ("fireflies", "leaves", "pollen", "dust"):  # game_map.gd
+            if drift in data:
+                need_number(where, data, drift, 0, 200)
         if "ground" in data:
             rows = data["ground"]
             if not rows or any(len(row) != len(rows[0]) for row in rows):

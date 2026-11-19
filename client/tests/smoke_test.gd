@@ -88,7 +88,14 @@ func _run() -> void:
 		enemy.evasion = 0.0  # no random misses in the checks below
 
 	# --- combat rules: miss, crit, defense
+	_check(
+		is_equal_approx(CombatRules.hit_evasion(1.0, 0.0), CombatRules.max_evasion),
+		"evasion is capped (%d%% at most)" % roundi(CombatRules.max_evasion * 100.0)
+	)
+	var evasion_cap: float = CombatRules.max_evasion
+	CombatRules.max_evasion = 1.0  # without the cap, so the next check does not hang on luck
 	_check(CombatRules.resolve_hit(10, 0.0, 0, 1.0)["miss"], "100% evasion always misses")
+	CombatRules.max_evasion = evasion_cap
 	var crit_hit: Dictionary = CombatRules.resolve_hit(10, 1.0, 3, 0.0)
 	_check(
 		crit_hit["crit"] and crit_hit["damage"] >= roundi(8 * 1.5) - 3,

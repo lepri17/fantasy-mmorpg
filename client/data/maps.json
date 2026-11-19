@@ -230,7 +230,8 @@
         }
       ],
       "teleport_price": 0,
-      "music": "music_town"
+      "music": "music_town",
+      "pollen": 18
     },
     "field": {
       "name": "Green Meadow",
@@ -303,7 +304,8 @@
           720,
           1080
         ]
-      ]
+      ],
+      "pollen": 30
     },
     "forest": {
       "name": "Mossy Woods",
@@ -676,7 +678,8 @@
           920,
           840
         ]
-      ]
+      ],
+      "leaves": 26
     },
     "cellar": {
       "name": "Old Cellar",
@@ -831,7 +834,8 @@
         }
       },
       "music": "music_cellar",
-      "indoor": true
+      "indoor": true,
+      "dust": 12
     },
     "lake": {
       "name": "Sunpetal Lake",
@@ -1837,7 +1841,8 @@
           1360,
           1040
         ]
-      ]
+      ],
+      "pollen": 26
     },
     "twilight": {
       "name": "Twilight Woods",
@@ -2859,7 +2864,8 @@
           320,
           1240
         ]
-      ]
+      ],
+      "leaves": 16
     },
     "ridge": {
       "name": "Galeclaw Ridge",
@@ -3866,7 +3872,8 @@
           1000,
           1200
         ]
-      ]
+      ],
+      "dust": 34
     },
     "grove": {
       "name": "Elder Grove",
@@ -4760,7 +4767,8 @@
           1760,
           960
         ]
-      ]
+      ],
+      "leaves": 22
     },
     "ruins": {
       "name": "Moonfall Ruins",
@@ -5708,7 +5716,8 @@
           2160,
           840
         ]
-      ]
+      ],
+      "dust": 16
     },
     "frostfang": {
       "name": "Frostfang Hollow",

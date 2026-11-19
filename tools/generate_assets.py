@@ -2000,9 +2000,25 @@ def build_tiles() -> Image.Image:
     }
     sheet = Image.new("RGBA", (TILE * 2 * len(TILE_KINDS), TILE), (0, 0, 0, 0))
     for i, kind in enumerate(TILE_KINDS):
-        for variant in range(2):
-            sheet.paste(makers[kind](11 + variant * 31 + i), ((i * 2 + variant) * TILE, 0))
+        first = makers[kind](11 + i)
+        sheet.paste(first, (i * 2 * TILE, 0))
+        sheet.paste(_soft_variant(first, makers[kind](11 + 31 + i)), ((i * 2 + 1) * TILE, 0))
     return sheet
+
+
+def _soft_variant(base: Image.Image, other: Image.Image) -> Image.Image:
+    """A ground kind's second variant: the first one at its edges and the other
+    in a soft round patch in the middle. Cells of the two variants side by
+    side then meet with no square seam, so the ground does not look like a grid."""
+    size = base.width
+    mask = Image.new("L", (size, size), 0)
+    pixels = mask.load()
+    half = size / 2.0
+    for y in range(size):
+        for x in range(size):
+            t = min(1.0, max(0.0, (0.88 - math.hypot(x + 0.5 - half, y + 0.5 - half) / half) / 0.33))
+            pixels[x, y] = int(255 * t * t * (3 - 2 * t))
+    return Image.composite(other, base, mask)
 
 
 def build_grass_tile(size: int = 256, seed: int = 7) -> Image.Image:
