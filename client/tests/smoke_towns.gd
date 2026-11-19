@@ -19,6 +19,7 @@ func run(test, main, player, hud) -> void:
 	await _check_new_towns(main, player)
 	await _check_markets(main, player)
 	await _check_wish(main, player, hud)
+	await _check_people(main, player, hud)
 	await _check_teleports(main, player, hud)
 	await _check_arena(main, player)
 	main.change_map("town")
@@ -159,6 +160,46 @@ func _check_markets(main, player) -> void:
 			),
 			"the road out of %s comes back at the gate" % name
 		)
+
+
+## The townspeople: each their own drawing (not the hero dyed), and alive:
+## they do their action now and then, and greet the hero with a line.
+func _check_people(main, player, hud) -> void:
+	var looks: Array = []
+	for npc_id in GameData.table("npcs"):
+		var look = GameData.table("npcs")[npc_id].get("look")
+		if look != null:
+			looks.append(look)
+	var unique: Dictionary = {}
+	for look in looks:
+		unique[look] = true
+	t._check(
+		looks.size() >= 20 and unique.size() == looks.size(),
+		"every townsperson has their own look (%d people, %d looks)" % [looks.size(), unique.size()]
+	)
+	main.change_map("town", "default")
+	await t._frames(10)
+	var lune = t.get_nodes_in_group("npcs").filter(func(npc): return npc.npc_id == "healer")[0]
+	var sprite: Sprite2D = lune.get_node("Sprite")
+	t._check(
+		sprite.hframes == 8 and sprite.texture.resource_path.ends_with("lune.png"),
+		"Sister Lune has her own sheet: breathing and her own action"
+	)
+	lune.act()
+	await t._frames(6)
+	t._check(
+		lune.acting and sprite.frame >= 4, "now and then she does her action (frame %d)" % sprite.frame
+	)
+	_heal(player)
+	player.global_position = lune.global_position + Vector2(300, 120)
+	await t._frames(3)
+	player.global_position = lune.global_position + Vector2(40, 60)
+	await t._frames(4)
+	t._check(
+		lune.bubble_text() in GameData.table("npcs")["healer"]["chatter"],
+		"walking up to her, she says hello: \"%s\"" % lune.bubble_text()
+	)
+	hud.call("_close_windows")
 
 
 ## O18: the wishing fountain in a market. TALK at it, toss in gold, get a prize.

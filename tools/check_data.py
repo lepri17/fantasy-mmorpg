@@ -622,6 +622,9 @@ def check_npcs(npcs: dict, items: dict) -> None:
             check_wish(where, npc.get("wish"), items)
         elif not res_exists(f"res://assets/characters/npcs/{npc.get('look')}.png"):
             error(f"{where}: look '{npc.get('look')}' has no picture")
+        chatter = npc.get("chatter", [])
+        if not (isinstance(chatter, list) and all(isinstance(line, str) and 0 < len(line) <= 48 for line in chatter)):
+            error(f"{where}: 'chatter' must be a list of short lines (48 letters at most)")
         for service in npc.get("services", []):
             if service not in SERVICES:
                 error(f"{where}: service '{service}' is not one of {sorted(SERVICES)}")

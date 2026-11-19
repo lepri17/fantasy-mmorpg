@@ -2,7 +2,7 @@
   "merchant": {
     "name": "Mira",
     "title": "General Store",
-    "look": "merchant",
+    "look": "mira",
     "greeting": "Potions and stones for the road!",
     "services": [
       "shop"
@@ -11,57 +11,87 @@
       "red_potion",
       "blue_potion",
       "ember_stone"
+    ],
+    "chatter": [
+      "Fresh potions! Get them while they're cold!",
+      "Going hunting? Take a few potions.",
+      "Ember Stones, shiny and warm!"
     ]
   },
   "healer": {
     "name": "Sister Lune",
     "title": "Healer",
-    "look": "healer",
+    "look": "lune",
     "greeting": "Rest a moment. I will mend your wounds.",
     "services": [
       "heal"
+    ],
+    "chatter": [
+      "May the light keep you safe.",
+      "Hurt? Come, sit a moment.",
+      "Even heroes need rest."
     ]
   },
   "keeper": {
     "name": "Old Bram",
     "title": "Storage",
-    "look": "keeper",
+    "look": "bram",
     "greeting": "Leave your things with me. Nothing gets lost here.",
     "services": [
       "storage"
+    ],
+    "chatter": [
+      "Everything in its place, I always say.",
+      "My keys never get lost. Mostly.",
+      "Your things are safe with old Bram."
     ]
   },
   "guide": {
     "name": "Tessa",
     "title": "Guide",
-    "look": "guide",
+    "look": "tessa",
     "greeting": "Where shall I send you?",
     "services": [
       "teleport"
+    ],
+    "chatter": [
+      "The stars say you'll travel far!",
+      "Anywhere you like, in a blink.",
+      "Hold still, the magic tickles."
     ]
   },
   "captain": {
     "name": "Captain Rowan",
     "title": "Town Guard",
-    "look": "captain",
+    "look": "rowan",
     "greeting": "Slimes keep pouring out of the woods. Lend me your sword?",
     "services": [
       "quests"
+    ],
+    "chatter": [
+      "Slimes again in the meadow...",
+      "Stay sharp out there!",
+      "Nothing gets past this gate."
     ]
   },
   "master": {
     "name": "Master Hale",
     "title": "Class Master",
-    "look": "master",
+    "look": "hale",
     "greeting": "Reach level 10 and come to me for your trial. Pass it, and your class grows.",
     "services": [
       "quests"
+    ],
+    "chatter": [
+      "A blade is only as strong as its wielder.",
+      "Train hard. Then train harder.",
+      "Come back at level 10."
     ]
   },
   "lh_merchant": {
     "name": "Rook",
     "title": "General Store",
-    "look": "merchant",
+    "look": "rook",
     "greeting": "Lantern oil, potions and steel for the deep woods.",
     "services": [
       "shop"
@@ -71,46 +101,71 @@
       "blue_potion",
       "ember_stone",
       "moon_stone"
+    ],
+    "chatter": [
+      "Mind the dark out there.",
+      "My lantern never goes out.",
+      "Potions for the deep woods."
     ]
   },
   "lh_healer": {
     "name": "Brother Wick",
     "title": "Healer",
-    "look": "healer",
+    "look": "wick",
     "greeting": "Rest a while by the lanterns, traveller.",
     "services": [
       "heal"
+    ],
+    "chatter": [
+      "Breathe. The forest is calm tonight.",
+      "One candle is enough against the dark.",
+      "Rest here, traveller."
     ]
   },
   "lh_keeper": {
     "name": "Moss",
     "title": "Storage",
-    "look": "keeper",
+    "look": "moss",
     "greeting": "Your things are safe with me, even this far from Willow Town.",
     "services": [
       "storage"
+    ],
+    "chatter": [
+      "I've read every book in this town. Twice.",
+      "Your storage is in order. Alphabetical!",
+      "Hmm? Oh, hello!"
     ]
   },
   "lh_guide": {
     "name": "Lyra",
     "title": "Guide",
-    "look": "guide",
+    "look": "lyra",
     "greeting": "The lantern roads reach every town and wood. Where to?",
     "services": [
       "teleport"
+    ],
+    "chatter": [
+      "The old roads still remember us.",
+      "The orb shows many paths.",
+      "Where shall the wind take you?"
     ]
   },
   "lh_warden": {
     "name": "Warden Thorne",
     "title": "Arena Master",
-    "look": "captain",
+    "look": "thorne",
     "greeting": "The Lantern Arena is through the hall's door. Beat three waves and the champion for a prize. Three bouts a day. Bring friends, once the roads to other worlds open.",
-    "services": []
+    "services": [],
+    "chatter": [
+      "The arena waits for the brave.",
+      "Three waves. One champion.",
+      "Think you're strong? Prove it."
+    ]
   },
   "fg_merchant": {
     "name": "Sigrid",
     "title": "General Store",
-    "look": "merchant",
+    "look": "sigrid",
     "greeting": "Warm potions and good stones. The cold takes the rest.",
     "services": [
       "shop"
@@ -119,46 +174,71 @@
       "red_potion",
       "blue_potion",
       "rebirth_scroll"
+    ],
+    "chatter": [
+      "Keep warm, keep a potion handy.",
+      "The snow bites, but my prices don't!",
+      "Brr! Busy day."
     ]
   },
   "fg_healer": {
     "name": "Mother Isolde",
     "title": "Healer",
-    "look": "healer",
+    "look": "isolde",
     "greeting": "Come in from the snow, child.",
     "services": [
       "heal"
+    ],
+    "chatter": [
+      "The cold is no friend. Let me help.",
+      "Ice can heal as well as harm.",
+      "Rest by the fire, child."
     ]
   },
   "fg_keeper": {
     "name": "Old Rune",
     "title": "Storage",
-    "look": "keeper",
+    "look": "rune",
     "greeting": "Ice keeps everything. So do I.",
     "services": [
       "storage"
+    ],
+    "chatter": [
+      "Nothing freezes in my vault.",
+      "Counted it all. Twice. In the cold!",
+      "Rune remembers everything."
     ]
   },
   "fg_guide": {
     "name": "Edda",
     "title": "Guide",
-    "look": "guide",
+    "look": "edda",
     "greeting": "Frostgate is the end of the road north. Shall I send you back?",
     "services": [
       "teleport"
+    ],
+    "chatter": [
+      "The frost paths are quick, if you know them.",
+      "Snow hides many roads.",
+      "Ready when you are."
     ]
   },
   "fg_warden": {
     "name": "Warden Bjorn",
     "title": "Arena Master",
-    "look": "captain",
+    "look": "bjorn",
     "greeting": "The Frost Arena waits behind the hall's door. Wolves, wraiths and an Ice Golem to finish. Three bouts a day.",
-    "services": []
+    "services": [],
+    "chatter": [
+      "HA! Another challenger!",
+      "The frost arena makes heroes.",
+      "My axe is getting bored."
+    ]
   },
   "weaponsmith": {
     "name": "Garrick",
     "title": "Weaponsmith",
-    "look": "smith",
+    "look": "garrick",
     "greeting": "A good blade, a good staff, a good bow. Take your pick.",
     "services": [
       "shop"
@@ -167,12 +247,17 @@
       "training_sword",
       "oak_staff",
       "short_bow"
+    ],
+    "chatter": [
+      "Clang! Clang! Hear that? Quality!",
+      "Every blade, hammered by hand.",
+      "A dull sword is a sad sword."
     ]
   },
   "tailor": {
     "name": "Nell",
     "title": "Tailor",
-    "look": "tailor",
+    "look": "nell",
     "greeting": "Hats, capes, gloves and boots, all sewn right here!",
     "services": [
       "shop"
@@ -189,12 +274,17 @@
       "violet_robe",
       "green_hood",
       "ranger_vest"
+    ],
+    "chatter": [
+      "Ooh, that cape needs a stitch!",
+      "Measure twice, cut once!",
+      "Hats are in this season."
     ]
   },
   "lh_outfitter": {
     "name": "Tamsin",
     "title": "Outfitter",
-    "look": "trader",
+    "look": "tamsin",
     "greeting": "Gear for the deep woods. Nothing here will let you down.",
     "services": [
       "shop"
@@ -207,12 +297,17 @@
       "shadow_vest",
       "ember_staff",
       "midnight_robe"
+    ],
+    "chatter": [
+      "Good boots save lives out there!",
+      "I've walked every trail in these woods.",
+      "Feather in your cap? Free of charge."
     ]
   },
   "fg_stonecutter": {
     "name": "Halvard",
     "title": "Stonecutter",
-    "look": "smith",
+    "look": "halvard",
     "greeting": "Stones cut in the cold hold the strongest charm.",
     "services": [
       "shop"
@@ -220,6 +315,11 @@
     "shop": [
       "ember_stone",
       "moon_stone"
+    ],
+    "chatter": [
+      "Cut in the cold, strong as stone.",
+      "Tink, tink. Hear the stone sing?",
+      "Moon Stones, freshly cut!"
     ]
   },
   "willow_fountain": {

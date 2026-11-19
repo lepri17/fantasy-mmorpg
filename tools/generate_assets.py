@@ -805,71 +805,510 @@ def recolor(image: Image.Image, rules) -> Image.Image:
     return out
 
 
-# Townspeople: the warrior's plain body (no gear) with the tunic dyed and the
-# hair recoloured. look -> (tunic hue, tunic saturation, hair hue or None for
-# grey hair).
-NPC_LOOKS = {
-    "merchant": (130, 0.45, 30),
-    "healer": (330, 0.28, 48),
-    "keeper": (28, 0.5, None),
-    "guide": (270, 0.45, 205),
-    "captain": (0, 0.55, 18),
-    "master": (45, 0.6, 265),
-    "smith": (22, 0.3, None),
-    "tailor": (176, 0.45, 318),
-    "trader": (212, 0.5, 40),
+# ---------------------------------------------------------------- townspeople
+# Every townsperson is drawn on their own (not the hero dyed): a face, hair,
+# a hat, clothes and a thing to hold that show their job, like the NPCs of
+# MapleStory or MU Online. NPC_FRAMES frames facing down: four of breathing
+# (with a blink), then four of the person's own action (the smith hammers,
+# the healer raises her staff, the guide's orb glows, others wave).
+NPC_FRAMES = 8
+NPC_IDLE = 4
+NPC_SKINS = {"light": SKIN, "tan": (240, 196, 158, 255), "brown": (190, 134, 98, 255)}
+NPC_IRISES = {"blue": IRIS, "green": (86, 176, 104, 255), "brown": (150, 96, 60, 255),
+              "violet": (150, 104, 220, 255), "teal": (60, 176, 186, 255), "gold": (226, 176, 60, 255),
+              "ice": (120, 196, 240, 255), "red": (210, 80, 80, 255)}
+NPC_STEEL = (196, 206, 222, 255)
+NPC_WOOD = (150, 102, 64, 255)
+NPC_SHOE = (92, 62, 46, 255)
+NPC_GLASS = (220, 240, 255, 150)
+
+# One entry per person: what makes them themselves.
+TOWNSFOLK = {
+    # Willow Town: bright and friendly
+    "mira": dict(skin="light", hair=(204, 104, 52, 255), style="side", iris="green", eyes="big",
+                 hat="scarf", hat_color=(250, 214, 92, 255), outfit="dress", main=(98, 172, 104, 255),
+                 trim=(250, 244, 228, 255), apron=(250, 244, 228, 255), prop="potion", act="lift"),
+    "lune": dict(skin="light", hair=(250, 222, 140, 255), style="long", iris="blue", eyes="calm",
+                 hat="veil", hat_color=(252, 250, 246, 255), outfit="robe", main=(252, 250, 246, 255),
+                 trim=(240, 130, 160, 255), prop="staff_heart", act="raise"),
+    "bram": dict(skin="tan", hair=(232, 232, 236, 255), style="bald", iris="brown", eyes="old",
+                 beard="full", outfit="vest", main=(150, 98, 60, 255), trim=(240, 226, 196, 255),
+                 build="stout", prop="keys", act="jingle"),
+    "tessa": dict(skin="light", hair=(80, 168, 200, 255), style="long", iris="violet", eyes="big",
+                  hat="wizard", hat_color=(116, 82, 186, 255), outfit="robe", main=(126, 92, 196, 255),
+                  trim=(250, 214, 92, 255), stars=True, prop="orb", act="glow"),
+    "rowan": dict(skin="tan", hair=(120, 78, 48, 255), style="short", iris="brown", eyes="big",
+                  beard="mustache", hat="helmet", hat_color=NPC_STEEL, plume=(214, 56, 64, 255),
+                  outfit="armor", main=NPC_STEEL, trim=(206, 52, 60, 255), prop="spear", act="stamp"),
+    "hale": dict(skin="tan", hair=(214, 214, 222, 255), style="topknot", iris="gold", eyes="calm",
+                 brows=True, beard="goatee", outfit="gi", main=(40, 44, 62, 255), trim=(214, 56, 64, 255),
+                 sword_back=True, prop=None, act="wave"),
+    "garrick": dict(skin="brown", hair=(110, 62, 40, 255), style="bald", iris="brown", eyes="big",
+                    beard="full", brows=True, hat="bandana", hat_color=(206, 52, 60, 255), outfit="tunic",
+                    main=(196, 176, 150, 255), trim=(110, 72, 48, 255), apron=(122, 82, 54, 255),
+                    build="stout", prop="hammer", act="hammer"),
+    "nell": dict(skin="light", hair=(244, 140, 186, 255), style="bun", iris="teal", eyes="big",
+                 glasses=True, outfit="dress", main=(186, 160, 230, 255), trim=(250, 244, 228, 255),
+                 tape=True, prop="scissors", act="snip"),
+    # Lanternhold: dusk colours, cloaks and lanterns
+    "rook": dict(skin="light", hair=(46, 40, 58, 255), style="spiky", iris="gold", eyes="big",
+                 hat="hood_down", hat_color=(62, 98, 74, 255), outfit="cloak", main=(62, 98, 74, 255),
+                 trim=(196, 160, 96, 255), prop="lantern", act="lift"),
+    "wick": dict(skin="tan", hair=(90, 64, 48, 255), style="monk", iris="brown", eyes="smile",
+                 outfit="robe", main=(130, 90, 60, 255), trim=(210, 176, 110, 255), rope=True,
+                 prop="candle", act="raise"),
+    "moss": dict(skin="light", hair=(110, 168, 92, 255), style="short", iris="green", eyes="big",
+                 glasses=True, ears="pointy", outfit="vest", main=(96, 70, 120, 255), trim=(214, 196, 140, 255),
+                 build="small", prop="book", act="read"),
+    "lyra": dict(skin="light", hair=(222, 226, 244, 255), style="long", iris="teal", eyes="calm",
+                 ears="pointy", circlet=True, outfit="robe", main=(54, 126, 140, 255), trim=(214, 236, 240, 255),
+                 prop="orb", act="glow"),
+    "thorne": dict(skin="tan", hair=(40, 34, 40, 255), style="short", iris="red", eyes="calm",
+                   brows=True, scar=True, outfit="armor", main=(70, 66, 84, 255), trim=(128, 54, 74, 255),
+                   fur=(120, 96, 80, 255), prop="axe", act="stamp"),
+    "tamsin": dict(skin="light", hair=(176, 82, 52, 255), style="braid", iris="green", eyes="big",
+                   hat="ranger", hat_color=(98, 132, 70, 255), plume=(236, 92, 80, 255), outfit="vest",
+                   main=(98, 132, 70, 255), trim=(176, 124, 80, 255), backpack=True, prop=None, act="wave"),
+    # Frostgate: furs, wool and ice
+    "sigrid": dict(skin="light", hair=(250, 222, 140, 255), style="braids", iris="blue", eyes="big",
+                   hat="fur", hat_color=(246, 246, 250, 255), outfit="coat", main=(74, 120, 196, 255),
+                   trim=(246, 246, 250, 255), prop="potion", act="lift"),
+    "isolde": dict(skin="light", hair=(236, 238, 246, 255), style="bun", iris="ice", eyes="calm",
+                   brows=True, outfit="robe", main=(170, 210, 240, 255), trim=(250, 252, 255, 255),
+                   snowflake=True, prop="staff_ice", act="raise"),
+    "rune": dict(skin="tan", hair=(236, 236, 240, 255), style="bald", iris="ice", eyes="old",
+                 beard="braided", hat="fur", hat_color=(150, 116, 86, 255), outfit="coat",
+                 main=(120, 86, 64, 255), trim=(236, 226, 206, 255), build="stout", prop="book", act="read"),
+    "edda": dict(skin="light", hair=(246, 248, 255, 255), style="long", iris="ice", eyes="big",
+                 hat="hood", hat_color=(130, 186, 230, 255), outfit="cloak", main=(130, 186, 230, 255),
+                 trim=(246, 248, 255, 255), prop="staff_ice", act="glow"),
+    "bjorn": dict(skin="light", hair=(206, 96, 54, 255), style="short", iris="blue", eyes="big",
+                  brows=True, beard="full", hat="fur", hat_color=(140, 106, 80, 255), outfit="armor",
+                  main=(150, 160, 176, 255), trim=(80, 120, 170, 255), fur=(140, 106, 80, 255),
+                  build="stout", prop="axe", act="stamp"),
+    "halvard": dict(skin="tan", hair=(160, 160, 170, 255), style="short", iris="brown", eyes="big",
+                    brows=True, beard="full", goggles=True, outfit="tunic", main=(110, 130, 150, 255),
+                    trim=(110, 72, 48, 255), apron=(96, 70, 50, 255), build="stout", prop="pickaxe",
+                    act="hammer"),
 }
 
 
-def _dye(image: Image.Image, hue: float, saturation: float) -> Image.Image:
-    """The pale cream tunic (hue near 40, low saturation, light) in another colour."""
-    out = image.copy()
-    box = out.getchannel("A").getbbox()
-    if not box:
-        return out
-    pixels = out.load()
-    for y in range(box[1], box[3]):
-        for x in range(box[0], box[2]):
-            r, g, b, a = pixels[x, y]
-            h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
-            if a and s < 0.35 and v > 0.55 and abs(h * 360 - 40) < 30:
-                r, g, b = (round(c * 255) for c in colorsys.hsv_to_rgb(hue / 360, saturation, v))
-                pixels[x, y] = (r, g, b, a)
-    return out
+def _npc_back_hair(c, s, cx, cy):
+    hair = s["hair"]
+    style = s["style"]
+    if style == "long":
+        c.polygon([(cx - 22, cy - 2), (cx - 24, cy + 30), (cx - 12, cy + 34), (cx + 12, cy + 34),
+                   (cx + 24, cy + 30), (cx + 22, cy - 2)], hair)
+    elif style == "braids":
+        for side in (-1, 1):
+            for k in range(4):
+                c.ellipse(cx + side * 21, cy + 12 + k * 6, 4, 3.6, hair)
+            c.ellipse(cx + side * 21, cy + 36, 2.6, 2.2, (214, 56, 64, 255))
+    elif style == "braid":
+        for k in range(4):
+            c.ellipse(cx + 20 + k * 1.2, cy + 10 + k * 6, 4, 3.6, hair)
+    elif style == "side":
+        c.polygon([(cx + 14, cy - 6), (cx + 30, cy + 8), (cx + 26, cy + 30), (cx + 18, cy + 12)], hair)
+        c.ellipse(cx + 18, cy - 4, 3, 3, (226, 74, 74, 255))
 
 
-def _hair(image: Image.Image, hue) -> Image.Image:
-    """The orange hair (strongly coloured, unlike the skin) in another colour, or grey."""
-    out = image.copy()
-    box = out.getchannel("A").getbbox()
-    if not box:
-        return out
-    pixels = out.load()
-    for y in range(box[1], box[3]):
-        for x in range(box[0], box[2]):
-            r, g, b, a = pixels[x, y]
-            h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
-            if a and s > 0.5 and v > 0.3 and (h * 360 < 45 or h * 360 > 350):
-                if hue is None:
-                    rgb = colorsys.hsv_to_rgb(0, 0.04, min(1.0, v * 0.95))
-                else:
-                    rgb = colorsys.hsv_to_rgb(hue / 360, s, v)
-                pixels[x, y] = (*(round(c * 255) for c in rgb), a)
-    return out
+def _npc_eye(c, s, ex, ey, blink, smile_side):
+    kind = s["eyes"]
+    if blink or kind == "smile":
+        c.line(arc_points(ex, ey + 1.5, 3.2, 2.4, 200, 340, 8), width=1.6)
+        return
+    iris = NPC_IRISES[s["iris"]]
+    if kind == "old":
+        c.ellipse(ex, ey + 1, 1.8, 2.2, EYE, outline=False)
+        c.ellipse(ex - 0.6, ey + 0.2, 0.6, 0.6, WHITE, outline=False)
+        return
+    c.ellipse(ex, ey, 3.3, 4.7, EYE, outline=False)
+    c.ellipse(ex, ey + 1.6, 2.4, 2.6, iris, outline=False)
+    c.ellipse(ex - 1.0, ey - 1.5, 1.4, 1.5, WHITE, outline=False)
+    c.ellipse(ex + 1.2, ey + 2.5, 0.7, 0.75, WHITE, outline=False)
+    if kind == "calm":  # a heavy upper lid: calm, wise or sleepy
+        c.polygon(arc_points(ex, ey - 0.5, 4.0, 5.0, 180, 360, 8), NPC_SKINS[s["skin"]], outline=False)
+        c.line([(ex - 4.0, ey - 0.4), (ex + 4.0, ey - 0.4)], width=1.6)
+    else:
+        c.line(arc_points(ex, ey + 0.8, 3.9, 5.2, 205, 335, 8))
 
 
-def build_npc_sheet(frames, look: str) -> Image.Image:
-    """Four idle frames (facing down) of a townsperson, side by side."""
-    tunic_hue, tunic_saturation, hair_hue = NPC_LOOKS[look]
-    sheet = Image.new("RGBA", (CELL * IDLE_FRAMES, CELL), (0, 0, 0, 0))
-    for col in range(IDLE_FRAMES):
-        parts = dict(frames[(0, col)])
-        for part in ("torso", "arms"):
-            if part in parts:
-                parts[part] = _dye(parts[part], tunic_hue, tunic_saturation)
-        if "head" in parts:
-            parts["head"] = _hair(parts["head"], hair_hue)
-        sheet.paste(compose(parts, "down", set()), (col * CELL, 0))
+def _npc_head_back(c, s, cx, cy):
+    """What is behind the body: a hood's or veil's drape, long hair."""
+    hat = s.get("hat")
+    if hat == "hood_down":  # lying on the shoulders, behind the neck
+        c.polygon([(cx - 26, cy + 12), (cx - 22, cy + 26), (cx + 22, cy + 26), (cx + 26, cy + 12),
+                   (cx + 12, cy + 18), (cx - 12, cy + 18)], s["hat_color"])
+    if hat in ("hood", "veil"):
+        c.polygon([(cx - 24, cy - 4), (cx - 27, cy + 30), (cx - 14, cy + 34), (cx + 14, cy + 34),
+                   (cx + 27, cy + 30), (cx + 24, cy - 4)], _tone(s["hat_color"], 0.88))
+    _npc_back_hair(c, s, cx, cy)
+
+
+def _npc_head(c, s, cx, cy, blink):
+    skin = NPC_SKINS[s["skin"]]
+    hair = s["hair"]
+    dark = _tone(hair, 0.78)
+    light = _tone(hair, light=0.35)
+    if s.get("ears") == "pointy":
+        for side in (-1, 1):
+            c.polygon([(cx + side * 19, cy + 2), (cx + side * 31, cy - 6), (cx + side * 20, cy + 10)], skin)
+    c.ellipse(cx, cy, 22, 20, skin)
+    for side in (-1, 1):
+        _npc_eye(c, s, cx + side * 8.5, cy + 7.5, blink, side)
+        if s["eyes"] != "old":
+            c.ellipse(cx + side * 14, cy + 13.5, 3.2, 1.8, BLUSH, outline=False)
+    if s.get("brows") or s["eyes"] == "old":
+        for side in (-1, 1):
+            c.line([(cx + side * 5.5, cy + 0.5), (cx + side * 12, cy - 0.5 - (1 if s["eyes"] == "old" else 0))],
+                   fill=hair if s["style"] != "bald" else s["hair"], width=2.4)
+    if s.get("scar"):
+        c.line([(cx + 10, cy - 1), (cx + 6, cy + 13)], fill=(196, 110, 110, 255), width=1.2)
+    beard = s.get("beard")
+    if beard in ("full", "braided"):
+        c.polygon([(cx - 19, cy + 6), (cx - 15, cy + 22), (cx - 6, cy + 30), (cx, cy + 32), (cx + 6, cy + 30),
+                   (cx + 15, cy + 22), (cx + 19, cy + 6), (cx + 12, cy + 14), (cx, cy + 16), (cx - 12, cy + 14)],
+                  hair)
+        c.ellipse(cx - 3.5, cy + 15.5, 4.2, 2.4, dark, outline=False)
+        c.ellipse(cx + 3.5, cy + 15.5, 4.2, 2.4, dark, outline=False)
+        if beard == "braided":
+            for side in (-1, 1):
+                for k in range(3):
+                    c.ellipse(cx + side * 5, cy + 33 + k * 4.5, 2.6, 2.4, hair)
+                c.ellipse(cx + side * 5, cy + 46, 2, 1.6, (226, 176, 60, 255))
+    elif beard == "mustache":
+        for side in (-1, 1):
+            c.polygon([(cx, cy + 12.5), (cx + side * 8, cy + 13), (cx + side * 9, cy + 16), (cx + side * 2, cy + 15)],
+                      hair)
+        c.line(arc_points(cx, cy + 17, 2.2, 1.4, 20, 160, 6), width=1.1)
+    elif beard == "goatee":
+        c.polygon([(cx - 4, cy + 16), (cx + 4, cy + 16), (cx, cy + 26)], hair)
+        c.line(arc_points(cx, cy + 14, 2.2, 1.4, 20, 160, 6), width=1.1)
+    else:
+        c.line(arc_points(cx, cy + 13.5, 2.4, 1.8, 20, 160, 8), width=1.2)
+    if s.get("glasses"):
+        for side in (-1, 1):
+            c.ellipse(cx + side * 8.5, cy + 7.5, 5.2, 5.2, NPC_GLASS)
+        c.line([(cx - 3.3, cy + 6.5), (cx + 3.3, cy + 6.5)], width=1.3)
+    style = s["style"]
+    if style == "bald":
+        c.ellipse(cx - 6, cy - 12, 5, 2.6, _tone(skin, light=0.5), outline=False)
+        for side in (-1, 1):  # what is left at the sides
+            c.polygon([(cx + side * 22, cy - 2), (cx + side * 23, cy + 9), (cx + side * 17, cy + 6)], hair)
+    elif style == "monk":
+        c.ellipse(cx, cy - 6, 15, 10, _tone(skin, light=0.25), outline=False)
+        c.polygon(arc_points(cx, cy, 23, 21.5, 180, 230) + [(cx - 17, cy + 4), (cx - 21, cy + 2)], hair)
+        c.polygon(arc_points(cx, cy, 23, 21.5, 310, 360) + [(cx + 21, cy + 2), (cx + 17, cy + 4)], hair)
+    else:
+        if style == "spiky":
+            fringe = [(cx + 23, cy + 2), (cx + 17, cy + 9), (cx + 13, cy), (cx + 7, cy + 10), (cx + 2, cy),
+                      (cx - 4, cy + 10), (cx - 9, cy), (cx - 15, cy + 9), (cx - 23, cy + 2)]
+            crown = [(cx - 23, cy), (cx - 26, cy - 14), (cx - 16, cy - 16), (cx - 14, cy - 28), (cx - 4, cy - 20),
+                     (cx + 4, cy - 30), (cx + 10, cy - 20), (cx + 20, cy - 26), (cx + 20, cy - 14), (cx + 27, cy - 10)]
+            c.polygon(crown + fringe, hair)
+        else:
+            side_part = style in ("side", "long", "braids", "braid")
+            if side_part:
+                fringe = [(cx + 23, cy + 4), (cx + 19, cy + 12), (cx + 14, cy + 3), (cx + 4, cy + 7),
+                          (cx - 8, cy + 2), (cx - 16, cy + 9), (cx - 23, cy + 8)]
+            else:
+                fringe = [(cx + 22, cy), (cx + 18, cy + 7), (cx + 12, cy + 1), (cx + 6, cy + 7), (cx, cy + 1),
+                          (cx - 6, cy + 7), (cx - 12, cy + 1), (cx - 18, cy + 7), (cx - 22, cy)]
+            c.polygon(arc_points(cx, cy, 23, 21.5, 180, 360) + fringe, hair)
+        c.line(arc_points(cx, cy - 4, 16, 13, 215, 260, 8), fill=light, width=2.2)
+        if style == "bun":
+            c.ellipse(cx, cy - 24, 9, 7.5, hair)
+            c.line([(cx + 4, cy - 31), (cx + 12, cy - 18)], fill=(250, 214, 92, 255), width=1.6)
+        if style == "topknot":
+            c.ellipse(cx, cy - 24, 6, 5.5, hair)
+            c.rect(cx - 4, cy - 21, cx + 4, cy - 18, s["trim"], radius=1)
+    if s.get("circlet"):
+        c.line(arc_points(cx, cy - 2, 22, 9, 190, 350, 14), fill=(226, 196, 110, 255), width=1.6)
+        c.ellipse(cx, cy - 10.5, 2.2, 2.6, (110, 226, 248, 255))
+    if s.get("goggles"):
+        c.rect(cx - 21, cy - 10, cx + 21, cy - 6.5, (90, 70, 56, 255), radius=1)
+        for side in (-1, 1):
+            c.ellipse(cx + side * 7, cy - 9, 5, 4.2, (150, 210, 230, 255))
+    _npc_hat(c, s, cx, cy)
+
+
+def _npc_hat(c, s, cx, cy):
+    hat = s.get("hat")
+    if not hat:
+        return
+    color = s.get("hat_color", (200, 200, 200, 255))
+    dark = _tone(color, 0.8)
+    if hat == "wizard":
+        c.ellipse(cx, cy - 10, 30, 6.5, color)
+        c.polygon([(cx - 17, cy - 12), (cx - 2, cy - 44), (cx + 10, cy - 40), (cx + 17, cy - 12)], color)
+        c.rect(cx - 17, cy - 17, cx + 17, cy - 12, s.get("trim", GOLD), radius=1.5)
+        c.polygon([(cx + 2, cy - 30), (cx + 3.5, cy - 27), (cx + 7, cy - 27), (cx + 4.5, cy - 25),
+                   (cx + 5.5, cy - 21.5), (cx + 2, cy - 23.5), (cx - 1.5, cy - 21.5), (cx - 0.5, cy - 25),
+                   (cx - 3, cy - 27), (cx + 0.5, cy - 27)], (250, 226, 120, 255), outline=False)
+    elif hat == "helmet":
+        c.polygon(arc_points(cx, cy - 2, 24, 23, 180, 360) + [(cx + 24, cy + 2), (cx - 24, cy + 2)], color)
+        c.rect(cx - 25, cy - 3, cx + 25, cy + 2.5, dark, radius=1.5)
+        c.line([(cx, cy - 25), (cx, cy - 3)], fill=dark, width=1.5)
+        plume = s.get("plume")
+        if plume:
+            c.polygon([(cx - 2, cy - 24), (cx + 4, cy - 38), (cx + 16, cy - 36), (cx + 6, cy - 22)], plume)
+    elif hat == "veil":
+        c.polygon(arc_points(cx, cy - 1, 25, 23.5, 180, 360) + [(cx + 25, cy + 4), (cx - 25, cy + 4)], color)
+        c.rect(cx - 23, cy - 5, cx + 23, cy - 1, s.get("trim", BLUSH), radius=1.5)
+        c.polygon([(cx - 2.2, cy - 17), (cx + 2.2, cy - 17), (cx + 2.2, cy - 13.2), (cx + 6, cy - 13.2),
+                   (cx + 6, cy - 9.4), (cx + 2.2, cy - 9.4), (cx + 2.2, cy - 6), (cx - 2.2, cy - 6),
+                   (cx - 2.2, cy - 9.4), (cx - 6, cy - 9.4), (cx - 6, cy - 13.2), (cx - 2.2, cy - 13.2)],
+                  s.get("trim", BLUSH), outline=False)
+    elif hat == "hood":
+        if True:
+            c.polygon(arc_points(cx, cy - 1, 26, 25, 180, 360) + [(cx + 26, cy + 6), (cx + 20, cy + 2),
+                      (cx + 14, cy - 8), (cx, cy - 12), (cx - 14, cy - 8), (cx - 20, cy + 2), (cx - 26, cy + 6)], color)
+    elif hat == "bandana":
+        c.polygon(arc_points(cx, cy - 1, 23.5, 22, 180, 360) + [(cx + 23, cy - 2), (cx - 23, cy - 2)], color)
+        c.polygon([(cx + 20, cy - 6), (cx + 31, cy - 2), (cx + 27, cy + 6)], color)
+        for x in (-12, -2, 8):
+            c.ellipse(cx + x, cy - 12, 1.6, 1.6, WHITE, outline=False)
+    elif hat == "scarf":
+        c.polygon(arc_points(cx, cy - 2, 23.5, 21, 185, 355) + [(cx + 22, cy - 6), (cx - 22, cy - 6)], color)
+        c.ellipse(cx + 20, cy - 8, 4, 3.4, color)
+        for x in (-10, 2, 13):
+            c.ellipse(cx + x, cy - 15, 1.8, 1.8, (226, 92, 96, 255), outline=False)
+    elif hat == "fur":
+        c.polygon(arc_points(cx, cy - 4, 22, 22, 180, 360) + [(cx + 22, cy - 4), (cx - 22, cy - 4)],
+                  _tone(color, 0.75) if color[0] > 200 else s.get("main", color))
+        c.rect(cx - 25, cy - 9, cx + 25, cy + 1, color, radius=5)
+        for x in range(-20, 22, 7):
+            c.line([(cx + x, cy - 7), (cx + x + 2, cy - 1)], fill=_tone(color, 0.85), width=1)
+    elif hat == "ranger":
+        c.ellipse(cx, cy - 8, 31, 7, color)
+        c.polygon(arc_points(cx, cy - 10, 17, 17, 180, 360), color)
+        c.rect(cx - 17, cy - 13, cx + 17, cy - 9, _tone(color, 0.7), radius=1)
+        plume = s.get("plume")
+        if plume:
+            c.polygon([(cx + 10, cy - 12), (cx + 30, cy - 30), (cx + 26, cy - 22), (cx + 16, cy - 10)], plume)
+
+
+def _npc_prop(c, s, hand, act):
+    """The thing in the person's hand; `act` (0..1) is how far along their action is."""
+    prop = s.get("prop")
+    x, y = hand
+    if prop in ("staff_heart", "staff_ice", "spear", "axe", "candle"):
+        tall = prop != "candle"
+        top = (x - 13, y - 50) if tall else (x - 1, y - 14)
+        foot = (x + 3, y + 12) if tall else (x + 1, y + 2)
+        c.line([foot, top], width=4.2)
+        c.line([foot, top], fill=NPC_WOOD, width=2.6)
+        tx, ty = top
+        glow = act if s.get("act") in ("raise", "glow") else 0
+        if prop == "staff_heart":
+            c.ellipse(tx, ty, 6 + glow * 3, 6 + glow * 3, (255, 220, 236, 120 + int(glow * 100)), outline=False)
+            c.ellipse(tx - 2.2, ty - 1, 3, 3, (240, 110, 150, 255), outline=False)
+            c.ellipse(tx + 2.2, ty - 1, 3, 3, (240, 110, 150, 255), outline=False)
+            c.polygon([(tx - 5, ty), (tx + 5, ty), (tx, ty + 6)], (240, 110, 150, 255), outline=False)
+        elif prop == "staff_ice":
+            c.ellipse(tx, ty, 6 + glow * 4, 6 + glow * 4, (200, 236, 255, 110 + int(glow * 110)), outline=False)
+            c.polygon([(tx, ty - 9), (tx + 4, ty), (tx, ty + 7), (tx - 4, ty)], (150, 216, 250, 255))
+        elif prop == "spear":
+            c.polygon([(tx, ty - 11), (tx + 3.5, ty - 2), (tx, ty + 2), (tx - 3.5, ty - 2)], NPC_STEEL)
+            c.polygon([(tx - 3, ty + 2), (tx + 3, ty + 2), (tx + 4, ty + 7), (tx - 4, ty + 7)], s["trim"])
+        elif prop == "axe":
+            c.polygon([(tx + 1, ty + 2), (tx + 13, ty - 4), (tx + 15, ty + 8), (tx + 13, ty + 18), (tx + 1, ty + 12)],
+                      NPC_STEEL)
+            c.line([(tx + 13, ty - 3), (tx + 14, ty + 17)], fill=_tone(NPC_STEEL, light=0.6), width=1.2)
+        elif prop == "candle":
+            c.rect(tx - 3, ty - 9, tx + 3, ty, (250, 244, 228, 255), radius=1)
+            flame = 1 + act * 0.6
+            c.ellipse(tx, ty - 9 - 7, 8 * flame, 8 * flame, (255, 214, 120, 90), outline=False)
+            c.polygon([(tx, ty - 18 - act * 3), (tx + 2.6, ty - 12), (tx, ty - 9.5), (tx - 2.6, ty - 12)],
+                      (255, 196, 80, 255), outline=False)
+    elif prop == "potion":
+        c.ellipse(x, y - 5, 4.6, 4.6, (220, 60, 70, 255))
+        c.rect(x - 1.6, y - 13, x + 1.6, y - 9, (196, 220, 236, 255), radius=0.5)
+        c.ellipse(x - 1.4, y - 6.5, 1.2, 1.2, WHITE, outline=False)
+        if act > 0.3:
+            for k, (dx, dy) in enumerate(((-7, -14), (6, -18), (-2, -21))):
+                c.ellipse(x + dx, y + dy - act * 3, 1.3, 1.3, (255, 240, 200, 255), outline=False)
+    elif prop == "keys":
+        c.ellipse(x, y + 3, 4.5, 4.5, (0, 0, 0, 0))
+        for k, angle in enumerate((60, 95, 130)):
+            a = math.radians(angle + (act * 30 - 15) * (1 if k % 2 else -1))
+            ex, ey = x + math.cos(a) * 9, y + 3 + math.sin(a) * 9
+            c.line([(x, y + 3), (ex, ey)], fill=GOLD, width=1.8)
+            c.rect(ex - 1.5, ey - 1, ex + 2.5, ey + 1.5, GOLD, radius=0.4, outline=False)
+        c.line(arc_points(x, y + 3, 4.5, 4.5, 0, 360, 12), fill=GOLD, width=1.6)
+    elif prop == "orb":
+        glow = act
+        c.ellipse(x, y - 7, 9 + glow * 5, 9 + glow * 5, (200, 170, 255, 70 + int(glow * 90)), outline=False)
+        c.ellipse(x, y - 7, 6, 6, (170, 140, 250, 255) if s["main"][2] > s["main"][1] else (120, 220, 230, 255))
+        c.ellipse(x - 2, y - 9, 2, 1.5, WHITE, outline=False)
+    elif prop == "hammer":
+        c.line([(x, y + 4), (x + 2, y - 14)], fill=NPC_WOOD, width=2.6)
+        c.rect(x - 5, y - 20, x + 9, y - 13, (120, 124, 136, 255), radius=1.2)
+        if act > 0.6:
+            for dx, dy in ((10, -2), (14, -8), (7, -10)):
+                c.ellipse(x + dx, y + dy, 1.4, 1.4, (255, 214, 92, 255), outline=False)
+    elif prop == "pickaxe":
+        c.line([(x, y + 4), (x + 2, y - 16)], fill=NPC_WOOD, width=2.6)
+        c.polygon([(x - 10, y - 12), (x + 2, y - 19), (x + 14, y - 12), (x + 2, y - 16)], NPC_STEEL)
+        if act > 0.6:
+            for dx, dy in ((14, -6), (17, -12)):
+                c.ellipse(x + dx, y + dy, 1.4, 1.4, (190, 230, 255, 255), outline=False)
+    elif prop == "lantern":
+        c.line([(x, y), (x, y + 5)], width=1.2)
+        sway = (act - 0.5) * 4
+        c.rect(x - 4 + sway, y + 5, x + 4 + sway, y + 15, (70, 60, 56, 255), radius=1.5)
+        c.ellipse(x + sway, y + 10, 8 + act * 3, 8 + act * 3, (255, 200, 110, 90), outline=False)
+        c.rect(x - 2.4 + sway, y + 7, x + 2.4 + sway, y + 13, (255, 206, 110, 255), radius=1, outline=False)
+    elif prop == "scissors":
+        opening = 6 * (1 - act) if act else 6
+        for side in (-1, 1):
+            c.line([(x, y - 2), (x + side * opening * 0.4 + 2, y - 14)], fill=NPC_STEEL, width=1.8)
+            c.ellipse(x + side * 2.5, y + 1.5, 2.2, 2.2, (226, 92, 120, 255))
+    elif prop == "book":
+        open_ = act
+        c.rect(x - 8, y - 6, x + 8, y + 4, (120, 60, 70, 255) if s["main"][0] > 100 else (70, 90, 140, 255), radius=1)
+        c.rect(x - 7, y - 5, x - 0.5, y + 3, (250, 244, 228, 255), radius=0.5, outline=False)
+        c.rect(x + 0.5, y - 5, x + 7, y + 3, (250, 244, 228, 255), radius=0.5, outline=False)
+        flip_x = x + 7 - 13 * open_
+        c.polygon([(x, y - 5), (flip_x, y - 6 - 3 * math.sin(open_ * math.pi)), (flip_x, y + 2), (x, y + 3)],
+                  (236, 228, 210, 255), outline=False)
+        for k in range(3):
+            c.line([(x - 6, y - 3 + k * 2), (x - 2, y - 3 + k * 2)], fill=(150, 140, 130, 255), width=0.6)
+
+
+def draw_townsperson(npc_id: str, frame: int) -> Image.Image:
+    s = TOWNSFOLK[npc_id]
+    c = Canvas(FRAME)
+    acting = frame >= NPC_IDLE
+    step = frame - NPC_IDLE if acting else frame
+    bob = (0.0, 0.5, 1.0, 0.5)[step] if not acting else 0.3
+    act = (0.35, 1.0, 0.7, 0.2)[step] if acting else 0.0
+    build = s.get("build", "slim")
+    half = {"slim": 12, "stout": 15.5, "small": 11}[build]
+    cx, oy = 48, bob
+    head_y = 35 + oy + (3 if build == "small" else 0)
+    c.ellipse(48, FEET_Y + 1, half + 6, 5, SHADOW, outline=False)
+    main, trim = s["main"], s["trim"]
+    main_dark = _tone(main, 0.8)
+    _npc_head_back(c, s, cx, head_y)
+    if s.get("backpack"):
+        c.rect(cx - 15, 52 + oy, cx + 15, 76 + oy, (156, 108, 66, 255), radius=5)
+        c.ellipse(cx, 48 + oy, 9, 4, (230, 220, 200, 255))
+    if s["outfit"] == "cloak":
+        c.polygon([(cx - 15, 52 + oy), (cx - 21, 84), (cx + 21, 84), (cx + 15, 52 + oy)], main_dark)
+    if s.get("sword_back"):  # its hilt shows over the shoulder, beside the head
+        c.line([(cx + 14, 78 + oy), (cx - 30, 20 + oy)], width=5.2)
+        c.line([(cx + 14, 78 + oy), (cx - 30, 20 + oy)], fill=(60, 50, 64, 255), width=3.6)
+        c.line([(cx - 24, 30 + oy), (cx - 31, 24 + oy)], fill=GOLD, width=3)
+        c.line([(cx - 33, 26 + oy), (cx - 22, 28 + oy)], width=2.4)
+        c.line([(cx - 31, 21 + oy), (cx - 36, 15 + oy)], fill=(90, 60, 50, 255), width=2.6)
+    long = s["outfit"] in ("robe", "dress")
+    # legs and shoes
+    for side in (-1, 1):
+        x = cx + side * (half * 0.45)
+        if not long:
+            c.capsule((x, 69 + oy), (x, FEET_Y - 4), 4.4, _tone(main, 0.55) if s["outfit"] != "armor" else (72, 72, 92, 255))
+        c.rect(x - 5, FEET_Y - 5, x + 5, FEET_Y, NPC_SHOE if s["outfit"] != "armor" else (110, 116, 130, 255), radius=2.4)
+    top, waist = 53 + oy, 70 + oy
+    if build == "small":
+        top += 3
+    # the body
+    if long:
+        hem = 84
+        c.polygon([(cx - half + 1, waist - 4), (cx - half - 6, hem), (cx + half + 6, hem), (cx + half - 1, waist - 4)], main)
+        c.line([(cx - half - 5.5, hem - 2.5), (cx + half + 5.5, hem - 2.5)], fill=trim, width=2.2)
+        if s.get("stars"):
+            for dx, dy in ((-9, 76), (6, 80), (12, 73), (-3, 72)):
+                c.ellipse(cx + dx, dy, 1.2, 1.2, (250, 226, 120, 255), outline=False)
+    c.rect(cx - half, top, cx + half, waist + 3, main, radius=6 if build != "stout" else 8)
+    if s["outfit"] == "armor":
+        c.rect(cx - 6, top + 2, cx + 6, waist + 10, trim, radius=1.5)  # tabard
+        c.polygon([(cx - 6, waist + 10), (cx + 6, waist + 10), (cx, waist + 14)], trim)
+        c.ellipse(cx, top + 9, 3, 3, GOLD)
+        for side in (-1, 1):
+            c.ellipse(cx + side * (half + 1), top + 3, 7, 5.6, s.get("fur") or _tone(main, light=0.2))
+    elif s["outfit"] == "gi":
+        c.polygon([(cx - 7, top), (cx, top + 12), (cx + 7, top)], (250, 244, 228, 255))
+        c.line([(cx - 7, top), (cx + 3, top + 14)], fill=trim, width=2)
+        c.rect(cx - half - 0.5, waist - 3, cx + half + 0.5, waist + 1, trim, radius=1)
+    elif s["outfit"] == "vest":
+        c.rect(cx - 6, top, cx + 6, waist + 3, trim, radius=2)  # the shirt under the open vest
+        for k in range(3):
+            c.ellipse(cx + 7, top + 5 + k * 5, 1.1, 1.1, GOLD, outline=False)
+    elif s["outfit"] == "coat":
+        c.line([(cx, top + 2), (cx, waist + 3)], width=1.2)
+        c.rect(cx - half - 1, top - 1, cx + half + 1, top + 4, trim, radius=2)  # the fur collar
+        c.rect(cx - half - 0.5, waist + 0.5, cx + half + 0.5, waist + 4.5, trim, radius=2)
+    elif s["outfit"] == "cloak":
+        c.polygon([(cx - 8, top), (cx + 8, top), (cx + 4, waist + 3), (cx - 4, waist + 3)], trim)
+        c.ellipse(cx, top + 3, 3, 3, GOLD)
+    elif s["outfit"] in ("dress", "robe"):
+        c.rect(cx - half + 0.5, waist - 3, cx + half - 0.5, waist + 0.5, trim if not s.get("rope") else ROPE, radius=1)
+        c.line([(cx - 3, top + 1), (cx, top + 5), (cx + 3, top + 1)], width=1.2)
+        if s.get("snowflake"):
+            for a in range(0, 180, 60):
+                r = math.radians(a)
+                c.line([(cx - 4 * math.cos(r), top + 10 - 4 * math.sin(r)), (cx + 4 * math.cos(r), top + 10 + 4 * math.sin(r))],
+                       fill=(255, 255, 255, 255), width=1.2)
+    elif s["outfit"] == "tunic":
+        c.rect(cx - half - 0.5, waist - 3, cx + half + 0.5, waist + 0.5, (110, 72, 48, 255), radius=1)
+    if s.get("apron"):
+        bottom = (waist + 12) if not long else 80
+        apron_top = top + 4 if s["outfit"] == "tunic" else waist - 5
+        c.polygon([(cx - half + 4, apron_top), (cx + half - 4, apron_top), (cx + half - 2, bottom),
+                   (cx - half + 2, bottom)], s["apron"])
+        if s["outfit"] == "tunic":
+            for side in (-1, 1):
+                c.line([(cx + side * (half - 4), apron_top), (cx + side * (half - 2), top)], fill=s["apron"], width=1.6)
+        c.rect(cx - 3.5, bottom - 9, cx + 3.5, bottom - 4, _tone(s["apron"], 0.88), radius=1)  # a pocket
+    if s.get("tape"):
+        c.line([(cx - 8, top + 1), (cx - 6, top + 14)], fill=(250, 214, 92, 255), width=1.8)
+        c.line([(cx + 8, top + 1), (cx + 5, top + 12)], fill=(250, 214, 92, 255), width=1.8)
+    if s["outfit"] == "cloak" or s.get("fur"):
+        pass
+    # arms: the prop hand (viewer's left) and the free hand
+    sleeve = main if s["outfit"] not in ("vest",) else trim
+    if s["outfit"] == "armor":
+        sleeve = (90, 90, 110, 255)
+    skin = NPC_SKINS[s["skin"]]
+    action = s.get("act", "wave")
+    left_shoulder, right_shoulder = (cx - half + 1, top + 4), (cx + half - 1, top + 4)
+    prop_hand = (cx - half - 3, waist + 1)
+    free_hand = (cx + half + 3, waist + 1)
+    if acting:
+        if action in ("lift", "raise", "glow", "read"):
+            prop_hand = (cx - half - 1 + act * 4, waist - 2 - act * (14 if action != "read" else 6))
+        elif action == "stamp":
+            prop_hand = (cx - half - 3, waist + 1 - (6 if step in (1, 2) else 0))
+        elif action == "hammer":  # up high beside the head, then down onto the anvil
+            prop_hand = (cx - half - 9, waist - 4 - (18 if step == 0 else (6 if step == 1 else 0)))
+        elif action == "jingle":
+            prop_hand = (cx - half - 3 + (2 if step % 2 else -2), waist - 4)
+        elif action == "snip":
+            prop_hand = (cx - half - 1, waist - 6)
+        elif action == "wave":
+            free_hand = (cx + half + 15, top - 8 - (5 if step % 2 else 0))
+    if s.get("prop") == "book" and not acting:
+        prop_hand = (cx - 4, waist - 2)
+    for shoulder, hand in ((left_shoulder, prop_hand), (right_shoulder, free_hand)):
+        c.capsule(shoulder, hand, 3.6 if build != "stout" else 4.4, sleeve)
+        c.ellipse(hand[0], hand[1], 3.1, 3.1, skin)
+    if s.get("fur") and s["outfit"] == "armor":
+        c.rect(cx - half - 2, top - 2, cx + half + 2, top + 4, s["fur"], radius=3)
+    blink = (not acting) and step == 2
+    behind = s.get("prop") in ("hammer", "pickaxe")  # swung beside the head, not over the face
+    if behind:
+        _npc_prop(c, s, prop_hand, act if acting else 0.0)
+    _npc_head(c, s, cx, head_y, blink)
+    if s.get("prop") and not behind:
+        _npc_prop(c, s, prop_hand, act if acting else 0.0)
+    return c.finish(CELL)
+
+
+def build_townsperson_sheet(npc_id: str) -> Image.Image:
+    sheet = Image.new("RGBA", (CELL * NPC_FRAMES, CELL), (0, 0, 0, 0))
+    for frame in range(NPC_FRAMES):
+        sheet.paste(draw_townsperson(npc_id, frame), (frame * CELL, 0))
     return sheet
 
 
@@ -3737,8 +4176,12 @@ def main() -> None:
     sheet.save(warrior_dir / "warrior.png")
     npc_dir = ASSETS / "characters" / "npcs"
     npc_dir.mkdir(parents=True, exist_ok=True)
-    for look in NPC_LOOKS:
-        build_npc_sheet(frames, look).save(npc_dir / f"{look}.png")
+    for old in npc_dir.glob("*.png"):  # the old dyed-hero sheets and any person no longer in TOWNSFOLK
+        if old.stem not in TOWNSFOLK:
+            old.unlink()
+            old.with_suffix(".png.import").unlink(missing_ok=True)
+    for npc_id in TOWNSFOLK:
+        build_townsperson_sheet(npc_id).save(npc_dir / f"{npc_id}.png")
     add_look_variants(frames)
     atlas, pieces = pack_warrior_parts(frames)
     atlas.save(warrior_dir / "warrior_parts.png")
