@@ -2,7 +2,7 @@
 
 import random
 
-from server.data import roundi, scene_objects
+from server.data import roundi, table
 from server.rules import combat, items
 from server.rules.stats import Stats, kill_xp, level_gap_factor, xp_for_level
 
@@ -84,10 +84,11 @@ def test_resolve_hit_and_gear_rolls_are_in_range():
     assert items.clean_stack(piece) == piece
 
 
-def test_meadow_scene_objects():
-    things = scene_objects("res://scenes/maps/field.tscn")
+def test_meadow_objects():
+    """Green Meadow is built from maps.json like every map (since 2026-11-20)."""
+    things = table("maps")["maps"]["field"]["objects"]
     kinds = {t["type"] for t in things}
-    assert kinds == {"tree", "rock", "monster"}
+    assert {"tree", "rock", "monster"} <= kinds
     assert any(t.get("id") == "blue_slime" for t in things)
 
 

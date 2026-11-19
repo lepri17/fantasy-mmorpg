@@ -1,6 +1,6 @@
 """The game data, shared with the client: the JSON tables in client/data, plus
-the trees, rocks and monsters placed in scene-built maps (the meadow is a Godot
-scene, field.tscn, not JSON). Set MMO_CLIENT_DIR to use another client folder."""
+the trees, rocks and monsters placed in scene-built maps, if a map is a Godot
+scene (none is since 2026-11-20). Set MMO_CLIENT_DIR to use another client folder."""
 
 from __future__ import annotations
 

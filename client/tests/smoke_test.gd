@@ -112,7 +112,7 @@ func _run() -> void:
 	_check(player.stats.level == 1 and player.max_hp == 100, "starts at level 1 with 100 HP")
 
 	# --- obstacle: walk straight into a tree
-	var tree: Node2D = get_first_node_in_group("obstacles")
+	var tree: Node2D = get_first_node_in_group("trees")
 	player.global_position = tree.global_position + Vector2(-80, 0)
 	await _frames(2)
 	await _hold("move_right", 40)
