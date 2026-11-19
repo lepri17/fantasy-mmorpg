@@ -1607,6 +1607,110 @@ def build_tree() -> Image.Image:
     return c.finish()
 
 
+# Scenery in a MapleStory-like style: puffy, outlined, lit from the top left.
+# Each map picks its kinds (maps.json "tree_style", "rock_style"); every kind
+# has two shapes. Drawn at twice the design size and shown at half (tree.tscn,
+# rock.tscn), so they stay crisp on a phone.
+TREE_STYLES = {
+    "oak": ((76, 166, 86, 255), (48, 120, 70, 255), (138, 212, 112, 255)),
+    "blossom": ((240, 156, 186, 255), (204, 108, 148, 255), (255, 214, 228, 255)),
+    "autumn": ((228, 142, 62, 255), (186, 94, 46, 255), (252, 204, 102, 255)),
+    "dark": ((44, 110, 98, 255), (28, 74, 72, 255), (98, 172, 140, 255)),
+    "pine": ((54, 132, 88, 255), (34, 92, 66, 255), (116, 186, 120, 255)),
+    "snowpine": ((60, 128, 110, 255), (38, 90, 84, 255), (120, 182, 156, 255)),
+}
+ROCK_STYLES = ("stone", "mossy", "crag", "snowy")
+BARK = (132, 90, 58, 255)
+BARK_DARK = (98, 64, 44, 255)
+
+
+def _tree_trunk(c, cx, base, top, half):
+    c.polygon([(cx - half - 3, base), (cx - half + 1, top), (cx + half - 1, top), (cx + half + 3, base)], BARK)
+    c.polygon([(cx + 1, base - 1), (cx + 1, top + 2), (cx + half - 2, top + 2), (cx + half + 1.5, base - 1)],
+              BARK_DARK, outline=False)
+    for side in (-1, 1):
+        c.ellipse(cx + side * (half + 4), base - 1, 6, 3, BARK)
+
+
+def draw_scenery_tree(style: str, shape: int) -> Image.Image:
+    """A tree, 160x160 design (out 320 px), trunk base at (80, 150)."""
+    leaf, shade, light = TREE_STYLES[style]
+    rng = random.Random(len(style) * 7 + shape * 31)
+    c = Canvas(160)
+    c.ellipse(80, 150, 40, 9, SHADOW, outline=False)
+    if style in ("pine", "snowpine"):
+        _tree_trunk(c, 80, 150, 118, 7)
+        tiers = [(122, 58, 34), (96, 48, 34), (70, 36, 32)] if shape == 0 else [(124, 54, 30), (100, 46, 30), (78, 38, 28), (56, 28, 26)]
+        for base_y, half, height in tiers:
+            points = [(80 - half, base_y), (80, base_y - height), (80 + half, base_y)]
+            c.polygon(points, leaf)
+            c.polygon([(80, base_y - height + 3), (80 + half - 4, base_y - 2), (80, base_y - 2)], shade, outline=False)
+            c.polygon([(80 - half + 7, base_y - 3), (80 - 3, base_y - height + 8), (80 - 3, base_y - 6)], light,
+                      outline=False)
+            c.line(points, width=1.5)
+            if style == "snowpine":
+                c.polygon([(80 - half * 0.55, base_y - height * 0.45), (80, base_y - height - 1),
+                           (80 + half * 0.55, base_y - height * 0.45), (80, base_y - height * 0.6)], SNOW_WHITE)
+        if style == "snowpine":
+            c.ellipse(80 - 30, 150, 12, 4, SNOW_WHITE)
+        return c.finish(320)
+    _tree_trunk(c, 80, 150, 96, 9)
+    puffs = ([(80, 50, 40, 34), (46, 72, 30, 26), (114, 72, 30, 26), (58, 98, 30, 20), (102, 98, 30, 20),
+              (80, 82, 40, 30)] if shape == 0 else
+             [(80, 46, 34, 30), (52, 66, 26, 24), (108, 66, 26, 24), (66, 96, 28, 20), (98, 98, 28, 20),
+              (80, 76, 38, 30), (40, 92, 18, 14)])
+    blob(c, puffs, leaf)
+    for cx, cy, rx, ry in ((60, 100, 22, 11), (100, 102, 22, 10), (82, 90, 26, 10), (118, 80, 12, 9)):
+        c.ellipse(cx, cy, rx, ry, shade, outline=False)
+    for cx, cy, rx, ry in ((64, 36, 20, 12), (40, 62, 12, 8), (98, 54, 13, 8), (70, 70, 9, 6)):
+        c.ellipse(cx, cy, rx, ry, light, outline=False)
+    for _ in range(14):  # little leaf curls
+        x, y = rng.uniform(48, 112), rng.uniform(40, 100)
+        c.line([(x - 4, y), (x - 1, y + 3), (x + 3, y + 1)], fill=shade, width=1.3)
+    if style in ("oak", "autumn") and shape == 1:  # a few fruits
+        for x, y in ((62, 80), (96, 70), (84, 96)):
+            c.ellipse(x, y, 4, 4, (220, 64, 64, 255) if style == "oak" else (250, 196, 80, 255))
+            c.ellipse(x - 1.2, y - 1.4, 1.2, 1.2, WHITE, outline=False)
+    if style == "blossom":
+        for _ in range(10):
+            x, y = rng.uniform(46, 114), rng.uniform(36, 100)
+            c.ellipse(x, y, 2.6, 2.6, WHITE, outline=False)
+            c.ellipse(x, y, 1, 1, (255, 214, 92, 255), outline=False)
+    return c.finish(320)
+
+
+def draw_scenery_rock(style: str, shape: int) -> Image.Image:
+    """A rock, 80x80 design (out 160 px), base at (40, 66)."""
+    c = Canvas(80)
+    c.ellipse(40, 66, 30, 6, SHADOW, outline=False)
+    stone, dark, light = (158, 164, 180, 255), (118, 124, 142, 255), (210, 214, 224, 255)
+    if style == "crag":
+        stone, dark, light = (168, 150, 130, 255), (124, 108, 94, 255), (210, 196, 176, 255)
+        points = ([(14, 64), (18, 40), (32, 28), (50, 30), (64, 44), (68, 64)] if shape == 0 else
+                  [(16, 64), (22, 44), (38, 32), (58, 36), (66, 64)])
+        c.polygon(points, stone)
+        c.polygon([(40, 34), (62, 46), (64, 62), (42, 62)], dark, outline=False)
+        c.polygon([(20, 46), (31, 33), (38, 36), (26, 50)], light, outline=False)
+        c.line(points + points[:1], width=1.5)
+        c.line([(36, 40), (40, 50), (37, 58)], fill=dark, width=1.2)
+        return c.finish(160)
+    puffs = ([(40, 50, 28, 16), (31, 42, 18, 14), (51, 45, 14, 11)] if shape == 0 else
+             [(38, 52, 24, 13), (46, 44, 16, 12), (28, 48, 12, 9)])
+    blob(c, puffs, stone)
+    c.ellipse(48, 57, 15, 5, dark, outline=False)
+    c.ellipse(28, 38, 9, 5, light, outline=False)
+    c.line([(44, 40), (47, 47), (44, 53)], fill=dark, width=1.1)
+    if style == "mossy":
+        for x, y, rx in ((30, 36, 10), (44, 37, 9), (36, 34, 6)):
+            c.ellipse(x, y, rx, 4, (98, 160, 80, 255), outline=False)
+            c.ellipse(x - 2, y - 1, rx * 0.4, 1.6, (150, 206, 110, 255), outline=False)
+    if style == "snowy":
+        c.ellipse(36, 37, 17, 6, SNOW_WHITE)
+        c.ellipse(48, 41, 9, 4, SNOW_WHITE, outline=False)
+    c.ellipse(64, 63, 4, 3, stone)  # a pebble alongside
+    return c.finish(160)
+
+
 def build_rock() -> Image.Image:
     """80x80, base at (40, 66)."""
     c = Canvas(80)
@@ -3466,8 +3570,16 @@ def main() -> None:
     for theme, roles in HOUSE_SETS.items():
         for role in roles:
             draw_house(theme, role).save(houses_dir / f"{theme}_{role}.png")
-    build_tree().save(environment_dir / "tree.png")
-    build_rock().save(environment_dir / "rock.png")
+    draw_scenery_tree("oak", 0).save(environment_dir / "tree.png")  # the default (meadow scene)
+    draw_scenery_rock("stone", 0).save(environment_dir / "rock.png")
+    for folder in ("trees", "rocks"):
+        (environment_dir / folder).mkdir(parents=True, exist_ok=True)
+    for style in TREE_STYLES:
+        for shape in range(2):
+            draw_scenery_tree(style, shape).save(environment_dir / "trees" / f"{style}_{shape}.png")
+    for style in ROCK_STYLES:
+        for shape in range(2):
+            draw_scenery_rock(style, shape).save(environment_dir / "rocks" / f"{style}_{shape}.png")
 
     items_dir = ASSETS / "items"
     items_dir.mkdir(parents=True, exist_ok=True)

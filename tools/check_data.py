@@ -721,6 +721,10 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
         spawns = data.get("spawns", {})
         if "default" not in spawns:
             error(f"{where}: needs a 'default' spawn")
+        for key, folder in (("tree_style", "trees"), ("rock_style", "rocks")):  # game_map.gd
+            for style in data.get(key, []):
+                if not res_exists(f"res://assets/environment/{folder}/{style}_0.png"):
+                    error(f"{where}: {key} '{style}' has no drawing")
         street_top = data.get("street_top")  # a town's street: nothing may stand above it
         if street_top is not None:
             if not (is_number(street_top) and 80 <= street_top <= 600):

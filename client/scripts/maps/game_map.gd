@@ -89,6 +89,7 @@ func _ready() -> void:
 	for drift in DRIFTS:
 		if int(data.get(drift, 0)) > 0:
 			_add_drift(drift, int(data[drift]))
+	_dress_scenery()
 	call_deferred("_bake_navigation")
 	if data.has("dungeon"):
 		var run: Node = DungeonRun.new()
@@ -263,6 +264,26 @@ func _bake(blend: Node2D) -> void:
 	picture.centered = false
 	picture.z_index = -9  # just over the ground, as the shapes were
 	add_child(picture)
+
+
+## Gives each tree and rock a drawing of the map's kinds (maps.json
+## "tree_style", "rock_style": names in assets/environment/trees and rocks),
+## picked by its place, in one of two shapes. Also the meadow scene's trees.
+func _dress_scenery() -> void:
+	var styles := {
+		"trees": data.get("tree_style", ["oak"]), "rocks": data.get("rock_style", ["stone"])
+	}
+	for node in find_children("*", "StaticBody2D", true, false):
+		for group in styles:
+			var sprite = node.get_node_or_null("Sprite")
+			if not node.is_in_group(group) or sprite == null:
+				continue
+			var kinds: Array = styles[group]
+			var pick: int = hash(Vector2i(node.position))
+			sprite.texture = load(
+				"res://assets/environment/%s/%s_%d.png"
+				% [group, kinds[posmod(pick, kinds.size())], posmod(pick >> 4, 2)]
+			)
 
 
 ## Leaves, pollen or dust drifting over the whole map (DRIFTS), each bit
