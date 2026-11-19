@@ -256,16 +256,6 @@ func _lake(main, player) -> void:
 		if float(frog.moves.get("_air_left")) > 0.25:
 			break
 	await _shot("42_frog_leap")
-	main.bosses.appear("slime_king", "lake")  # the roaming Slime King, leaping
-	var king = main.bosses.node_of("slime_king")
-	king.moves.set("_ready_in", 0.0)
-	player.global_position = king.global_position + Vector2(-260, 30)
-	for _i in 400:
-		player.hp = player.max_hp
-		await process_frame
-		if float(king.moves.get("_air_left")) > 0.3:
-			break
-	await _shot("43_king_leap")
 
 
 ## Galeclaw Ridge: the canyon between two cliffs, the rift and a rope bridge,
@@ -446,8 +436,10 @@ func _nearest_enemy(monster_id: String, point: Vector2):
 ## The Stormcrest Roc's reward on the ground (rare pieces stand in a beam of
 ## light), and an Elderwood piece's random bonuses and their ranges in the bag.
 func _boss_loot(player, hud) -> void:
+	get_first_node_in_group("game").change_map("ridge", "west")  # the Roc's own land
+	await _frames(20)
 	var bosses = get_first_node_in_group("game").bosses
-	bosses.appear("stormcrest_roc", "grove")
+	bosses.appear("stormcrest_roc", "ridge")
 	var boss = bosses.node_of("stormcrest_roc")
 	boss.set_physics_process(false)
 	boss.set("_player", player)

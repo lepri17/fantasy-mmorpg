@@ -392,8 +392,7 @@
       "roam": {
         "maps": [
           "field",
-          "forest",
-          "lake"
+          "forest"
         ],
         "first": [
           120,
@@ -1169,8 +1168,6 @@
       "min_rarity": "rare",
       "roam": {
         "maps": [
-          "twilight",
-          "grove",
           "ridge"
         ],
         "first": [
@@ -1590,7 +1587,6 @@
       "min_rarity": "rare",
       "roam": {
         "maps": [
-          "ruins",
           "frostfang"
         ],
         "first": [

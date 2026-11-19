@@ -71,12 +71,10 @@ func _check_ruins(main) -> void:
 	)
 	var walls: Array = t.get_nodes_in_group("cliffs").filter(func(w): return w.style == "wall")
 	t._check(walls.size() == 11, "old walls stand round the temple (%d)" % walls.size())
-	main.bosses.appear("frost_wyrm", "ruins")
-	var wyrm = main.bosses.node_of("frost_wyrm")
-	t._check(
-		wyrm != null and wyrm.is_in_group("bosses"), "the Frost Wyrm can come down in the ruins"
+	var visitors: Array = main.bosses.bosses.keys().filter(
+		func(id): return "ruins" in main.bosses.maps_of(id)
 	)
-	main.bosses.leave("frost_wyrm")
+	t._check(visitors.is_empty(), "no boss comes to the ruins: they are no boss's land")
 
 
 func _check_statue(main, player) -> void:

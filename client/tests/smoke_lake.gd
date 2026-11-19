@@ -54,13 +54,10 @@ func _check_lake(main) -> void:
 		water != null and water.bridges.size() == 3 and water.islands.size() == 1,
 		"a lake and a river, with three bridges and an island"
 	)
-	main.bosses.appear("slime_king", "lake")
-	var boss = main.bosses.node_of("slime_king")
-	t._check(
-		boss != null and boss.is_in_group("bosses") and boss.level == 8,
-		"the lake has no boss of its own, but the Slime King can come here"
+	var visitors: Array = main.bosses.bosses.keys().filter(
+		func(id): return "lake" in main.bosses.maps_of(id)
 	)
-	main.bosses.leave("slime_king")
+	t._check(visitors.is_empty(), "no boss comes to the lake: it is no boss's land")
 	t._check(
 		t.get_nodes_in_group("chests").size() == 2 and t.get_nodes_in_group("shrines").size() == 2,
 		"two treasure chests and two shrines to find"

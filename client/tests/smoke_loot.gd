@@ -76,11 +76,11 @@ func _check_rolls() -> void:
 
 
 func _check_boss(main, player) -> void:
-	main.change_map("grove", "south")
+	main.change_map("ridge", "west")
 	await t._frames(3)
-	main.bosses.appear("stormcrest_roc", "grove")
+	main.bosses.appear("stormcrest_roc", "ridge")
 	var boss = main.bosses.node_of("stormcrest_roc")
-	t._check(boss != null, "the Stormcrest Roc can come down in Elder Grove")
+	t._check(boss != null, "the Stormcrest Roc can come down on Galeclaw Ridge")
 	if boss == null:
 		return
 	boss.set_physics_process(false)

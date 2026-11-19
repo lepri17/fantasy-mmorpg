@@ -77,13 +77,10 @@ func _check_maps(main) -> void:
 			light["forest"], light["twilight"], light["grove"]
 		]
 	)
-	main.bosses.appear("stormcrest_roc", "grove")
-	var roc = main.bosses.node_of("stormcrest_roc")
-	t._check(
-		roc != null and roc.is_in_group("bosses") and roc.get("_crown") == null and roc.level == 17,
-		"the Stormcrest Roc can come down in the grove, without the Slime King's crown"
+	var visitors: Array = main.bosses.bosses.keys().filter(
+		func(id): return "grove" in main.bosses.maps_of(id) or "twilight" in main.bosses.maps_of(id)
 	)
-	main.bosses.leave("stormcrest_roc")
+	t._check(visitors.is_empty(), "no boss comes to the deep woods: they are no boss's land")
 	var blend = main.map.get_node_or_null("GroundBlend")
 	var bands: int = blend.bands if blend != null else 0
 	t._check(

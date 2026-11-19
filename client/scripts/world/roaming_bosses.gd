@@ -1,8 +1,10 @@
 extends Node
-## Roaming bosses (Mor's wish, 2026-11-19): one boss for every few maps, and
-## it is not always there. A monster whose "boss" in monsters.json has a
-## "roam" part waits a random time ("first", later "wait": [shortest, longest]
-## seconds), then appears in one of its "maps", at one of that map's
+## Roaming bosses (Mor's wish, 2026-11-19): a few bosses, each only in the
+## maps that are its own land (slimes in the meadow and the woods, the storm
+## bird on the ridge, the ice dragon in the hollow), and not always there. A
+## monster whose "boss" in monsters.json has a "roam" part waits a random time
+## ("first", later "wait": [shortest, longest] seconds), then appears in one of
+## its "maps", at one of that map's
 ## "boss_spots" (maps.json). It stays "stay" seconds, then leaves, unless it is
 ## in a fight. Beaten, it waits again. The clock runs wherever the hero is;
 ## the boss itself is made only while the hero is in its map. game.gd makes
@@ -71,6 +73,9 @@ func appear(id: String, map_id: String = "") -> void:
 	var maps: Array = roam["maps"]
 	if map_id == "":
 		map_id = maps.pick_random()
+	if not map_id in maps or spots(map_id).is_empty():
+		push_error("%s does not come to %s" % [id, map_id])
+		return
 	var spot: Vector2 = spots(map_id).pick_random()
 	var state: Dictionary = bosses[id]
 	state["map"] = map_id
@@ -105,6 +110,11 @@ func map_arrived(map_id: String) -> String:
 			_make(id)
 			names.append(_name(id))
 	return ", ".join(names)
+
+
+## The maps that are a boss's own land: the only ones it comes to.
+func maps_of(id: String) -> Array:
+	return _roam(id)["maps"]
 
 
 ## True while the boss is out, in some map.

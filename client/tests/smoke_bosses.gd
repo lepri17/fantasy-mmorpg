@@ -39,6 +39,13 @@ func _check_few(roaming) -> void:
 		roaming.bosses.values().all(func(state): return float(state["wait"]) >= 60.0),
 		"each boss waits minutes before it comes"
 	)
+	var lands: Array = [
+		roaming.maps_of("slime_king"), roaming.maps_of("stormcrest_roc"), roaming.maps_of("frost_wyrm")
+	]
+	t._check(
+		lands == [["field", "forest"], ["ridge"], ["frostfang"]],
+		"each boss comes only to its own land: slimes' meadow and woods, the ridge, the hollow"
+	)
 
 
 func _check_clock(main, roaming) -> void:
@@ -50,7 +57,7 @@ func _check_clock(main, roaming) -> void:
 	RoamingBosses.enabled = false
 	var state: Dictionary = roaming.bosses["slime_king"]
 	t._check(
-		roaming.is_out("slime_king") and state["map"] in ["field", "forest", "lake"],
+		roaming.is_out("slime_king") and state["map"] in ["field", "forest"],
 		"when its wait is over, the Slime King appears in one of its maps (%s)" % state["map"]
 	)
 	state["left"] = 0.01  # its time is up, and no one is fighting it
@@ -64,19 +71,19 @@ func _check_clock(main, roaming) -> void:
 func _check_walk_in(main, roaming) -> void:
 	main.change_map("town")
 	await t._frames(3)
-	roaming.appear("stormcrest_roc", "twilight")
+	roaming.appear("stormcrest_roc", "ridge")
 	t._check(
 		roaming.is_out("stormcrest_roc") and roaming.node_of("stormcrest_roc") == null,
 		"a boss can come out in another map, away from the hero"
 	)
-	main.change_map("twilight", "south")
+	main.change_map("ridge", "west")
 	await t._frames(3)
 	var roc = roaming.node_of("stormcrest_roc")
 	t._check(
 		(
 			roc != null
 			and roc.is_in_group("bosses")
-			and RoamingBosses.spots("twilight").any(
+			and RoamingBosses.spots("ridge").any(
 				func(spot): return spot.distance_to(roc.global_position) < 40.0
 			)
 		),
