@@ -632,6 +632,26 @@ def check_npcs(npcs: dict, items: dict) -> None:
                 error(f"{where}: sells '{item_id}', which is not an item with a price")
 
 
+def check_events(events: dict) -> None:
+    """events.json (O19): when random events come, and each event's numbers."""
+    for key in ("first", "wait"):
+        span = events.get(key)
+        if not (isinstance(span, list) and len(span) == 2 and all(is_number(v) and v > 0 for v in span)
+                and span[0] <= span[1]):
+            error(f"events.json: '{key}' must be [shortest, longest] seconds")
+    needs = {"treasure": ("weight", "seconds", "gear_chance"),
+             "swarm": ("weight", "seconds", "count", "xp_bonus", "gold_per_level"),
+             "lucky": ("weight", "seconds", "gold")}
+    found = events.get("events", {})
+    if set(found) != set(needs):
+        error(f"events.json: 'events' must be {sorted(needs)}")
+    for event, keys in needs.items():
+        for key in keys:
+            need_number(f"events.json {event}", found.get(event, {}), key, 0.0)
+    if found.get("lucky", {}).get("min_rarity") not in RARITIES:
+        error("events.json lucky: 'min_rarity' must be a rarity")
+
+
 def check_wish(where: str, wish, items: dict) -> None:
     """A wishing fountain (O18): what a wish costs and the prizes, by weight."""
     if not isinstance(wish, dict):
@@ -1072,6 +1092,7 @@ def main() -> int:
     check_npcs(load("npcs"), items_data.get("items", {}))
     check_quests(load("quests"), load("npcs"), items_data.get("items", {}), load("monsters"))
     check_maps(load("maps"), load("monsters"), load("npcs"))
+    check_events(load("events"))
     need_number("character.json", load("character"), "storage_size", 1, 200)
     need_number("items.json", items_data, "sell_fraction", 0.01, 1.0)
     for item_id, item in items_data.get("items", {}).items():

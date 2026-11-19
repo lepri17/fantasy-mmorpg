@@ -14,6 +14,7 @@ const INVADERS := "invaders"
 const SkyClock := preload("res://scripts/world/sky.gd")
 const FloatingText := preload("res://scripts/ui/floating_text.gd")
 const RoamingBosses := preload("res://scripts/world/roaming_bosses.gd")
+const MapEvents := preload("res://scripts/world/map_events.gd")
 const MUSIC_DB := -14.0
 ## The quiet sound of the place under the music (maps.json "ambience").
 const AMBIENCE_DB := -12.0
@@ -32,6 +33,8 @@ static var fade_seconds: float = 0.3
 var map = null
 ## The roaming bosses (roaming_bosses.gd).
 var bosses = null
+## The random events in the hunting maps (map_events.gd).
+var events = null
 var _invasion_check: float = 0.0
 var _sky_check: float = 0.0
 var _daylight: CanvasModulate
@@ -59,6 +62,10 @@ func _ready() -> void:
 	bosses.name = "RoamingBosses"
 	add_child(bosses)
 	bosses.setup(self)
+	events = MapEvents.new()
+	events.name = "MapEvents"
+	add_child(events)
+	events.setup(self, _player)
 	map = _world.get_node("Map")
 	var saved: String = _player.stats.map_id
 	if saved != "" and saved != map.map_id and _maps().has(saved):
@@ -249,6 +256,7 @@ func _arrive(point: Vector2) -> void:
 	update_sky()
 	var subtitle: String = _maps()[map.map_id].get("levels", "")
 	var boss_here: String = bosses.map_arrived(map.map_id)
+	events.map_arrived(map.map_id)
 	if boss_here != "":
 		subtitle += "  -  %s is here!" % boss_here
 	_hud.call("show_banner", map.display_name(), subtitle)

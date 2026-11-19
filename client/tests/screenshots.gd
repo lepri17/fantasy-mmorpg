@@ -10,6 +10,7 @@ const ItemDb = preload("res://scripts/items/item_db.gd")
 const PICKUP_SCENE = preload("res://scenes/items/pickup.tscn")
 const GameScript = preload("res://scripts/game.gd")
 const RoamingBosses = preload("res://scripts/world/roaming_bosses.gd")
+const MapEvents = preload("res://scripts/world/map_events.gd")
 const SAVE_PATH := "user://screenshots_save.cfg"
 const Settings = preload("res://scripts/settings.gd")
 
@@ -25,6 +26,7 @@ func _initialize() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 	GameScript.invasions_enabled = false
 	RoamingBosses.enabled = false
+	MapEvents.enabled = false
 	GameScript.fade_seconds = 0.0
 	Settings.path = "user://screenshots_settings.cfg"
 	Settings.load_file()
@@ -460,6 +462,27 @@ func _towns(main, player) -> void:
 	await _frames(4)
 	await _shot("70_wishing_fountain")
 	hud.call("_close_windows")
+	main.change_map("forest", "west")  # random events (O19)
+	await _frames(30)
+	player.hp = player.max_hp
+	player.global_position = main.map.spawn_point("west") + Vector2(300, 0)
+	await _frames(5)
+	for enemy in get_nodes_in_group("enemies"):
+		enemy.set_physics_process(false)
+	main.events.start("swarm")
+	for monster in main.events.things:
+		monster.set_physics_process(false)
+	await _frames(20)
+	await _shot("71_swarm_event")
+	main.events.left = 0.01
+	await _frames(5)
+	main.events.start("lucky")
+	main.events.things[0].set_physics_process(false)
+	player.global_position = main.events.things[0].global_position + Vector2(-120, 40)
+	await _frames(30)
+	await _shot("72_lucky_monster")
+	main.events.left = 0.01
+	await _frames(5)
 
 
 func _nearest_enemy(monster_id: String, point: Vector2):

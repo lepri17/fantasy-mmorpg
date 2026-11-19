@@ -33,6 +33,9 @@ const WANDER_RADIUS := 90.0
 ## A slime that gets this far from home gives up the chase and walks back.
 const LEASH_RADIUS := 480.0
 
+## A Lucky monster's colour (O19): it pulses between these.
+const LUCKY_GOLD := Color(1.5, 1.2, 0.35)
+const LUCKY_GLOW := Color(2.1, 1.75, 0.6)
 ## Chance of spawning as an elite; below 0 = use combat.json. Tests set it to 0.
 static var elite_chance_override: float = -1.0
 
@@ -62,6 +65,8 @@ var gold_max: int = 5
 var drops: Array = []
 ## {"chance", "items"}: gear that can drop, with a random rarity.
 var gear_drops: Dictionary = {}
+## O19: a Lucky monster's gear is at least this rarity (map_events.gd), or "".
+var lucky_rarity: String = ""
 ## Shoots from afar instead of biting, or {}: {"keep_distance", "projectile_speed", "on_hit"}.
 var ranged: Dictionary = {}
 ## C9: a boss, or {}: {"enrage_at", "enrage_speed", "rarity_rolls", "summon": {...}}.
@@ -678,6 +683,25 @@ func make_elite() -> void:
 		_glow.tween_property(_sprite, "self_modulate", Color.WHITE, 0.5)
 
 
+## O19: a Lucky monster (map_events.gd): an elite with more gold, sure to drop
+## a piece of gear of at least `rarity`.
+func make_lucky(rarity: String, gold_times: float) -> void:
+	make_elite()
+	display_name = display_name.replace("Elite ", "Lucky ")
+	gold_min = roundi(gold_min * gold_times)
+	gold_max = roundi(gold_max * gold_times)
+	gear_drops = gear_drops.duplicate()
+	gear_drops["chance"] = 1.0
+	lucky_rarity = rarity
+	if is_node_ready():
+		_hp_bar.set_label("Lv.%d %s" % [level, display_name])
+		if _glow != null:
+			_glow.kill()
+		_glow = create_tween().set_loops()  # golden all over, brighter than an elite
+		_glow.tween_property(_sprite, "self_modulate", LUCKY_GLOW, 0.35)
+		_glow.tween_property(_sprite, "self_modulate", LUCKY_GOLD, 0.35)
+
+
 func _roll_elite() -> void:
 	if not boss.is_empty():
 		return
@@ -823,7 +847,7 @@ func _maybe_drop_gear() -> void:
 		if randf() >= chance:
 			continue
 		var piece: Dictionary = ItemDb.roll_gear(
-			pool.pick_random(), rolls, boss.get("min_rarity", "")
+			pool.pick_random(), rolls, boss.get("min_rarity", lucky_rarity)
 		)
 		var pickup: Node2D = PICKUP_SCENE.instantiate()
 		pickup.set("kind", "item")

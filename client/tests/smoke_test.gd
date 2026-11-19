@@ -31,6 +31,8 @@ const SmokeRuins = preload("res://tests/smoke_ruins.gd")
 const SmokeFrost = preload("res://tests/smoke_frost.gd")
 const SmokeBosses = preload("res://tests/smoke_bosses.gd")
 const SmokeTowns = preload("res://tests/smoke_towns.gd")
+const SmokeEvents = preload("res://tests/smoke_events.gd")
+const MapEvents = preload("res://scripts/world/map_events.gd")
 const RoamingBosses = preload("res://scripts/world/roaming_bosses.gd")
 const Settings = preload("res://scripts/settings.gd")
 const SETTINGS_PATH := "user://smoke_test_settings.cfg"
@@ -53,6 +55,7 @@ func _run() -> void:
 	seed(20261118)  # the same drops on every run
 	GameScript.invasions_enabled = false  # the clock must not start one mid-test
 	RoamingBosses.enabled = false  # nor bring a boss
+	MapEvents.enabled = false  # nor an event
 	var main: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	await _frames(5)
@@ -748,6 +751,7 @@ func _run() -> void:
 	await SmokeFrost.new().run(self, main, player, hud)
 	await SmokeBosses.new().run(self, main, player, hud)
 	await SmokeTowns.new().run(self, main, player, hud)
+	await SmokeEvents.new().run(self, main, player, hud)
 
 	_remove_test_save()
 	root.remove_child(main)
