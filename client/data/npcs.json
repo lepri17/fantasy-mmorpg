@@ -1,30 +1,16 @@
 {
   "merchant": {
     "name": "Mira",
-    "title": "Merchant",
+    "title": "General Store",
     "look": "merchant",
-    "greeting": "Fresh potions, good steel and fair prices!",
+    "greeting": "Potions and stones for the road!",
     "services": [
       "shop"
     ],
     "shop": [
       "red_potion",
       "blue_potion",
-      "ember_stone",
-      "red_headband",
-      "training_sword",
-      "leather_gloves",
-      "red_cape",
-      "blue_plate",
-      "leather_boots",
-      "hawk_gloves",
-      "swift_boots",
-      "oak_staff",
-      "sage_hat",
-      "violet_robe",
-      "short_bow",
-      "green_hood",
-      "ranger_vest"
+      "ember_stone"
     ]
   },
   "healer": {
@@ -74,7 +60,7 @@
   },
   "lh_merchant": {
     "name": "Rook",
-    "title": "Merchant",
+    "title": "General Store",
     "look": "merchant",
     "greeting": "Lantern oil, potions and steel for the deep woods.",
     "services": [
@@ -84,14 +70,7 @@
       "red_potion",
       "blue_potion",
       "ember_stone",
-      "moon_stone",
-      "duelist_cape",
-      "hawk_gloves",
-      "swift_boots",
-      "crimson_bow",
-      "shadow_vest",
-      "ember_staff",
-      "midnight_robe"
+      "moon_stone"
     ]
   },
   "lh_healer": {
@@ -130,7 +109,7 @@
   },
   "fg_merchant": {
     "name": "Sigrid",
-    "title": "Merchant",
+    "title": "General Store",
     "look": "merchant",
     "greeting": "Warm potions and good stones. The cold takes the rest.",
     "services": [
@@ -139,8 +118,6 @@
     "shop": [
       "red_potion",
       "blue_potion",
-      "ember_stone",
-      "moon_stone",
       "rebirth_scroll"
     ]
   },
@@ -177,5 +154,72 @@
     "look": "captain",
     "greeting": "The Frost Arena waits behind the hall's door. Wolves, wraiths and an Ice Golem to finish. Three bouts a day.",
     "services": []
+  },
+  "weaponsmith": {
+    "name": "Garrick",
+    "title": "Weaponsmith",
+    "look": "smith",
+    "greeting": "A good blade, a good staff, a good bow. Take your pick.",
+    "services": [
+      "shop"
+    ],
+    "shop": [
+      "training_sword",
+      "oak_staff",
+      "short_bow"
+    ]
+  },
+  "tailor": {
+    "name": "Nell",
+    "title": "Tailor",
+    "look": "tailor",
+    "greeting": "Hats, capes, gloves and boots, all sewn right here!",
+    "services": [
+      "shop"
+    ],
+    "shop": [
+      "red_headband",
+      "leather_gloves",
+      "red_cape",
+      "blue_plate",
+      "leather_boots",
+      "hawk_gloves",
+      "swift_boots",
+      "sage_hat",
+      "violet_robe",
+      "green_hood",
+      "ranger_vest"
+    ]
+  },
+  "lh_outfitter": {
+    "name": "Tamsin",
+    "title": "Outfitter",
+    "look": "trader",
+    "greeting": "Gear for the deep woods. Nothing here will let you down.",
+    "services": [
+      "shop"
+    ],
+    "shop": [
+      "duelist_cape",
+      "hawk_gloves",
+      "swift_boots",
+      "crimson_bow",
+      "shadow_vest",
+      "ember_staff",
+      "midnight_robe"
+    ]
+  },
+  "fg_stonecutter": {
+    "name": "Halvard",
+    "title": "Stonecutter",
+    "look": "smith",
+    "greeting": "Stones cut in the cold hold the strongest charm.",
+    "services": [
+      "shop"
+    ],
+    "shop": [
+      "ember_stone",
+      "moon_stone"
+    ]
   }
 }

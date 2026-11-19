@@ -3,8 +3,9 @@ extends RefCounted
 ## Lanternhold (between Mossy Woods and Twilight Woods) and Frostgate (between
 ## Moonfall Ruins and Frostfang Hollow). Houses stand along the top and the
 ## people stand at their doors along the street, so the hero walks left and
-## right to reach them; behind each new town's hall is an arena. smoke_test.gd
-## runs it; t is the test (a SceneTree).
+## right to reach them; behind each new town's hall is an arena. Each town's
+## gate leads into its market (2026-11-19): the sellers and storage, a fountain
+## and stalls. smoke_test.gd runs it; t is the test (a SceneTree).
 
 const GameData = preload("res://scripts/data/game_data.gd")
 
@@ -15,6 +16,7 @@ func run(test, main, player, hud) -> void:
 	t = test
 	await _check_street(main, player)
 	await _check_new_towns(main, player)
+	await _check_markets(main, player)
 	await _check_teleports(main, player, hud)
 	await _check_arena(main, player)
 	main.change_map("town")
@@ -33,7 +35,7 @@ func _check_street(main, player) -> void:
 		"Willow Town is a long street with a row of houses (%d x %d)" % [size.x, size.y]
 	)
 	t._check(
-		xs.max() - xs.min() > 2000.0,
+		xs.max() - xs.min() > 1500.0,
 		"its people stand along the street, not in one clump (%d px)" % (xs.max() - xs.min())
 	)
 	t._check(
@@ -63,8 +65,8 @@ func _check_street(main, player) -> void:
 
 func _check_new_towns(main, player) -> void:
 	for step in [
-		["forest", "lanternhold", "twilight", "Lanternhold", "lantern_arena"],
-		["ruins", "frostgate", "frostfang", "Frostgate", "frost_arena"]
+		["forest", "lanternhold", "twilight", "Lanternhold", "lantern_arena", "lantern_market"],
+		["ruins", "frostgate", "frostfang", "Frostgate", "frost_arena", "frost_market"]
 	]:
 		main.change_map(step[0], "south")
 		await t._frames(30)
@@ -80,20 +82,80 @@ func _check_new_towns(main, player) -> void:
 		for npc in t.get_nodes_in_group("npcs"):
 			services.append_array(GameData.table("npcs")[npc.npc_id].get("services", []))
 		t._check(
-			["shop", "heal", "storage", "teleport"].all(func(service): return service in services),
-			"%s has a shop, a healer, storage and a guide" % step[3]
+			["heal", "teleport"].all(func(service): return service in services),
+			"%s has a healer and a guide on its street" % step[3]
 		)
 		t._check(
 			(
 				_portal_to(step[0]) != null
 				and _portal_to(step[2]) != null
 				and _portal_to(step[4]) != null
+				and _portal_to(step[5]) != null
 			),
-			"and roads back and on, and a door into its arena"
+			"and roads back and on, a door into its arena, and a gate into its market"
 		)
 		t._check(
 			t.get_nodes_in_group("enemies").is_empty() and t.get_nodes_in_group("houses").size() == 7,
 			"no monsters in %s, and seven houses" % step[3]
+		)
+
+
+## Each town's gate leads into its market: the sellers, one kind of goods each,
+## the storage, a fountain and stalls to walk around, and the road back out
+## comes back at the gate.
+func _check_markets(main, player) -> void:
+	for step in [
+		["town", "willow_market", ["merchant", "weaponsmith", "tailor", "keeper"]],
+		["lanternhold", "lantern_market", ["lh_merchant", "lh_outfitter", "lh_keeper"]],
+		["frostgate", "frost_market", ["fg_merchant", "fg_stonecutter", "fg_keeper"]]
+	]:
+		main.change_map(step[0], "default")
+		await t._frames(30)
+		var gate = _portal_to(step[1])
+		_heal(player)
+		player.global_position = gate.global_position
+		await t._frames(30)
+		var name: String = main.map.display_name()
+		t._check(main.map.map_id == step[1], "the gate leads into %s" % name)
+		var ids: Array = t.get_nodes_in_group("npcs").map(func(npc): return npc.npc_id)
+		ids.sort()
+		var wanted: Array = step[2].duplicate()
+		wanted.sort()
+		var services: Array = []
+		for id in ids:
+			services.append_array(GameData.table("npcs")[id].get("services", []))
+		t._check(
+			ids == wanted and "shop" in services and "storage" in services,
+			"%s has its sellers and the storage (%s)" % [name, ", ".join(ids)]
+		)
+		var props: Array = t.get_nodes_in_group("props")
+		t._check(
+			(
+				props.any(func(prop): return prop.look.begins_with("fountain"))
+				and props.filter(func(prop): return prop.look.begins_with("stall")).size() == 4
+				and t.get_nodes_in_group("enemies").is_empty()
+			),
+			"a fountain and four stalls, and no monsters"
+		)
+		var fountain = props.filter(func(prop): return prop.look.begins_with("fountain"))[0]
+		_heal(player)
+		player.global_position = fountain.global_position + Vector2(0, 80)
+		await t._frames(2)
+		await t._hold("move_up", 60)
+		t._check(
+			player.global_position.y > fountain.global_position.y,
+			"the fountain is in the way (y %d)" % player.global_position.y
+		)
+		var road = _portal_to(step[0])
+		_heal(player)
+		player.global_position = road.global_position
+		await t._frames(30)
+		t._check(
+			(
+				main.map.map_id == step[0]
+				and player.global_position.distance_to(main.map.spawn_point("market")) < 5.0
+			),
+			"the road out of %s comes back at the gate" % name
 		)
 
 

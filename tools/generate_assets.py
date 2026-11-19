@@ -815,6 +815,9 @@ NPC_LOOKS = {
     "guide": (270, 0.45, 205),
     "captain": (0, 0.55, 18),
     "master": (45, 0.6, 265),
+    "smith": (22, 0.3, None),
+    "tailor": (176, 0.45, 318),
+    "trader": (212, 0.5, 40),
 }
 
 
@@ -3489,6 +3492,197 @@ def draw_house(theme: str, role: str) -> Image.Image:
     return c.finish(256)
 
 
+# The market quarter behind each town's gate (prop.gd): stalls, a fountain,
+# barrels, crates and benches. Drawn like the houses: design 128 px, image
+# 256 px, the ground line at HOUSE_BASE.
+PROP_WOOD = (176, 124, 78, 255)
+PROP_WOOD_DARK = (118, 80, 50, 255)
+PROP_CREAM = (250, 244, 228, 255)
+STALL_COLORS = {"red": (222, 74, 74, 255), "blue": (74, 132, 214, 255),
+                "green": (82, 168, 96, 255), "gold": (232, 176, 60, 255)}
+STALL_GOODS = {"red": "fruit", "blue": "potions", "green": "greens", "gold": "cloth"}
+FOUNTAIN_STONE = {"willow": (214, 206, 194, 255), "lantern": (156, 146, 160, 255),
+                  "frost": (200, 214, 230, 255)}
+FOUNTAIN_WATER = (104, 186, 238, 255)
+FOUNTAIN_FOAM = (226, 246, 255, 255)
+GATE_BANNER = {"willow": (222, 74, 74, 255), "lantern": (104, 82, 150, 255), "frost": (74, 132, 200, 255)}
+
+
+def _darker(color, k=0.72):
+    return tuple(int(v * k) for v in color[:3]) + (255,)
+
+
+def _stall_goods(c, cx, top, goods):
+    if goods == "fruit":
+        for i, color in enumerate(((226, 64, 64, 255), (250, 160, 52, 255), (124, 196, 80, 255))):
+            x = cx - 18 + i * 18
+            c.rect(x - 7, top - 5, x + 7, top + 1, PROP_WOOD_DARK, radius=2)
+            for dx, dy in ((-3.5, -6), (3.5, -6), (0, -9.5)):
+                c.ellipse(x + dx, top + dy, 3.2, 3.2, color)
+    elif goods == "potions":
+        for i, color in enumerate(((220, 60, 70, 255), (70, 120, 230, 255), (90, 200, 120, 255),
+                                   (220, 60, 70, 255), (180, 110, 230, 255))):
+            x = cx - 22 + i * 11
+            c.ellipse(x, top - 4.5, 3.8, 3.8, color)
+            c.rect(x - 1.4, top - 11, x + 1.4, top - 7.5, (200, 220, 236, 255), radius=0.4)
+            c.ellipse(x - 1.2, top - 5.5, 1, 1, (255, 255, 255, 255), outline=False)
+    elif goods == "greens":
+        for i in range(3):
+            x = cx - 18 + i * 18
+            c.ellipse(x - 3, top - 5, 5, 4.5, (112, 186, 86, 255))
+            c.ellipse(x - 3, top - 5.5, 2, 2, (168, 226, 128, 255), outline=False)
+            c.polygon([(x + 3, top - 8), (x + 8, top - 8), (x + 5.5, top - 1)], (240, 132, 48, 255))
+    else:  # cloth: rolls in bright colours
+        for i, color in enumerate(((236, 110, 160, 255), (110, 180, 236, 255), (246, 214, 92, 255),
+                                   (150, 110, 220, 255))):
+            x = cx - 21 + i * 14
+            c.rect(x - 6, top - 7, x + 6, top, color, radius=3)
+            c.line([(x - 2, top - 7), (x - 2, top)], fill=_darker(color), width=1)
+
+
+def draw_stall(color_name: str) -> Image.Image:
+    """A market stall: a wooden counter with goods and a striped awning."""
+    color = STALL_COLORS[color_name]
+    c = Canvas(128)
+    cx, base = 64, HOUSE_BASE
+    c.ellipse(cx, base + 1, 38, 5, SHADOW, outline=False)
+    for side in (-1, 1):  # the poles
+        c.rect(cx + side * 28 - 2, base - 50, cx + side * 28 + 2, base, PROP_WOOD_DARK, radius=1)
+    c.rect(cx - 32, base - 22, cx + 32, base, PROP_WOOD, radius=2)
+    for y in (base - 15, base - 8):
+        c.line([(cx - 31, y), (cx + 31, y)], fill=PROP_WOOD_DARK, width=1)
+    c.rect(cx - 34, base - 25, cx + 34, base - 21, _darker(PROP_WOOD, 0.85), radius=1)
+    _stall_goods(c, cx, base - 25, STALL_GOODS[color_name])
+    stripes, left, right, y0, y1 = 8, cx - 36, cx + 36, base - 62, base - 47
+    for k in range(stripes):  # the awning, a little wider at the bottom
+        x0, x1 = left + (right - left) * k / stripes, left + (right - left) * (k + 1) / stripes
+        fill = color if k % 2 == 0 else PROP_CREAM
+        c.polygon([(x0 + 3, y0), (x1 + 3, y0), (x1, y1), (x0, y1)], fill, outline=False)
+        c.ellipse((x0 + x1) / 2, y1, (x1 - x0) / 2, 3.4, fill, outline=False)
+    c.line([(left + 3, y0), (right + 3, y0)], width=1.4)
+    c.line([(left, y1), (left + 3, y0)], width=1.2)
+    c.line([(right, y1), (right + 3, y0)], width=1.2)
+    return c.finish(256)
+
+
+def draw_fountain(theme: str) -> Image.Image:
+    """The plaza's fountain: a round basin, a pillar with a bowl, falling water."""
+    stone = FOUNTAIN_STONE[theme]
+    dark = _darker(stone, 0.78)
+    c = Canvas(128)
+    cx, base = 64, HOUSE_BASE
+    c.ellipse(cx, base - 1, 50, 9, SHADOW, outline=False)
+    c.rect(cx - 46, base - 22, cx + 46, base - 2, stone, radius=8)
+    for x in range(int(cx - 40), int(cx + 41), 14):
+        c.line([(x, base - 20), (x, base - 4)], fill=dark, width=0.8)
+    c.ellipse(cx, base - 22, 46, 13, stone)
+    c.ellipse(cx, base - 22, 39, 9.5, FOUNTAIN_WATER)
+    for rx, ry in ((30, 6.5), (18, 3.8)):  # ripples
+        c.line(arc_points(cx, base - 21, rx, ry, 200, 340, 12), fill=FOUNTAIN_FOAM, width=1)
+    c.rect(cx - 6, base - 54, cx + 6, base - 22, stone, radius=2)
+    c.line([(cx - 2, base - 52), (cx - 2, base - 24)], fill=_darker(stone, 0.9), width=1)
+    for side in (-1, 1):  # water falling from the bowl into the basin
+        c.line([(cx + side * 16, base - 55), (cx + side * 22, base - 44), (cx + side * 25, base - 27)],
+               fill=FOUNTAIN_WATER, width=2.6)
+        c.line([(cx + side * 16, base - 55), (cx + side * 21, base - 44)], fill=FOUNTAIN_FOAM, width=1)
+        for k in range(3):
+            c.ellipse(cx + side * (20 + k * 5), base - 25 + (k % 2) * 2, 1.6, 1.2, FOUNTAIN_FOAM, outline=False)
+    c.ellipse(cx, base - 56, 18, 5.5, stone)
+    c.ellipse(cx, base - 57, 14, 3.4, FOUNTAIN_WATER)
+    c.rect(cx - 2.5, base - 68, cx + 2.5, base - 57, stone, radius=1.5)
+    c.ellipse(cx, base - 70, 4.5, 4, FOUNTAIN_FOAM)
+    if theme == "frost":  # snow on the rim
+        for x in (-34, -12, 14, 34):
+            c.ellipse(cx + x, base - 30 + abs(x) / 6, 6, 2.4, SNOW_WHITE, outline=False)
+    if theme == "lantern":  # two little lanterns on the rim
+        for side in (-1, 1):
+            c.rect(cx + side * 40 - 3, base - 38, cx + side * 40 + 3, base - 29, HOUSE_LANTERN, radius=2)
+            c.ellipse(cx + side * 40, base - 33.5, 1.4, 2, (255, 236, 170, 255), outline=False)
+    return c.finish(256)
+
+
+def draw_barrels() -> Image.Image:
+    c = Canvas(128)
+    cx, base = 64, HOUSE_BASE
+    c.ellipse(cx, base + 1, 22, 4, SHADOW, outline=False)
+    for x, h in ((-9, 26), (10, 22)):
+        c.rect(cx + x - 9, base - h, cx + x + 9, base, PROP_WOOD, radius=5)
+        for y in (base - h + 6, base - 6):
+            c.line([(cx + x - 9, y), (cx + x + 9, y)], fill=(96, 98, 108, 255), width=1.4)
+        c.ellipse(cx + x, base - h + 1, 8, 2.4, _darker(PROP_WOOD, 0.85))
+    return c.finish(256)
+
+
+def draw_crates() -> Image.Image:
+    c = Canvas(128)
+    cx, base = 64, HOUSE_BASE
+    c.ellipse(cx, base + 1, 24, 4, SHADOW, outline=False)
+    for x0, y1, size in ((cx - 20, base, 20), (cx + 1, base, 17), (cx - 12, base - 20, 15)):
+        c.rect(x0, y1 - size, x0 + size, y1, PROP_WOOD, radius=1)
+        c.line([(x0, y1 - size), (x0 + size, y1)], fill=PROP_WOOD_DARK, width=1.2)
+        c.line([(x0 + size, y1 - size), (x0, y1)], fill=PROP_WOOD_DARK, width=1.2)
+    return c.finish(256)
+
+
+def draw_bench() -> Image.Image:
+    c = Canvas(128)
+    cx, base = 64, HOUSE_BASE
+    c.ellipse(cx, base + 1, 26, 3.5, SHADOW, outline=False)
+    for side in (-1, 1):
+        c.rect(cx + side * 18 - 2, base - 10, cx + side * 18 + 2, base, (90, 90, 100, 255), radius=1)
+    c.rect(cx - 24, base - 26, cx + 24, base - 20, PROP_WOOD, radius=1.5)
+    c.rect(cx - 25, base - 13, cx + 25, base - 8, PROP_WOOD, radius=1.5)
+    return c.finish(256)
+
+
+def draw_market_gate(theme: str) -> Image.Image:
+    """The way into a town's market: an arch with a banner, open to the plaza behind."""
+    look = HOUSE_THEMES[theme]
+    wall, trim = look["wall"], look["trim"]
+    banner = GATE_BANNER[theme]
+    c = Canvas(128)
+    cx, base = 64, HOUSE_BASE
+    c.ellipse(cx, base + 1, 46, 5, SHADOW, outline=False)
+    c.rect(cx - 30, base - 52, cx + 30, base, (126, 112, 104, 255), radius=2)  # the opening
+    c.rect(cx - 28, base - 16, cx + 28, base, (196, 186, 170, 255), radius=1, outline=False)  # plaza beyond
+    for x in (-20, -6, 8, 22):  # stalls glimpsed through the arch
+        c.rect(cx + x - 5, base - 26, cx + x + 5, base - 16, STALL_COLORS[["red", "blue", "gold", "green"][(x + 20) // 14]],
+               radius=1, outline=False)
+    for side in (-1, 1):  # the pillars
+        c.rect(cx + side * 37 - 8, base - 70, cx + side * 37 + 8, base, wall, radius=2)
+        c.rect(cx + side * 37 - 10, base - 6, cx + side * 37 + 10, base, trim, radius=1)
+        c.rect(cx + side * 37 - 10, base - 72, cx + side * 37 + 10, base - 66, trim, radius=1)
+    c.polygon(arc_points(cx, base - 54, 45, 26, 180, 360, 20), wall)  # the arch
+    c.polygon(arc_points(cx, base - 54, 32, 16, 180, 360, 16), (126, 112, 104, 255))
+    c.rect(cx - 47, base - 58, cx + 47, base - 50, trim, radius=1.5)
+    c.rect(cx - 22, base - 84, cx + 22, base - 70, banner, radius=2)  # the sign board
+    for x in range(-16, 17, 8):
+        c.ellipse(cx + x, base - 77, 2, 2, PROP_CREAM, outline=False)
+    stripes = 8  # a little striped awning over the opening
+    for k in range(stripes):
+        x0, x1 = cx - 30 + 60 * k / stripes, cx - 30 + 60 * (k + 1) / stripes
+        fill = banner if k % 2 == 0 else PROP_CREAM
+        c.polygon([(x0, base - 50), (x1, base - 50), (x1, base - 44), (x0, base - 44)], fill, outline=False)
+        c.ellipse((x0 + x1) / 2, base - 44, (x1 - x0) / 2, 2.4, fill, outline=False)
+    c.line([(cx - 30, base - 50), (cx + 30, base - 50)], width=1.2)
+    if theme == "frost":
+        c.line(arc_points(cx, base - 55, 45, 27, 192, 348, 16), fill=SNOW_WHITE, width=4.5)
+        for side in (-1, 1):
+            c.ellipse(cx + side * 37, base - 73, 10, 2.6, SNOW_WHITE, outline=False)
+    if theme == "lantern":
+        for side in (-1, 1):
+            x = cx + side * 37
+            c.rect(x - 4, base - 64, x + 4, base - 53, HOUSE_LANTERN, radius=2)
+            c.ellipse(x, base - 58.5, 1.6, 2.4, (255, 236, 170, 255), outline=False)
+    if theme == "willow":
+        for side in (-1, 1):
+            c.ellipse(cx + side * 37, base - 74, 9, 4, (124, 176, 84, 255))
+            for k in range(3):
+                c.ellipse(cx + side * 37 - 5 + k * 5, base - 76, 1.8, 1.8, ((236, 92, 96, 255), (255, 214, 92, 255),
+                          (236, 120, 190, 255))[k], outline=False)
+    return c.finish(256)
+
+
 def build_monster_sheet(draw, poses) -> Image.Image:
     sheet = Image.new("RGBA", (MONSTER_PX * len(poses), MONSTER_PX), (0, 0, 0, 0))
     for col, pose in enumerate(poses):
@@ -3570,6 +3764,16 @@ def main() -> None:
     for theme, roles in HOUSE_SETS.items():
         for role in roles:
             draw_house(theme, role).save(houses_dir / f"{theme}_{role}.png")
+        draw_market_gate(theme).save(houses_dir / f"{theme}_gate.png")
+    props_dir = environment_dir / "props"
+    props_dir.mkdir(parents=True, exist_ok=True)
+    for color in STALL_COLORS:
+        draw_stall(color).save(props_dir / f"stall_{color}.png")
+    for theme in FOUNTAIN_STONE:
+        draw_fountain(theme).save(props_dir / f"fountain_{theme}.png")
+    draw_barrels().save(props_dir / "barrels.png")
+    draw_crates().save(props_dir / "crates.png")
+    draw_bench().save(props_dir / "bench.png")
     draw_scenery_tree("oak", 0).save(environment_dir / "tree.png")  # the default (meadow scene)
     draw_scenery_rock("stone", 0).save(environment_dir / "rock.png")
     for folder in ("trees", "rocks"):

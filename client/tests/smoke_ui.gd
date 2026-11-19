@@ -134,7 +134,7 @@ func _check_auto(main, player, hud) -> void:
 	)
 	t._check(
 		MapGuide.map_with_monster("spore_shroom", "town") == "forest"
-		and MapGuide.map_with_npc("merchant") == "town"
+		and MapGuide.map_with_npc("merchant") == "willow_market"
 		and MapGuide.monster_dropping("slime_jelly") != "",
 		"and where monsters, townspeople and loot are"
 	)
@@ -161,9 +161,9 @@ func _check_auto(main, player, hud) -> void:
 	t._check(not player.auto.active(), "tapping AUTO again stops it")
 	t._freeze(t.get_nodes_in_group("enemies"), false)
 
-	player.auto.walk_goal = {"map": "town", "npc": "merchant"}
+	player.auto.walk_goal = {"map": "willow_market", "npc": "merchant"}
 	waited = 0
-	while not player.auto.walk_goal.is_empty() and waited < 1800:
+	while not player.auto.walk_goal.is_empty() and waited < 2600:
 		await t._frames(10)
 		waited += 10
 	var mira: Node2D = null
@@ -172,11 +172,11 @@ func _check_auto(main, player, hud) -> void:
 			mira = npc
 	t._check(
 		(
-			main.map.map_id == "town"
+			main.map.map_id == "willow_market"
 			and mira != null
 			and player.global_position.distance_to(mira.global_position) < 160.0
 		),
-		"a quest walk goes through the portal to town and stops at Mira (%d frames)" % waited
+		"a quest walk goes through town and its market gate to Mira (%d frames)" % waited
 	)
 	player.toggle_auto_hunt()
 	t._check(not player.auto.hunting, "there is nothing to hunt in town")

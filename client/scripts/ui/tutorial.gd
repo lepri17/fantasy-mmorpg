@@ -95,7 +95,7 @@ func _done(id: String) -> bool:
 		"loot": stats.gold > _start["gold"] or stats.bag.size() != _start["bag"],
 		"skill": int(counters.get("skills_used", 0)) > _start["skills"],
 		"bag": hud.get("_inventory").visible,
-		"town": stats.map_id == "town",
+		"town": stats.map_id in ["town", "willow_market"],
 	}
 	return checks.get(id, true)
 

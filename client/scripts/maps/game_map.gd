@@ -42,6 +42,7 @@ const Water := preload("res://scripts/world/water.gd")
 const Cliff := preload("res://scripts/world/cliff.gd")
 const Icefall := preload("res://scripts/world/icefall.gd")
 const House := preload("res://scripts/world/house.gd")
+const Prop := preload("res://scripts/world/prop.gd")
 const Decor := preload("res://scripts/world/decor.gd")
 const Chest := preload("res://scripts/world/chest.gd")
 const Shrine := preload("res://scripts/world/shrine.gd")
@@ -139,6 +140,14 @@ func _add_object(thing: Dictionary) -> void:
 		house.look = thing["look"]
 		house.position = Vector2(thing["pos"][0], thing["pos"][1])
 		add_child(house)
+		return
+	if thing["type"] == "prop":
+		var prop = Prop.new()
+		prop.look = thing["look"]
+		var block: Array = thing.get("block", [0, 0])
+		prop.block = Vector2(block[0], block[1])
+		prop.position = Vector2(thing["pos"][0], thing["pos"][1])
+		add_child(prop)
 		return
 	if thing["type"] == "icefall":
 		var gorge = Icefall.new()

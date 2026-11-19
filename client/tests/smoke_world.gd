@@ -74,8 +74,14 @@ func run(test, main, player, hud) -> void:
 	)
 
 	# --- the townspeople: TALK, the shop, storage, the healer and the guide (W1, W9)
+	t._check(t.get_nodes_in_group("npcs").size() == 4, "four townspeople on Willow Town's street")
+	main.change_map("willow_market", "default")
+	await t._frames(4)
 	var townspeople: Array = t.get_nodes_in_group("npcs")
-	t._check(townspeople.size() == 6, "six townspeople in Willow Town")
+	t._check(
+		main.map.map_id == "willow_market" and townspeople.size() == 4,
+		"and four sellers in Willow Market, behind the gate"
+	)
 	var mira = townspeople.filter(func(npc): return npc.npc_id == "merchant")[0]
 	player.global_position = mira.global_position + Vector2(70, 30)
 	await t._frames(4)
@@ -157,6 +163,9 @@ func run(test, main, player, hud) -> void:
 	t._check(saved_quests.quests.done == quest_book.quests.done, "quests survive saving (version 7)")
 	while player.stats.bag.size() >= 13:
 		player.stats.bag.pop_back()
+	main.change_map("town", "market")  # back out to the street, where Rowan and Lune stand
+	await t._frames(4)
+	townspeople = t.get_nodes_in_group("npcs")
 	var rowan = townspeople.filter(func(npc): return npc.npc_id == "captain")[0]
 	var lune = townspeople.filter(func(npc): return npc.npc_id == "healer")[0]
 	player.global_position = rowan.global_position + Vector2(70, 30)

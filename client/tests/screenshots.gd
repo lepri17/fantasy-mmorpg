@@ -59,6 +59,8 @@ func _initialize() -> void:
 	main.change_map("town", "default")
 	await _frames(20)
 	await _shot("05_town")
+	main.change_map("willow_market", "default")
+	await _frames(20)
 	var mira = get_nodes_in_group("npcs").filter(func(npc): return npc.npc_id == "merchant")[0]
 	player.global_position = mira.global_position + Vector2(70, 30)
 	await _frames(10)
@@ -437,7 +439,10 @@ func _towns(main, player) -> void:
 		["town", Vector2(1000, 560), "63_willow_street"],
 		["lanternhold", Vector2(1300, 560), "64_lanternhold"],
 		["frostgate", Vector2(1300, 560), "65_frostgate"],
-		["lantern_arena", Vector2(700, 640), "66_lantern_arena"]
+		["lantern_arena", Vector2(700, 640), "66_lantern_arena"],
+		["willow_market", Vector2(1000, 560), "67_willow_market"],
+		["lantern_market", Vector2(900, 560), "68_lantern_bazaar"],
+		["frost_market", Vector2(900, 560), "69_frost_market"]
 	]:
 		main.change_map(step[0], "default")
 		await _frames(20)

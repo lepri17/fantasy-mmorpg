@@ -6,7 +6,6 @@ from __future__ import annotations
 from .data import roundi, table
 from .rules import items as item_db
 from .rules.stats import class_info, class_name, today, with_article
-from .world.maps import town
 
 NPC_REACH = 260.0
 DROP_DISTANCE = 56.0
@@ -228,7 +227,8 @@ def tutorial(session, message) -> None:
 
 
 def _near(hero, npc_id, service: str = "") -> bool:
-    if hero.dead or hero.inst is None or hero.inst.map.id != town() or not isinstance(npc_id, str):
+    # townspeople stand in the safe maps: the towns' streets and their markets
+    if hero.dead or hero.inst is None or not hero.inst.map.safe or not isinstance(npc_id, str):
         return False
     place = hero.inst.map.npcs.get(npc_id)
     if place is None or hero.distance_to(*place) > NPC_REACH:

@@ -131,8 +131,12 @@ def test_portals_towns_and_shops():
     game.handle(a, {"t": "portal", "to": "town"})
     assert hero.inst.map.id == "town" and a.last("enter")["map"] == "town"
     game.handle(a, {"t": "buy", "npc": "merchant", "item": "red_potion"})
-    assert hero.stats.potions == 2  # too far from Mira
-    place(game, a, "town", *maps()["town"].npcs["merchant"])
+    assert hero.stats.potions == 2  # Mira is in the market, behind the town's gate
+    gate = next(p for p in maps()["town"].portals if p["to"] == "willow_market")
+    place(game, a, "town", *gate["pos"])
+    game.handle(a, {"t": "portal", "to": "willow_market"})
+    assert hero.inst.map.id == "willow_market"
+    place(game, a, "willow_market", *maps()["willow_market"].npcs["merchant"])
     hero.stats.gold = 100
     game.handle(a, {"t": "buy", "npc": "merchant", "item": "red_potion"})
     assert hero.stats.potions == 3 and hero.stats.gold == 80 and "Bought Red Potion for 20 gold." in a.texts()

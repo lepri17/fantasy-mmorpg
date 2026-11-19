@@ -542,7 +542,7 @@ def check_upgrades(items_data: dict) -> None:
 
 
 OBJECT_TYPES = {"tree", "rock", "monster", "portal", "npc", "torch", "glowcap", "decor", "chest", "house",
-                "shrine"}
+                "shrine", "prop"}
 GLOW_COLORS = {"cyan", "teal", "violet"}
 DECOR_KINDS = {"reeds", "cattails", "lily", "flowers", "pebbles", "log", "mushrooms", "bones",
                "crystals", "rubble", "pillar"}  # decor.gd
@@ -739,6 +739,24 @@ def check_maps(maps_data: dict, monsters: dict, npcs: dict) -> None:
                 look = thing.get("look")
                 if not (isinstance(look, str) and res_exists(f"res://assets/environment/houses/{look}.png")):
                     error(f"{where}: house look '{look}' has no drawing")
+            elif thing.get("type") == "prop":
+                look = thing.get("look")
+                if not (isinstance(look, str) and res_exists(f"res://assets/environment/props/{look}.png")):
+                    error(f"{where}: prop look '{look}' has no drawing")
+                block = thing.get("block", [0, 0])
+                if not (isinstance(block, list) and len(block) == 2 and all(is_number(v) and v >= 0 for v in block)):
+                    error(f"{where}: prop 'block' must be [width, height]")
+                    continue
+                px, py = thing["pos"]
+                box = (px - block[0] / 2, py - block[1], px + block[0] / 2, py)
+                for other in data.get("objects", []):  # nothing to meet or use stands in a stall
+                    if other.get("type") in ("npc", "portal", "chest", "shrine", "monster"):
+                        ox, oy = other["pos"]
+                        if box[0] - 30 < ox < box[2] + 30 and box[1] - 10 < oy < box[3] + 30:
+                            error(f"{where}: {other.get('type')} at {other['pos']} is in the {look}")
+                for spawn_name, point in data.get("spawns", {}).items():
+                    if box[0] - 30 < point[0] < box[2] + 30 and box[1] - 10 < point[1] < box[3] + 30:
+                        error(f"{where}: spawn '{spawn_name}' is in the {look}")
             elif (street_top is not None and thing.get("type") in ("npc", "portal", "monster", "chest", "shrine")
                   and isinstance(thing.get("pos"), list) and thing["pos"][1] <= street_top + 20):
                 error(f"{where}: {thing.get('type')} at {thing.get('pos')} is above the street")
@@ -939,7 +957,9 @@ def check_exit(where: str, map_id: str, exit_: dict, size: tuple, maps: dict, sp
     elif exit_.get("spawn", "default") not in target.get("spawns", {}):
         error(f"{where}: exit to '{exit_['to']}' names no spawn there")
     else:
-        if not any(e.get("type") == "exit" and e.get("to") == map_id for e in target.get("objects", [])):
+        # The way back is a road too, or a gate (a town's gate into its market).
+        if not any(e.get("type") in ("exit", "portal") and e.get("to") == map_id
+                   for e in target.get("objects", [])):
             error(f"{where}: the road to '{exit_['to']}' has no road back from there")
     reach = EXIT_DEPTH + 40  # the trigger, and a hero's body beside it
     if side == "west":

@@ -52,6 +52,10 @@
         "east": [
           3150,
           560
+        ],
+        "market": [
+          620,
+          560
         ]
       },
       "objects": [
@@ -65,11 +69,19 @@
         },
         {
           "type": "house",
-          "look": "willow_shop",
+          "look": "willow_gate",
           "pos": [
             620,
             300
           ]
+        },
+        {
+          "type": "portal",
+          "pos": [
+            620,
+            336
+          ],
+          "to": "willow_market"
         },
         {
           "type": "house",
@@ -105,7 +117,7 @@
         },
         {
           "type": "house",
-          "look": "willow_storage",
+          "look": "willow_home2",
           "pos": [
             2500,
             300
@@ -129,14 +141,6 @@
         },
         {
           "type": "npc",
-          "id": "merchant",
-          "pos": [
-            620,
-            372
-          ]
-        },
-        {
-          "type": "npc",
           "id": "healer",
           "pos": [
             990,
@@ -156,14 +160,6 @@
           "id": "captain",
           "pos": [
             2120,
-            372
-          ]
-        },
-        {
-          "type": "npc",
-          "id": "keeper",
-          "pos": [
-            2500,
             372
           ]
         },
@@ -1416,6 +1412,10 @@
         "east": [
           2840,
           560
+        ],
+        "market": [
+          620,
+          560
         ]
       },
       "objects": [
@@ -1429,11 +1429,19 @@
         },
         {
           "type": "house",
-          "look": "lantern_shop",
+          "look": "lantern_gate",
           "pos": [
             620,
             300
           ]
+        },
+        {
+          "type": "portal",
+          "pos": [
+            620,
+            336
+          ],
+          "to": "lantern_market"
         },
         {
           "type": "house",
@@ -1453,7 +1461,7 @@
         },
         {
           "type": "house",
-          "look": "lantern_storage",
+          "look": "lantern_home",
           "pos": [
             1900,
             300
@@ -1477,14 +1485,6 @@
         },
         {
           "type": "npc",
-          "id": "lh_merchant",
-          "pos": [
-            620,
-            372
-          ]
-        },
-        {
-          "type": "npc",
           "id": "lh_healer",
           "pos": [
             990,
@@ -1496,14 +1496,6 @@
           "id": "lh_warden",
           "pos": [
             1270,
-            372
-          ]
-        },
-        {
-          "type": "npc",
-          "id": "lh_keeper",
-          "pos": [
-            1900,
             372
           ]
         },
@@ -6954,6 +6946,10 @@
         "east": [
           2840,
           560
+        ],
+        "market": [
+          620,
+          560
         ]
       },
       "objects": [
@@ -6967,11 +6963,19 @@
         },
         {
           "type": "house",
-          "look": "frost_shop",
+          "look": "frost_gate",
           "pos": [
             620,
             300
           ]
+        },
+        {
+          "type": "portal",
+          "pos": [
+            620,
+            336
+          ],
+          "to": "frost_market"
         },
         {
           "type": "house",
@@ -6991,7 +6995,7 @@
         },
         {
           "type": "house",
-          "look": "frost_storage",
+          "look": "frost_home",
           "pos": [
             1900,
             300
@@ -7015,14 +7019,6 @@
         },
         {
           "type": "npc",
-          "id": "fg_merchant",
-          "pos": [
-            620,
-            372
-          ]
-        },
-        {
-          "type": "npc",
           "id": "fg_healer",
           "pos": [
             990,
@@ -7034,14 +7030,6 @@
           "id": "fg_warden",
           "pos": [
             1270,
-            372
-          ]
-        },
-        {
-          "type": "npc",
-          "id": "fg_keeper",
-          "pos": [
-            1900,
             372
           ]
         },
@@ -8279,6 +8267,961 @@
         "snowy"
       ],
       "ambience": "amb_snow"
+    },
+    "willow_market": {
+      "name": "Willow Market",
+      "levels": "Shops and storage",
+      "safe": true,
+      "no_teleport": true,
+      "street_top": 300,
+      "ground": [
+        "gggggggggggggggggggg",
+        "gggggggggggggggggggg",
+        "ssssssssssssssssssss",
+        "ssssssssssssssssssss",
+        "ssssssssssssssssssss",
+        "ssssssssssssssssssss",
+        "gggggggggggggggggggg"
+      ],
+      "spawns": {
+        "default": [
+          260,
+          560
+        ]
+      },
+      "teleport_price": 0,
+      "music": "music_town",
+      "ambience": "amb_birds",
+      "tree_style": [
+        "oak",
+        "blossom"
+      ],
+      "rock_style": [
+        "stone"
+      ],
+      "objects": [
+        {
+          "type": "house",
+          "look": "willow_home",
+          "pos": [
+            300,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "willow_shop",
+          "pos": [
+            680,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "willow_guard",
+          "pos": [
+            1060,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "willow_home2",
+          "pos": [
+            1500,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "willow_storage",
+          "pos": [
+            1880,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "willow_home",
+          "pos": [
+            2260,
+            300
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "merchant",
+          "pos": [
+            680,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "weaponsmith",
+          "pos": [
+            1060,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "tailor",
+          "pos": [
+            1500,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "keeper",
+          "pos": [
+            1880,
+            372
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1280,
+            290
+          ],
+          "scale": 0.9
+        },
+        {
+          "type": "torch",
+          "pos": [
+            490,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            870,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1170,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1390,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1690,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            2070,
+            332
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "fountain_willow",
+          "pos": [
+            1280,
+            610
+          ],
+          "block": [
+            172,
+            44
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "bench",
+          "pos": [
+            1050,
+            640
+          ],
+          "block": [
+            92,
+            16
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "bench",
+          "pos": [
+            1510,
+            640
+          ],
+          "block": [
+            92,
+            16
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "stall_red",
+          "pos": [
+            560,
+            740
+          ],
+          "block": [
+            124,
+            34
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "stall_blue",
+          "pos": [
+            860,
+            740
+          ],
+          "block": [
+            124,
+            34
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "stall_green",
+          "pos": [
+            1700,
+            740
+          ],
+          "block": [
+            124,
+            34
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "stall_gold",
+          "pos": [
+            2000,
+            740
+          ],
+          "block": [
+            124,
+            34
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "barrels",
+          "pos": [
+            290,
+            740
+          ],
+          "block": [
+            70,
+            24
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "crates",
+          "pos": [
+            2270,
+            740
+          ],
+          "block": [
+            74,
+            26
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            420,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            710,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            1160,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            1400,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            1850,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "flowers",
+          "pos": [
+            2140,
+            836
+          ]
+        },
+        {
+          "type": "exit",
+          "side": "west",
+          "span": [
+            420,
+            760
+          ],
+          "to": "town",
+          "spawn": "market"
+        }
+      ],
+      "pollen": 12
+    },
+    "lantern_market": {
+      "name": "Lantern Bazaar",
+      "levels": "Shops and storage",
+      "safe": true,
+      "no_teleport": true,
+      "street_top": 300,
+      "ground": [
+        "tttttttttttttttttt",
+        "tttttttttttttttttt",
+        "ssssssssssssssssss",
+        "ssssssssssssssssss",
+        "ssssssssssssssssss",
+        "ssssssssssssssssss",
+        "tttttttttttttttttt"
+      ],
+      "spawns": {
+        "default": [
+          260,
+          560
+        ]
+      },
+      "teleport_price": 0,
+      "music": "music_town",
+      "ambience": "amb_night",
+      "tree_style": [
+        "dark"
+      ],
+      "rock_style": [
+        "mossy"
+      ],
+      "objects": [
+        {
+          "type": "house",
+          "look": "lantern_home",
+          "pos": [
+            300,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "lantern_shop",
+          "pos": [
+            680,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "lantern_hall",
+          "pos": [
+            1620,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "lantern_storage",
+          "pos": [
+            1980,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "lantern_chapel",
+          "pos": [
+            2004,
+            300
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "lh_merchant",
+          "pos": [
+            680,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "lh_outfitter",
+          "pos": [
+            1620,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "lh_keeper",
+          "pos": [
+            1980,
+            372
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1152,
+            290
+          ],
+          "scale": 0.9
+        },
+        {
+          "type": "torch",
+          "pos": [
+            490,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            916,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1386,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1800,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1992,
+            332
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "fountain_lantern",
+          "pos": [
+            1152,
+            610
+          ],
+          "block": [
+            172,
+            44
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "bench",
+          "pos": [
+            922,
+            640
+          ],
+          "block": [
+            92,
+            16
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "bench",
+          "pos": [
+            1382,
+            640
+          ],
+          "block": [
+            92,
+            16
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "stall_red",
+          "pos": [
+            432,
+            740
+          ],
+          "block": [
+            124,
+            34
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "stall_blue",
+          "pos": [
+            732,
+            740
+          ],
+          "block": [
+            124,
+            34
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "stall_green",
+          "pos": [
+            1572,
+            740
+          ],
+          "block": [
+            124,
+            34
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "stall_gold",
+          "pos": [
+            1872,
+            740
+          ],
+          "block": [
+            124,
+            34
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "barrels",
+          "pos": [
+            162,
+            740
+          ],
+          "block": [
+            70,
+            24
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "crates",
+          "pos": [
+            2142,
+            740
+          ],
+          "block": [
+            74,
+            26
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            292,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            582,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            1032,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            1272,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            1722,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "mushrooms",
+          "pos": [
+            2012,
+            836
+          ]
+        },
+        {
+          "type": "exit",
+          "side": "west",
+          "span": [
+            420,
+            760
+          ],
+          "to": "lanternhold",
+          "spawn": "market"
+        }
+      ],
+      "shade": [
+        0.9,
+        0.9,
+        0.98
+      ],
+      "fireflies": 16
+    },
+    "frost_market": {
+      "name": "Frostgate Market",
+      "levels": "Shops and storage",
+      "safe": true,
+      "no_teleport": true,
+      "street_top": 300,
+      "ground": [
+        "wwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwww",
+        "ssssssssssssssssss",
+        "ssssssssssssssssss",
+        "ssssssssssssssssss",
+        "ssssssssssssssssss",
+        "wwwwwwwwwwwwwwwwww"
+      ],
+      "spawns": {
+        "default": [
+          260,
+          560
+        ]
+      },
+      "teleport_price": 0,
+      "music": "music_town",
+      "ambience": "amb_snow",
+      "tree_style": [
+        "snowpine"
+      ],
+      "rock_style": [
+        "snowy"
+      ],
+      "objects": [
+        {
+          "type": "house",
+          "look": "frost_home",
+          "pos": [
+            300,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "frost_shop",
+          "pos": [
+            680,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "frost_hall",
+          "pos": [
+            1620,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "frost_storage",
+          "pos": [
+            1980,
+            300
+          ]
+        },
+        {
+          "type": "house",
+          "look": "frost_chapel",
+          "pos": [
+            2004,
+            300
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "fg_merchant",
+          "pos": [
+            680,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "fg_stonecutter",
+          "pos": [
+            1620,
+            372
+          ]
+        },
+        {
+          "type": "npc",
+          "id": "fg_keeper",
+          "pos": [
+            1980,
+            372
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1152,
+            290
+          ],
+          "scale": 0.9
+        },
+        {
+          "type": "torch",
+          "pos": [
+            490,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            916,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1386,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1800,
+            332
+          ]
+        },
+        {
+          "type": "torch",
+          "pos": [
+            1992,
+            332
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "fountain_frost",
+          "pos": [
+            1152,
+            610
+          ],
+          "block": [
+            172,
+            44
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "bench",
+          "pos": [
+            922,
+            640
+          ],
+          "block": [
+            92,
+            16
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "bench",
+          "pos": [
+            1382,
+            640
+          ],
+          "block": [
+            92,
+            16
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "stall_red",
+          "pos": [
+            432,
+            740
+          ],
+          "block": [
+            124,
+            34
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "stall_blue",
+          "pos": [
+            732,
+            740
+          ],
+          "block": [
+            124,
+            34
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "stall_green",
+          "pos": [
+            1572,
+            740
+          ],
+          "block": [
+            124,
+            34
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "stall_gold",
+          "pos": [
+            1872,
+            740
+          ],
+          "block": [
+            124,
+            34
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "barrels",
+          "pos": [
+            162,
+            740
+          ],
+          "block": [
+            70,
+            24
+          ]
+        },
+        {
+          "type": "prop",
+          "look": "crates",
+          "pos": [
+            2142,
+            740
+          ],
+          "block": [
+            74,
+            26
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "crystals",
+          "pos": [
+            292,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "crystals",
+          "pos": [
+            582,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "crystals",
+          "pos": [
+            1032,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "crystals",
+          "pos": [
+            1272,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "crystals",
+          "pos": [
+            1722,
+            836
+          ]
+        },
+        {
+          "type": "decor",
+          "kind": "crystals",
+          "pos": [
+            2012,
+            836
+          ]
+        },
+        {
+          "type": "exit",
+          "side": "west",
+          "span": [
+            420,
+            760
+          ],
+          "to": "frostgate",
+          "spawn": "market"
+        }
+      ],
+      "shade": [
+        0.95,
+        0.97,
+        1.0
+      ],
+      "snowfall": 28
     }
   }
 }

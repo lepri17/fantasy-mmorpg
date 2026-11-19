@@ -190,8 +190,8 @@ func _check_mage(player, hud) -> void:
 		not slime.call("_for_player", "training_sword") and slime.call("_for_player", "oak_staff"),
 		"monsters drop gear the mage can wear"
 	)
-	hud.get_node("Shop").open("merchant", "mage")
-	var usable: int = GameData.table("npcs")["merchant"]["shop"].filter(
+	hud.get_node("Shop").open("weaponsmith", "mage")
+	var usable: int = GameData.table("npcs")["weaponsmith"]["shop"].filter(
 		func(item_id): return ItemDb.usable_by(item_id, "mage")
 	).size()
 	t._check(
