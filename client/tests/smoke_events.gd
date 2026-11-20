@@ -142,7 +142,10 @@ func _check_clock(main, player, events) -> void:
 	_heal(player)
 	MapEvents.enabled = true
 	events.wait = 0.05
-	await t._frames(10)
+	var waited: int = 0
+	while events.kind == "" and waited < 120:  # frames are shorter on a fast machine
+		await t._frames(1)
+		waited += 1
 	t._check(events.kind != "", "when the wait is over, an event comes by itself (%s)" % events.kind)
 	MapEvents.enabled = false
 	events.left = 0.01
