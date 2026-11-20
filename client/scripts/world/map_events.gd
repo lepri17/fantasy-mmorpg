@@ -17,6 +17,9 @@ const Burst := preload("res://scripts/combat/burst.gd")
 const SLIME_SCENE_PATH := "res://scenes/enemies/slime.tscn"
 ## How far from the hero an event's things appear.
 const NEAR := 230.0
+## Nothing an event brings comes this close to the map's edge, where the roads
+## leave (a chest there sent the hero on to the next map).
+const EDGE_KEEP := 230.0
 ## A chest that was opened stays this long, then fades out.
 const OPENED_SECONDS := 8.0
 
@@ -204,7 +207,7 @@ func _add(thing: Node2D) -> void:
 func _spot(distance: float, angle: float = -1.0) -> Vector2:
 	var hero: Vector2 = _player.global_position
 	var nav: RID = _game.map.get_world_2d().navigation_map
-	var bounds: Rect2 = _game.map.bounds().grow(-90.0)
+	var bounds: Rect2 = _game.map.bounds().grow(-EDGE_KEEP)
 	for attempt in 10:
 		var turn: float = (angle if angle >= 0.0 else randf() * TAU) + attempt * 0.7
 		var want: Vector2 = hero + Vector2.RIGHT.rotated(turn) * distance

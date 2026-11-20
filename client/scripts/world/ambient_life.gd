@@ -50,7 +50,11 @@ func setup(map_life: Dictionary, bounds: Rect2, seed_from: String) -> void:
 
 
 func _ready() -> void:
-	y_sort_enabled = true
+	# Not y-sorted, on purpose: a moving sprite with a z_index of its own inside a
+	# y-sorted node made Godot re-sort the whole map every frame (four butterflies
+	# cost about 10 ms a frame). The birds on the ground draw under trees and
+	# people; butterflies (z 4) and flocks (z 30) are over them anyway.
+	y_sort_enabled = false
 	for i in int(life.get("clouds", 0)):
 		_add_cloud()
 

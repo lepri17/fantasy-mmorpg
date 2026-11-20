@@ -24,6 +24,11 @@ const BAR_HEIGHT := 56.0
 ## Monster frames are drawn at twice the design size (generate_assets.py
 ## MONSTER_PX), so they are shown at half size: crisp on a phone's screen.
 const ART_SCALE := 0.5
+## Farther than this from the hero (well off screen), a monster that is after
+## no one rests: no thinking, no walking, no physics, so a map of 20 monsters
+## stays smooth (Mor: "no lags or FPS drops"). Bosses and event monsters
+## never rest.
+const REST_DISTANCE := 1150.0
 ## How often the path to a moving target is worked out again.
 const PATH_REFRESH_SECONDS := 0.25
 
@@ -103,6 +108,8 @@ var moves = null
 
 var hp: int = 0
 var is_dead: bool = false
+## True while it rests far from the hero (_should_rest).
+var resting: bool = false
 
 var _attack_ready_in: float = 0.0
 var _spawn_position: Vector2 = Vector2.ZERO
@@ -166,12 +173,16 @@ func _ready() -> void:
 	_sprite_offset = _sprite.offset
 	_hp_bar.set_label("Lv.%d %s" % [level, display_name])
 	_hp_bar.set_values(hp, max_hp)
+	_hp_bar.quiet = boss.is_empty() and not is_elite  # bar and name once it is hurt
 	_sprite.play("idle")
 	_sprite.animation_finished.connect(_on_animation_finished)
 
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
+		return
+	resting = _should_rest()  # one distance a frame: cheap next to thinking and moving
+	if resting:
 		return
 	_attack_ready_in = maxf(0.0, _attack_ready_in - delta)
 	_knockback = _knockback.move_toward(Vector2.ZERO, KNOCKBACK_DECAY * delta)
@@ -659,11 +670,23 @@ func _die() -> void:
 
 ## Turns this slime into an elite: more HP, damage, XP, gold and loot, a glow
 ## and a bigger body (numbers from the "elite" part of combat.json).
+## True when this monster may rest: no boss, not an event's, after no one,
+## and the hero far away.
+func _should_rest() -> bool:
+	if not boss.is_empty() or has_meta("event") or not _threat.is_empty():
+		return false
+	if _player == null:
+		_player = get_tree().get_first_node_in_group("player") as Node2D
+	return _player != null and _player.global_position.distance_to(global_position) > REST_DISTANCE
+
+
 func make_elite() -> void:
 	if is_elite:
 		return
 	var elite: Dictionary = CombatRules.settings["elite"]
 	is_elite = true
+	if is_node_ready():
+		_hp_bar.quiet = false  # an elite's name and bar always show
 	max_hp = roundi(max_hp * float(elite["hp"]))
 	hp = max_hp
 	attack_damage = roundi(attack_damage * float(elite["damage"]))
@@ -714,6 +737,7 @@ func _roll_elite() -> void:
 
 func _clear_elite() -> void:
 	is_elite = false
+	_hp_bar.quiet = boss.is_empty()
 	_sprite_scale = Vector2.ONE * ART_SCALE * size_scale
 	_sprite.scale = _sprite_scale
 	if _glow != null:

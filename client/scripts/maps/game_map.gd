@@ -88,6 +88,7 @@ func _ready() -> void:
 		_add_edges()
 	for thing in data.get("objects", []):
 		_add_object(thing)
+	_bake_flat_decor()
 	if int(data.get("fireflies", 0)) > 0:
 		_add_fireflies(int(data["fireflies"]))
 	if int(data.get("snowfall", 0)) > 0:
@@ -287,6 +288,20 @@ func _bake(blend: Node2D) -> void:
 	# clear pixels beside each band: a faint line of road along every border.
 	picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(picture)
+
+
+## Flowers, pebbles, mushrooms, bones and rubble lie flat and never move: they
+## go into the baked ground picture too, drawn once. Each was many small
+## shapes drawn every frame (about 250 draw calls in the meadow). Lily pads
+## stay, as they lie on the water, which is drawn over the ground.
+func _bake_flat_decor() -> void:
+	var viewport: SubViewport = get_node_or_null("GroundBake")
+	if viewport == null:
+		return  # no screen (the smoke test): they stay where they are
+	for node in get_children():
+		if node.get_script() == Decor and node.kind in Decor.FLAT and node.kind != "lily":
+			remove_child(node)
+			viewport.add_child(node)
 
 
 ## Gives each tree and rock a drawing of the map's kinds (maps.json
