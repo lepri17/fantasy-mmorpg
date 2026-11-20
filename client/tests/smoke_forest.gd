@@ -169,8 +169,11 @@ func _check_old_maps(main, player) -> void:
 	for monster in all:
 		counts[monster.monster_id] = int(counts.get(monster.monster_id, 0)) + 1
 	t._check(
-		[counts.get("twin_slime"), counts.get("mossback_beetle"), counts.get("puffcap")] == [2, 3, 3],
-		"Mossy Woods has new monsters (%s)" % str(counts)
+		(
+			[counts.get("twin_slime"), counts.get("mossback_beetle"), counts.get("puffcap")] == [3, 5, 3]
+			and all.size() == 20
+		),
+		"Mossy Woods III is full: 20 monsters (%s)" % str(counts)
 	)
 	t._freeze(t.get_nodes_in_group("enemies"), true)
 	var beetle = _monster("mossback_beetle")

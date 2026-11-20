@@ -32,6 +32,7 @@ const SmokeFrost = preload("res://tests/smoke_frost.gd")
 const SmokeBosses = preload("res://tests/smoke_bosses.gd")
 const SmokeTowns = preload("res://tests/smoke_towns.gd")
 const SmokeEvents = preload("res://tests/smoke_events.gd")
+const SmokeStages = preload("res://tests/smoke_stages.gd")
 const MapEvents = preload("res://scripts/world/map_events.gd")
 const RoamingBosses = preload("res://scripts/world/roaming_bosses.gd")
 const Settings = preload("res://scripts/settings.gd")
@@ -70,7 +71,7 @@ func _run() -> void:
 		func(enemy): return enemy.get("monster_id") == "blue_slime"
 	)
 	_check(
-		blue_slimes.size() == 2 and blue_slimes[0].level == 3 and blue_slimes[0].max_hp == 110,
+		blue_slimes.size() == 5 and blue_slimes[0].level == 3 and blue_slimes[0].max_hp == 110,
 		"blue slimes take their numbers from monsters.json"
 	)
 	var enemies: Array = get_nodes_in_group("enemies")
@@ -87,7 +88,10 @@ func _run() -> void:
 			around_tree.size() >= 3,
 			"a path past a tree goes around it (%d points)" % around_tree.size()
 		)
-	_check(enemies.size() == 6, "six slimes on the map (found %d)" % enemies.size())
+	_check(
+		enemies.size() == 18,
+		"Green Meadow I is a full hunting ground: 18 slimes (found %d)" % enemies.size()
+	)
 	for enemy in enemies:
 		enemy.evasion = 0.0  # no random misses in the checks below
 
@@ -752,6 +756,7 @@ func _run() -> void:
 	await SmokeBosses.new().run(self, main, player, hud)
 	await SmokeTowns.new().run(self, main, player, hud)
 	await SmokeEvents.new().run(self, main, player, hud)
+	await SmokeStages.new().run(self, main, player, hud)
 
 	_remove_test_save()
 	root.remove_child(main)

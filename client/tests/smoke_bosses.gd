@@ -43,7 +43,7 @@ func _check_few(roaming) -> void:
 		roaming.maps_of("slime_king"), roaming.maps_of("stormcrest_roc"), roaming.maps_of("frost_wyrm")
 	]
 	t._check(
-		lands == [["field", "forest"], ["ridge"], ["frostfang"]],
+		lands == [["field_3", "forest"], ["ridge"], ["frostfang"]],
 		"each boss comes only to its own land: slimes' meadow and woods, the ridge, the hollow"
 	)
 
@@ -57,7 +57,7 @@ func _check_clock(main, roaming) -> void:
 	RoamingBosses.enabled = false
 	var state: Dictionary = roaming.bosses["slime_king"]
 	t._check(
-		roaming.is_out("slime_king") and state["map"] in ["field", "forest"],
+		roaming.is_out("slime_king") and state["map"] in ["field_3", "forest"],
 		"when its wait is over, the Slime King appears in one of its maps (%s)" % state["map"]
 	)
 	state["left"] = 0.01  # its time is up, and no one is fighting it

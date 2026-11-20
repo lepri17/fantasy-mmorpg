@@ -226,7 +226,7 @@ func run(test, main, player, hud) -> void:
 	)
 	var forest_enemies: Array = t.get_nodes_in_group("enemies")
 	var shrooms: Array = forest_enemies.filter(func(enemy): return enemy.monster_id == "spore_shroom")
-	t._check(shrooms.size() == 3, "three Spore Shrooms grow in the forest")
+	t._check(shrooms.size() == 4, "four Spore Shrooms grow in Mossy Woods III (%d)" % shrooms.size())
 	if not shrooms.is_empty():
 		t._freeze(forest_enemies, true)
 		shrooms[0].set_physics_process(true)

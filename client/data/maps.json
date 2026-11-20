@@ -394,8 +394,8 @@
       }
     },
     "field": {
-      "name": "Green Meadow",
-      "levels": "Lv 1-5",
+      "name": "Green Meadow I",
+      "levels": "Lv 1-3",
       "monsters": [
         "green_slime",
         "blue_slime"
@@ -428,16 +428,6 @@
         ]
       },
       "music": "music_field",
-      "boss_spots": [
-        [
-          1800,
-          560
-        ],
-        [
-          1180,
-          1000
-        ]
-      ],
       "pollen": 30,
       "tree_style": [
         "oak",
@@ -1130,14 +1120,110 @@
             752,
             1008
           ],
-          "to": "forest",
+          "to": "field_2",
           "spawn": "west"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1758,
+            1011
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1428,
+            1307
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1639,
+            1082
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1811,
+            576
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1917,
+            950
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1683,
+            544
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1728,
+            1187
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1584,
+            1354
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1869,
+            718
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1917,
+            1065
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1890,
+            496
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2098,
+            383
+          ],
+          "id": "blue_slime"
         }
       ]
     },
     "forest": {
-      "name": "Mossy Woods",
-      "levels": "Lv 3-8",
+      "name": "Mossy Woods III",
+      "levels": "Lv 5-8",
       "ground": [
         "fffffffffppfffffffff",
         "fffffffffppfffffffff",
@@ -1577,7 +1663,7 @@
             736,
             928
           ],
-          "to": "field",
+          "to": "forest_2",
           "spawn": "east"
         },
         {
@@ -1893,6 +1979,38 @@
             1443,
             692
           ]
+        },
+        {
+          "type": "monster",
+          "pos": [
+            723,
+            461
+          ],
+          "id": "mossback_beetle"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            840,
+            346
+          ],
+          "id": "mossback_beetle"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1766,
+            331
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1857,
+            389
+          ],
+          "id": "twin_slime"
         }
       ],
       "pvp_zone": [
@@ -9833,6 +9951,2951 @@
         "flocks": true,
         "clouds": 2
       }
+    },
+    "field_2": {
+      "music": "music_field",
+      "ambience": "amb_birds",
+      "life": {
+        "birds": 6,
+        "bird": "song",
+        "butterflies": 8,
+        "flocks": true,
+        "clouds": 4
+      },
+      "tree_style": [
+        "blossom",
+        "oak",
+        "blossom"
+      ],
+      "rock_style": [
+        "stone"
+      ],
+      "pollen": 30,
+      "teleport_price": 0,
+      "name": "Green Meadow II",
+      "levels": "Lv 2-4",
+      "no_teleport": true,
+      "spawns": {
+        "default": [
+          200,
+          832
+        ],
+        "west": [
+          200,
+          832
+        ],
+        "east": [
+          2360,
+          704
+        ]
+      },
+      "ground": [
+        "gggggggggggggggggggg",
+        "gggggggggggggggggggg",
+        "gggggggggggggggggggg",
+        "gggggggggdddgggggggg",
+        "ggggggggggpggggggggg",
+        "ggggggggggpggppppppp",
+        "pppppppgggpggpggggpp",
+        "ggggggppppppppgggggg",
+        "gggggggggggggggggggg",
+        "gggggggggggggggggggg",
+        "gggggggggggggggggggg",
+        "gggggggggggggggggggg"
+      ],
+      "objects": [
+        {
+          "type": "water",
+          "points": [
+            [
+              1548,
+              250
+            ],
+            [
+              1560,
+              274
+            ],
+            [
+              1554,
+              300
+            ],
+            [
+              1516,
+              323
+            ],
+            [
+              1455,
+              339
+            ],
+            [
+              1389,
+              350
+            ],
+            [
+              1318,
+              358
+            ],
+            [
+              1243,
+              358
+            ],
+            [
+              1177,
+              345
+            ],
+            [
+              1126,
+              328
+            ],
+            [
+              1077,
+              313
+            ],
+            [
+              1016,
+              298
+            ],
+            [
+              962,
+              277
+            ],
+            [
+              948,
+              250
+            ],
+            [
+              977,
+              224
+            ],
+            [
+              1023,
+              203
+            ],
+            [
+              1067,
+              184
+            ],
+            [
+              1114,
+              166
+            ],
+            [
+              1176,
+              154
+            ],
+            [
+              1245,
+              150
+            ],
+            [
+              1315,
+              149
+            ],
+            [
+              1389,
+              149
+            ],
+            [
+              1467,
+              155
+            ],
+            [
+              1526,
+              174
+            ],
+            [
+              1547,
+              201
+            ],
+            [
+              1545,
+              227
+            ]
+          ]
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1166,
+            275
+          ],
+          "kind": "lily"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1323,
+            295
+          ],
+          "kind": "lily"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1220,
+            208
+          ],
+          "kind": "lily"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1412,
+            241
+          ],
+          "kind": "lily"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1159,
+            271
+          ],
+          "kind": "lily"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1599,
+            277
+          ],
+          "kind": "reeds"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1371,
+            372
+          ],
+          "kind": "reeds"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1170,
+            370
+          ],
+          "kind": "reeds"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            955,
+            240
+          ],
+          "kind": "cattails"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1121,
+            139
+          ],
+          "kind": "reeds"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1413,
+            134
+          ],
+          "kind": "reeds"
+        },
+        {
+          "type": "chest",
+          "pos": [
+            1180,
+            410
+          ],
+          "level": 3
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1331,
+            1343
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            762,
+            177
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            237,
+            212
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            432,
+            190
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1135,
+            1410
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            584,
+            217
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2354,
+            1368
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1035,
+            1328
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            507,
+            1328
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2316,
+            218
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            273,
+            1328
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1970,
+            1289
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1859,
+            250
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2071,
+            325
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            382,
+            533
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            488,
+            333
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            591,
+            419
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2154,
+            1143
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2322,
+            1230
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1990,
+            1058
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2036,
+            1412
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1626,
+            462
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            940,
+            642
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1514,
+            848
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            2015,
+            522
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            2391,
+            1050
+          ]
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2079,
+            444
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            770,
+            1177
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1464,
+            563
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1735,
+            193
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            833,
+            1066
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            667,
+            1153
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1803,
+            532
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2356,
+            1139
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            731,
+            1306
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1606,
+            1327
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1818,
+            1404
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1882,
+            1423
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1344,
+            1100
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            513,
+            957
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            427,
+            687
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1985,
+            585
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            495,
+            1150
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            943,
+            1100
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            565,
+            1426
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1704,
+            269
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1496,
+            745
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            170,
+            1288
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1271,
+            1227
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2073,
+            1069
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            967,
+            797
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2308,
+            1105
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            160,
+            526
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1118,
+            803
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            502,
+            984
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1578,
+            1319
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            849,
+            562
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1602,
+            1346
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            329,
+            1182
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            167,
+            1399
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            186,
+            391
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            924,
+            1086
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            714,
+            631
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1045,
+            1159
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1079,
+            849
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1284,
+            1116
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1157,
+            697
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1168,
+            1077
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1031,
+            561
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1918,
+            597
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2135,
+            1318
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1892,
+            878
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1766,
+            1275
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1765,
+            535
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1902,
+            1177
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1879,
+            995
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1711,
+            1162
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1485,
+            1188
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1590,
+            1338
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1202,
+            1236
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "exit",
+          "side": "west",
+          "span": [
+            768,
+            896
+          ],
+          "to": "field",
+          "spawn": "east"
+        },
+        {
+          "type": "exit",
+          "side": "east",
+          "span": [
+            640,
+            896
+          ],
+          "to": "field_3",
+          "spawn": "west"
+        }
+      ]
+    },
+    "field_3": {
+      "music": "music_field",
+      "ambience": "amb_birds",
+      "life": {
+        "birds": 6,
+        "bird": "song",
+        "butterflies": 8,
+        "flocks": true,
+        "clouds": 4
+      },
+      "tree_style": [
+        "oak",
+        "autumn",
+        "oak"
+      ],
+      "rock_style": [
+        "stone",
+        "mossy"
+      ],
+      "pollen": 30,
+      "teleport_price": 0,
+      "name": "Green Meadow III",
+      "levels": "Lv 3-6",
+      "no_teleport": true,
+      "spawns": {
+        "default": [
+          200,
+          704
+        ],
+        "west": [
+          200,
+          704
+        ],
+        "east": [
+          2360,
+          832
+        ]
+      },
+      "ground": [
+        "gggggggggggggggggggg",
+        "gggggggggggggggggggg",
+        "gggggggggggggggggggg",
+        "gggggggggggggggggggg",
+        "gggggpppppppgggggggg",
+        "ppppppgggpgpgggggggg",
+        "gggggggggpgppppppppp",
+        "gggggggggpgggggggggg",
+        "ggggggggssssgggggggg",
+        "ggggggggssssgggggggg",
+        "gggggggggggggggggggg",
+        "gggggggggggggggggggg"
+      ],
+      "boss_spots": [
+        [
+          1215,
+          900
+        ],
+        [
+          1900,
+          1000
+        ]
+      ],
+      "objects": [
+        {
+          "type": "shrine",
+          "pos": [
+            1215,
+            1110
+          ],
+          "gift": "power"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1425,
+            1120
+          ],
+          "kind": "pebbles"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1320,
+            1224
+          ],
+          "kind": "pebbles"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1110,
+            1224
+          ],
+          "kind": "pebbles"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1005,
+            1120
+          ],
+          "kind": "pebbles"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1110,
+            1016
+          ],
+          "kind": "pebbles"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1320,
+            1016
+          ],
+          "kind": "pebbles"
+        },
+        {
+          "type": "tree",
+          "pos": [
+            222,
+            1305
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1935,
+            302
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1492,
+            1335
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            805,
+            1369
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            486,
+            203
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1736,
+            1381
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1338,
+            210
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2147,
+            310
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1929,
+            1287
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            531,
+            326
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            879,
+            262
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2326,
+            270
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2019,
+            192
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2086,
+            430
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1982,
+            523
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1613,
+            397
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            2187,
+            1037
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1052,
+            325
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1076,
+            812
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            812,
+            855
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            655,
+            1259
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            381,
+            1412
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            871,
+            414
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            855,
+            1030
+          ]
+        },
+        {
+          "type": "decor",
+          "pos": [
+            211,
+            394
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1889,
+            1103
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1862,
+            1097
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2361,
+            505
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            966,
+            854
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2096,
+            712
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1920,
+            715
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2227,
+            219
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1916,
+            155
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            457,
+            1438
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            193,
+            414
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            640,
+            962
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2367,
+            415
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1954,
+            978
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1570,
+            290
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1177,
+            1349
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            690,
+            940
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1019,
+            197
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1677,
+            647
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1219,
+            1355
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1906,
+            658
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1339,
+            937
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1665,
+            689
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1014,
+            919
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1510,
+            283
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1367,
+            823
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1820,
+            547
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1489,
+            946
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1809,
+            408
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1507,
+            459
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            912,
+            1138
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1638,
+            519
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            977,
+            733
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1792,
+            687
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            859,
+            739
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            606,
+            988
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1706,
+            319
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            749,
+            974
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1420,
+            372
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            435,
+            1071
+          ],
+          "id": "green_slime"
+        },
+        {
+          "type": "exit",
+          "side": "west",
+          "span": [
+            640,
+            768
+          ],
+          "to": "field_2",
+          "spawn": "east"
+        },
+        {
+          "type": "exit",
+          "side": "east",
+          "span": [
+            768,
+            896
+          ],
+          "to": "forest_1",
+          "spawn": "west"
+        }
+      ]
+    },
+    "forest_1": {
+      "music": "music_forest",
+      "ambience": "amb_birds",
+      "life": {
+        "birds": 5,
+        "bird": "sparrow",
+        "butterflies": 4,
+        "flocks": true,
+        "clouds": 2
+      },
+      "tree_style": [
+        "oak",
+        "autumn",
+        "oak"
+      ],
+      "rock_style": [
+        "mossy",
+        "stone"
+      ],
+      "leaves": 26,
+      "teleport_price": 40,
+      "name": "Mossy Woods I",
+      "levels": "Lv 3-6",
+      "no_teleport": true,
+      "spawns": {
+        "default": [
+          200,
+          832
+        ],
+        "west": [
+          200,
+          832
+        ],
+        "east": [
+          2360,
+          832
+        ]
+      },
+      "ground": [
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff",
+        "fffffffppppppfffffff",
+        "ppppppppffffpppppppp",
+        "fffffpffffffffffffff",
+        "fffffpffffffffffffff",
+        "ffffdddfffffffffffff",
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff"
+      ],
+      "objects": [
+        {
+          "type": "water",
+          "points": [
+            [
+              1086,
+              1290
+            ],
+            [
+              1091,
+              1315
+            ],
+            [
+              1040,
+              1337
+            ],
+            [
+              961,
+              1351
+            ],
+            [
+              887,
+              1361
+            ],
+            [
+              820,
+              1373
+            ],
+            [
+              743,
+              1383
+            ],
+            [
+              656,
+              1385
+            ],
+            [
+              572,
+              1379
+            ],
+            [
+              492,
+              1369
+            ],
+            [
+              414,
+              1357
+            ],
+            [
+              355,
+              1338
+            ],
+            [
+              341,
+              1313
+            ],
+            [
+              366,
+              1290
+            ],
+            [
+              392,
+              1270
+            ],
+            [
+              403,
+              1249
+            ],
+            [
+              422,
+              1225
+            ],
+            [
+              478,
+              1205
+            ],
+            [
+              564,
+              1196
+            ],
+            [
+              656,
+              1195
+            ],
+            [
+              743,
+              1196
+            ],
+            [
+              828,
+              1201
+            ],
+            [
+              901,
+              1213
+            ],
+            [
+              953,
+              1231
+            ],
+            [
+              993,
+              1249
+            ],
+            [
+              1041,
+              1268
+            ]
+          ]
+        },
+        {
+          "type": "decor",
+          "pos": [
+            669,
+            1332
+          ],
+          "kind": "lily"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            652,
+            1249
+          ],
+          "kind": "lily"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            656,
+            1331
+          ],
+          "kind": "lily"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1080,
+            1311
+          ],
+          "kind": "cattails"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            922,
+            1386
+          ],
+          "kind": "reeds"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            423,
+            1372
+          ],
+          "kind": "cattails"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            315,
+            1297
+          ],
+          "kind": "cattails"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            538,
+            1184
+          ],
+          "kind": "reeds"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            940,
+            1198
+          ],
+          "kind": "reeds"
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2338,
+            319
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1893,
+            1405
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2390,
+            1333
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2008,
+            220
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1401,
+            1411
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1060,
+            230
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1528,
+            220
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1551,
+            1286
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2012,
+            1361
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            277,
+            1276
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1378,
+            183
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2238,
+            1372
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            295,
+            259
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            483,
+            265
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1373,
+            1280
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            853,
+            215
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2379,
+            186
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            729,
+            266
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1865,
+            209
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1649,
+            329
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1917,
+            387
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1752,
+            425
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1828,
+            967
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2120,
+            1135
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1711,
+            1027
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1884,
+            1263
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            864,
+            1074
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1474,
+            1135
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1468,
+            828
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1752,
+            1331
+          ]
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1548,
+            376
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1104,
+            150
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            445,
+            530
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1714,
+            186
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            511,
+            421
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1131,
+            354
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2152,
+            554
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1123,
+            566
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1304,
+            586
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1192,
+            1322
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1347,
+            883
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            497,
+            572
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2229,
+            322
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1678,
+            1414
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1350,
+            938
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1133,
+            914
+          ],
+          "kind": "flowers"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1983,
+            1176
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            448,
+            1026
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            489,
+            453
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1553,
+            490
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1137,
+            824
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2029,
+            522
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1346,
+            522
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1799,
+            586
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1082,
+            503
+          ],
+          "id": "blue_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2088,
+            402
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            727,
+            497
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            2221,
+            403
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            598,
+            597
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1739,
+            724
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            499,
+            466
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1878,
+            679
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            972,
+            394
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1790,
+            1167
+          ],
+          "id": "puffcap"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1107,
+            1125
+          ],
+          "id": "puffcap"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1487,
+            1010
+          ],
+          "id": "puffcap"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1243,
+            954
+          ],
+          "id": "puffcap"
+        },
+        {
+          "type": "exit",
+          "side": "west",
+          "span": [
+            768,
+            896
+          ],
+          "to": "field_3",
+          "spawn": "east"
+        },
+        {
+          "type": "exit",
+          "side": "east",
+          "span": [
+            768,
+            896
+          ],
+          "to": "forest_2",
+          "spawn": "west"
+        }
+      ]
+    },
+    "forest_2": {
+      "music": "music_forest",
+      "ambience": "amb_birds",
+      "life": {
+        "birds": 5,
+        "bird": "sparrow",
+        "butterflies": 4,
+        "flocks": true,
+        "clouds": 2
+      },
+      "tree_style": [
+        "autumn",
+        "oak",
+        "dark"
+      ],
+      "rock_style": [
+        "mossy"
+      ],
+      "leaves": 26,
+      "teleport_price": 40,
+      "name": "Mossy Woods II",
+      "levels": "Lv 4-7",
+      "no_teleport": true,
+      "spawns": {
+        "default": [
+          200,
+          832
+        ],
+        "west": [
+          200,
+          832
+        ],
+        "east": [
+          2360,
+          832
+        ]
+      },
+      "ground": [
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff",
+        "ffffffffffffffgggfff",
+        "ffffffffffffffgggfff",
+        "fffffffffffffffpffff",
+        "ffffffffffppppppffff",
+        "pppppfffffpffffppppp",
+        "ffffpppppppfffffffff",
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff",
+        "ffffffffffffffffffff"
+      ],
+      "objects": [
+        {
+          "type": "chest",
+          "pos": [
+            1920,
+            330
+          ],
+          "level": 6
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2150,
+            360
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2106,
+            431
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1991,
+            474
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1849,
+            474
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1734,
+            431
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1690,
+            360
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1734,
+            289
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1849,
+            246
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1991,
+            246
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2106,
+            289
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1811,
+            1376
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            451,
+            246
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1629,
+            1389
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            914,
+            289
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1269,
+            251
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            475,
+            1368
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1451,
+            182
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            884,
+            1351
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1285,
+            1405
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            159,
+            1382
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1034,
+            244
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1749,
+            291
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            174,
+            175
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1445,
+            1425
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1555,
+            1278
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1606,
+            261
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1444,
+            312
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1082,
+            1332
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            790,
+            234
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            2268,
+            328
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            691,
+            1345
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            577,
+            274
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            528,
+            629
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            699,
+            360
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            419,
+            517
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            326,
+            364
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            517,
+            407
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1419,
+            1208
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1193,
+            1121
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1060,
+            1206
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1319,
+            1284
+          ]
+        },
+        {
+          "type": "tree",
+          "pos": [
+            1344,
+            1074
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            897,
+            505
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            2308,
+            1231
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1151,
+            687
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            1563,
+            406
+          ]
+        },
+        {
+          "type": "rock",
+          "pos": [
+            2158,
+            1237
+          ]
+        },
+        {
+          "type": "decor",
+          "pos": [
+            840,
+            1132
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            803,
+            613
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2287,
+            239
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            263,
+            1255
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2115,
+            245
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1778,
+            184
+          ],
+          "kind": "mushrooms"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            2189,
+            425
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1448,
+            457
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1216,
+            470
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "decor",
+          "pos": [
+            1684,
+            994
+          ],
+          "kind": "log"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            199,
+            355
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            745,
+            639
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            735,
+            498
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            846,
+            774
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            622,
+            543
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1016,
+            480
+          ],
+          "id": "spore_shroom"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1471,
+            945
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            520,
+            1128
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1639,
+            1051
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            782,
+            1155
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1655,
+            1183
+          ],
+          "id": "twin_slime"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            987,
+            830
+          ],
+          "id": "puffcap"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1429,
+            468
+          ],
+          "id": "puffcap"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1155,
+            848
+          ],
+          "id": "puffcap"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1308,
+            518
+          ],
+          "id": "puffcap"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1336,
+            394
+          ],
+          "id": "mossback_beetle"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1179,
+            383
+          ],
+          "id": "mossback_beetle"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1541,
+            533
+          ],
+          "id": "mossback_beetle"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            948,
+            613
+          ],
+          "id": "mossback_beetle"
+        },
+        {
+          "type": "monster",
+          "pos": [
+            1722,
+            509
+          ],
+          "id": "mossback_beetle"
+        },
+        {
+          "type": "exit",
+          "side": "west",
+          "span": [
+            768,
+            896
+          ],
+          "to": "forest_1",
+          "spawn": "east"
+        },
+        {
+          "type": "exit",
+          "side": "east",
+          "span": [
+            768,
+            896
+          ],
+          "to": "forest",
+          "spawn": "west"
+        }
+      ]
     }
   }
 }

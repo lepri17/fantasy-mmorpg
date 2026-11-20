@@ -391,7 +391,7 @@
       "min_rarity": "rare",
       "roam": {
         "maps": [
-          "field",
+          "field_3",
           "forest"
         ],
         "first": [

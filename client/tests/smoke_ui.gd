@@ -129,8 +129,12 @@ func run(test, main, player, hud) -> void:
 ## U5 auto hunt and U6 walking to a quest's target.
 func _check_auto(main, player, hud) -> void:
 	t._check(
-		MapGuide.next_map("town", "forest") == "field" and MapGuide.next_map("forest", "town") == "field",
-		"the map guide knows the way between maps"
+		(
+			MapGuide.next_map("town", "forest") == "field"
+			and MapGuide.next_map("forest", "town") == "forest_2"
+			and MapGuide.next_map("field", "forest") == "field_2"
+		),
+		"the map guide knows the way between maps, stage by stage"
 	)
 	t._check(
 		MapGuide.map_with_monster("spore_shroom", "town") == "forest"
