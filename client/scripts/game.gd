@@ -194,9 +194,10 @@ func _play_music(track: String) -> void:
 
 
 ## G4: the place's own sound (birds, water, crickets, wind, drips), looping
-## on the Sounds bus, so the sounds slider sets it too.
+## on the Sounds bus, so the sounds slider sets it too. Off unless the player
+## turns "Background sounds" on in SETTINGS (Mor found them beeping).
 func _play_ambience(track: String) -> void:
-	if track == "":
+	if track == "" or not Settings.get_value("ambience"):
 		_ambience.stop()
 		return
 	var path: String = "res://assets/audio/%s.wav" % track
@@ -206,6 +207,11 @@ func _play_ambience(track: String) -> void:
 	_ambience.volume_db = -40.0
 	_ambience.play()
 	create_tween().tween_property(_ambience, "volume_db", AMBIENCE_DB, 1.2)
+
+
+## SETTINGS changed: start or stop the background sound of the map.
+func refresh_ambience() -> void:
+	_play_ambience(_maps()[map.map_id].get("ambience", ""))
 
 
 func _build_sky() -> void:

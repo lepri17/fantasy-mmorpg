@@ -248,6 +248,7 @@ func _on_menu_request(method: String) -> void:
 				toggle_menu()
 		"settings_changed":
 			get_tree().call_group("touch_controls", "apply_settings")
+			get_tree().call_group("game", "refresh_ambience")
 			UiStyle.apply_text_scale(self)
 			_refresh_windows()
 		"edit_buttons":

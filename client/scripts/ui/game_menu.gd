@@ -26,6 +26,7 @@ const SLIDERS := [
 const TOGGLES := [
 	["settings", "colorblind", "Colour-blind colours"],
 	["settings", "show_dps", "Show DPS"],
+	["settings", "ambience", "Background sounds"],
 	["controls", "floating_joystick", "Floating joystick"],
 	["controls", "left_handed", "Left-handed"],
 ]

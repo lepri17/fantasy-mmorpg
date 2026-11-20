@@ -21,6 +21,8 @@ const DEFAULTS := {
 	"button_scale": 1.0,
 	"button_layout": BUTTON_LAYOUT,
 	"show_dps": false,
+	## G4 background sounds (birdsong, crickets...). Off: Mor found them beeping.
+	"ambience": false,
 }
 ## The two sound buses and the setting each one follows.
 const BUSES := {"Music": "music", "Sounds": "sounds"}

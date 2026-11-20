@@ -4,6 +4,7 @@ extends RefCounted
 ## smoke_test.gd runs it at the end, when the meadow is no longer needed. t is
 ## the test itself (a SceneTree); its _check, _frames and helpers are used.
 
+const Settings = preload("res://scripts/settings.gd")
 const GameScript = preload("res://scripts/game.gd")
 const SkyClock = preload("res://scripts/world/sky.gd")
 const TorchScript = preload("res://scripts/world/torch.gd")
@@ -314,9 +315,12 @@ func run(test, main, player, hud) -> void:
 	await t._frames(3)
 	var run = main.map.get_node_or_null("DungeonRun")
 	var cave_sound = main.get_node("Ambience")
+	t._check(not cave_sound.playing, "background sounds are off unless turned on in SETTINGS")
+	Settings.set_value("ambience", true)
+	main.refresh_ambience()
 	t._check(
 		cave_sound.playing and cave_sound.stream.resource_path.ends_with("amb_cave.wav"),
-		"the cellar drips: each place has its own background sound"
+		"turned on, the cellar drips: each place has its own background sound"
 	)
 	t._check(
 		(
@@ -400,6 +404,9 @@ func run(test, main, player, hud) -> void:
 		),
 		"birds sing in town, under the music, at the sounds volume"
 	)
+	Settings.set_value("ambience", false)
+	main.refresh_ambience()
+	t._check(not ambience.playing, "and turned off again, they stop")
 	var dots: Array = hud.get_node("Minimap").markers()
 	t._check(
 		dots.any(func(dot): return dot[1] == Color(1, 1, 1)) and dots.size() > 5,
