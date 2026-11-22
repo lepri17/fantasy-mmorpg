@@ -10,6 +10,7 @@ extends "res://scripts/player/player_base.gd"
 ## keyboard. Skills come from res://data/skills.json; each names its action.
 
 const SkyClock = preload("res://scripts/world/sky.gd")
+const AdminPanel = preload("res://scripts/ui/admin_panel.gd")
 const Spells = preload("res://scripts/player/spells.gd")
 const AutoPilot = preload("res://scripts/player/auto_pilot.gd")
 const CombatLog = preload("res://scripts/combat/combat_log.gd")
@@ -153,7 +154,7 @@ func _physics_process(delta: float) -> void:
 
 ## Called by enemies.
 func take_damage(amount: int) -> void:
-	if is_dead or _invincible_left > 0.0 or _dash_left > 0.0:
+	if is_dead or _invincible_left > 0.0 or _dash_left > 0.0 or AdminPanel.god_mode:
 		return
 	if _guard > 0.0:
 		amount = maxi(1, roundi(amount * (1.0 - _guard)))

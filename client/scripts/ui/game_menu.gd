@@ -10,6 +10,7 @@ signal request(method: String)
 
 const UiStyle := preload("res://scripts/ui/ui_style.gd")
 const Settings := preload("res://scripts/settings.gd")
+const AdminPanel := preload("res://scripts/ui/admin_panel.gd")
 const GREEN := Color(0.22, 0.48, 0.3)
 const BLUE := Color(0.22, 0.32, 0.55)
 const BROWN := Color(0.5, 0.3, 0.18)
@@ -35,6 +36,9 @@ var _pages: Dictionary = {}
 var _sliders: Dictionary = {}
 var _value_labels: Dictionary = {}
 var _toggles: Dictionary = {}
+var _admin: PanelContainer = null
+var _title_taps: int = 0
+var _title_label: Label = null
 
 
 func _ready() -> void:
@@ -65,7 +69,11 @@ func _ready() -> void:
 func show_page(page_name: String) -> void:
 	for key in _pages:
 		_pages[key].visible = key == page_name
-	if page_name != "main":
+	if _admin != null:
+		_admin.visible = false
+	if page_name == "main":
+		_title_taps = 0
+	else:
 		_refresh_settings()
 	# As tall as the page shown, around the middle of the screen.
 	offset_top = -20.0
@@ -81,6 +89,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _main_page() -> VBoxContainer:
 	var page := _page("MENU")
+	# The title is tappable: five taps unlock the admin panel.
+	_title_label = page.get_child(0)  # the label _page() just added
+	_title_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	_title_label.gui_input.connect(_on_title_tap)
 	page.add_child(_button("RESUME", GREEN, func() -> void: request.emit("resume")))
 	page.add_child(_button("SETTINGS", BLUE, func() -> void: show_page("settings")))
 	page.add_child(_button("CONTROLS", BLUE, func() -> void: show_page("controls")))
@@ -89,6 +101,34 @@ func _main_page() -> VBoxContainer:
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	page.add_child(hint)
 	return page
+
+
+func _on_title_tap(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		_title_taps += 1
+		if _title_taps >= 5:
+			_title_taps = 0
+			_open_admin()
+
+
+func _open_admin() -> void:
+	if _admin == null:
+		_admin = AdminPanel.new()
+		_admin.visible = false
+		get_parent().add_child(_admin)
+		_admin.back_pressed.connect(_close_admin)
+	for key in _pages:
+		_pages[key].visible = false
+	visible = false
+	_admin.visible = true
+	_admin._refresh_level()
+
+
+func _close_admin() -> void:
+	if _admin != null:
+		_admin.visible = false
+	visible = true
+	show_page("main")
 
 
 func _settings_page(page_id: String, heading: String) -> VBoxContainer:
